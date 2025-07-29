@@ -1,3 +1,7 @@
+const User = require("../../models/userSchema")
+
+
+
 const loadSignup = async (req,res)=>{
     try {
         return res.render('signup')
@@ -7,6 +11,22 @@ const loadSignup = async (req,res)=>{
     }
 }
 
+
+const signup = async (req,res)=>{
+    const {name,phone,email,password} =req.body;
+    try {
+     const newUser = new User({name,phone,email,password})
+     console.log(newUser)
+     await newUser.save();
+      console.log("User successfully created:", newUser);
+     return res.redirect('/signup')   
+
+    } catch (error) {
+        console.error('form submission failed',error.message);
+       res.status(500).send('form submission failed')
+        
+    }
+}
 
 
 const pageNotFound = async (req,res)=>{
@@ -37,4 +57,5 @@ module.exports = {
     loadHomepage,
     pageNotFound,
     loadSignup,
+    signup,
 };
