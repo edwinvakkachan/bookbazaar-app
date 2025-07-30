@@ -196,9 +196,34 @@
         .login-link a:hover {
             text-decoration: underline;
         }
+.signup-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensures image covers the space */
+    display: block; /* Removes extra space below image */
+}
+.image-section {
+    position: relative;
+    overflow: hidden; /* Prevents image overflow */
+}
+.errorMessage{
+    color: red;
+    font-size: 0.75rem;
+    display: none;
+}
+.successMessage {
+    display: none;
+    color: green;
+    font-weight: bold;
+    margin-top: 1rem;
+    text-align: center;
+}
 
         /* Responsive Design */
         @media (max-width: 768px) {
+          .form-section {
+        padding: 2.5rem 2rem;
+    }
             .signup-container {
                 flex-direction: column;
                 max-width: 400px;
@@ -235,14 +260,14 @@
         <div class="image-section">
             <!-- Placeholder for image - you can replace this with your actual image -->
             <div class="image-placeholder">
-                [Your image will go here]
+                <img src="/images/signup.png" alt="BookBazaar signup illustration" class="signup-image">
             </div>
             
             <!-- Logo overlay -->
-            <div class="logo-overlay">
+            <!-- <div class="logo-overlay">
                 <div class="logo-text">BB</div>
                 <div class="logo-subtitle">BOOKBAZAAR</div>
-            </div>
+            </div> -->
         </div>
 
         <!-- Right side - Form section -->
@@ -250,37 +275,46 @@
             <h1 class="form-title">Create an account</h1>
             <p class="form-subtitle">Enter your details below</p>
 
+
+
+
             <form method="post" action="/signup" id="signupForm" >
                 <!-- Name fields -->
                 <div class="form-row">
                    
                     <div class="form-group">
-                        <input type="text" class="form-input" placeholder="Name" name="name" id="Name" required>
+                        <input type="text" class="form-input" placeholder="Full Name" name="name" id="name" required>
+                    <div id="errorName" class="errorMessage"></div>
                     </div>
                 </div>
 
                 <!-- Phone field -->
                 <div class="form-group">
                     <input type="tel" class="form-input" placeholder="Phone" name="phone" id="phone" required>
+                    <div id="errorPhone" class="errorMessage"></div>
                 </div>
 
                 <!-- Email field -->
                 <div class="form-group">
                     <input type="email" class="form-input" placeholder="Email" name="email" id="email" required>
+                    <div id="errorEmail" class="errorMessage"></div>
                 </div>
 
                 <!-- Password field -->
                 <div class="form-group">
                     <input type="password" class="form-input" placeholder="Password" name="password" id="password" required>
+                    <div id="errorPassword" class="errorMessage"></div>
                 </div>
 
                 <!-- Confirm Password field -->
                 <div class="form-group">
                     <input type="password" class="form-input" placeholder="Confirm Password" name="confirmPassword" id="confirmPassword" required>
+                    <div id="errorConfirmPassword" class="errorMessage"></div>
                 </div>
 
                 <!-- Create Account button -->
                 <button type="submit" class="create-btn">Create Account</button>
+                 <p class="successMessage" id="successMessage">Signup successful!</p>
 
                 <!-- Google signup button -->
                 <button type="button" class="google-btn" onclick="signUpWithGoogle()">
@@ -292,102 +326,136 @@
                 <div class="login-link">
                     Already have account? <a href="#" onclick="goToLogin()">Log in</a>
                 </div>
+               
+
             </form>
         </div>
     </div>
 
-    <!-- <script>
-        // Form submission handler
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+   <script> 
 
-            // Basic validation
-            if (!firstName || !lastName || !phone || !email || !password || !confirmPassword) {
-                alert('Please fill in all fields');
-                return;
-            }
+const name = document.getElementById('name')
+const phone = document.getElementById('phone');
+const email = document.getElementById('email');
+const password = document.getElementById('password');
+const confirmPassword = document.getElementById('confirmPassword')
+const errorName = document.getElementById('errorName');
+const errorPhone = document.getElementById('errorPhone');
+const errorEmail = document.getElementById('errorEmail');
+const errorPassword=document.getElementById('errorPassword');
+const errorConfirmPassword = document.getElementById('errorConfirmPassword');
+const signupForm = document.getElementById('signupForm')
 
-            if (password !== confirmPassword) {
-                alert('Passwords do not match');
-                return;
-            }
+function nameValidateChecking(){
+    const nameval = name.value;
+    const namePattern = /^[A-Za-z\s]+$/;
+    if(nameval.trim()===""){
+        errorName.style.display='block';
+        errorName.innerHTML='please enter a valid name';
+        return false;
+    }else if(!namePattern.test(nameval)){
+        errorName.style.display='block';
+        errorName.innerHTML='Name can only contain letters and spaces';
+        return false;
+    }
+    else {
+        errorName.style.display='none';
+        errorName.innerHTML=''; 
+        return true;
+    }
+    
+}
 
-            if (password.length < 6) {
-                alert('Password must be at least 6 characters long');
-                return;
-            }
+function emailValidateChecking() {
+    const emailval = email.value;
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+       if(emailval.trim()===""){
+        errorEmail.style.display='block';
+        errorEmail.innerHTML='please enter a valid email';
+        return false;
+    }else if(!emailPattern.test(emailval)){
+        errorEmail.style.display='block';
+        errorEmail.innerHTML='email id in invalid format';
+        return false;
+    }
+    else {
+        errorEmail.style.display='none';
+        errorEmail.innerHTML=''; 
+        return true;
+    }
+}
 
-            // Email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                alert('Please enter a valid email address');
-                return;
-            }
+function phoneValidateChecking() {
+    const phoneval = phone.value;
+    const phonepattern = /^(\+91[\-\s]?)?[0]?(6|7|8|9)\d{9}$/;
+     if(phoneval.trim()===""){
+        errorPhone.style.display='block';
+        errorPhone.innerHTML='please enter a valid phone number';
+        return false;
+    }else if(!phonepattern.test(phoneval)){
+       errorPhone.style.display='block';
+        errorPhone.innerHTML='phone number is in invalid format';
+        return false;
+    }
+    else {
+        errorPhone.style.display='none';
+        errorPhone.innerHTML=''; 
+        return true;
+    }
+}
 
-            // Phone validation (basic)
-            const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-            if (!phoneRegex.test(phone)) {
-                alert('Please enter a valid phone number');
-                return;
-            }
+function passwordValidateChecking(){
+    const passwordval = password.value;
+    const confirmPasswordval = confirmPassword.value;
+    const passwordPattern =  /^[A-Za-z0-9]{8,}$/;
+    if(passwordval.trim()===""){
+        errorPassword.style.display='block';
+        errorPassword.innerHTML='password should not be empty';
+        return false;
+    }else if(!passwordPattern.test(passwordval)){
+      errorPassword.style.display='block';
+        errorPassword.innerHTML='password should contain atleast 8 letters and only letters and digits are allowed';
+        return false;
+    }else if(passwordval != confirmPasswordval){
+       errorConfirmPassword.style.display='block';
+        errorConfirmPassword.innerHTML='password donot match'; 
+        return false;
+    }
+    else {
+        errorPassword.style.display='none';
+        errorPassword.innerHTML=''; 
+        return true;
+    }
 
-            // If validation passes
-            alert('Account created successfully!\n\nName: ' + firstName + ' ' + lastName + '\nEmail: ' + email + '\nPhone: ' + phone);
-            
-            // In a real application, you would send this data to your server
-            console.log('Form submitted:', {
-                firstName,
-                lastName,
-                phone,
-                email,
-                password
-            });
-        });
+    
 
-        // Google sign up handler
-        function signUpWithGoogle() {
-            alert('Google sign up clicked!\n\nIn a real application, this would integrate with Google OAuth.');
-            // In a real application, you would integrate with Google OAuth
-        }
 
-        // Login link handler
-        function goToLogin() {
-            alert('Redirecting to login page...');
-            // In a real application, you would redirect to the login page
-            // window.location.href = '/login';
-        }
+}
 
-        // Add some interactive feedback
-        document.querySelectorAll('.form-input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.style.borderBottomColor = '#333';
-            });
-            
-            input.addEventListener('blur', function() {
-                if (this.value === '') {
-                    this.style.borderBottomColor = '#ddd';
-                }
-            });
-        });
 
-        // Real-time password matching feedback
-        document.getElementById('confirmPassword').addEventListener('input', function() {
-            const password = document.getElementById('password').value;
-            const confirmPassword = this.value;
-            
-            if (confirmPassword && password !== confirmPassword) {
-                this.style.borderBottomColor = '#e74c3c';
-            } else {
-                this.style.borderBottomColor = '#27ae60';
-            }
-        });
-    </script> -->
+document.addEventListener('DOMContentLoaded',()=>{
+    signupForm.addEventListener('submit',(e)=>{
+
+e.preventDefault();
+
+   const nameValid= nameValidateChecking();
+   const emailValid= emailValidateChecking();
+   const phoneValid = phoneValidateChecking();
+  const passwordValid = passwordValidateChecking();
+
+if (nameValid && emailValid && phoneValid && passwordValid) {
+        document.getElementById("successMessage").style.display = "block";
+
+       
+        setTimeout(() => {
+            signupForm.reset();
+            document.getElementById("successMessage").style.display = "none";
+        }, 5000);
+    }
+
+    })
+})
+
+</script>
 </body>
 </html>

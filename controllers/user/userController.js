@@ -15,8 +15,7 @@ const loadSignup = async (req,res)=>{
 const signup = async (req,res)=>{
     const {name,phone,email,password} =req.body;
     try {
-     const newUser = new User({name,phone,email,password})
-     console.log(newUser)
+     const newUser = new User({name,phone,email,password});
      await newUser.save();
       console.log("User successfully created:", newUser);
      return res.redirect('/signup')   
