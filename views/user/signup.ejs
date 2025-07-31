@@ -416,7 +416,7 @@ function passwordValidateChecking(){
       errorPassword.style.display='block';
         errorPassword.innerHTML='password should contain atleast 8 letters and only letters and digits are allowed';
         return false;
-    }else if(passwordval != confirmPasswordval){
+    }else if(passwordval !== confirmPasswordval){
        errorConfirmPassword.style.display='block';
         errorConfirmPassword.innerHTML='password donot match'; 
         return false;
@@ -427,6 +427,25 @@ function passwordValidateChecking(){
         return true;
     }
 
+    function confirmPasswordValidateChecking() {
+    const passwordval = password.value;
+    const confirmPasswordval = confirmPassword.value;
+
+    if (confirmPasswordval.trim() === "") {
+        errorConfirmPassword.style.display = 'block';
+        errorConfirmPassword.innerHTML = 'Please confirm your password';
+        return false;
+    } else if (passwordval !== confirmPasswordval) {
+        errorConfirmPassword.style.display = 'block';
+        errorConfirmPassword.innerHTML = 'Passwords do not match';
+        return false;
+    } else {
+        errorConfirmPassword.style.display = 'none';
+        errorConfirmPassword.innerHTML = '';
+        return true;
+    }
+}
+
     
 
 
@@ -436,22 +455,15 @@ function passwordValidateChecking(){
 document.addEventListener('DOMContentLoaded',()=>{
     signupForm.addEventListener('submit',(e)=>{
 
-e.preventDefault();
-
    const nameValid= nameValidateChecking();
    const emailValid= emailValidateChecking();
    const phoneValid = phoneValidateChecking();
   const passwordValid = passwordValidateChecking();
+   const confirmPasswordValid = confirmPasswordValidateChecking();
 
-if (nameValid && emailValid && phoneValid && passwordValid) {
-        document.getElementById("successMessage").style.display = "block";
-
-       
-        setTimeout(() => {
-            signupForm.reset();
-            document.getElementById("successMessage").style.display = "none";
-        }, 5000);
-    }
+if (!(nameValid && emailValid && phoneValid && passwordValid && confirmPasswordValid)) {
+            e.preventDefault(); 
+        }
 
     })
 })
