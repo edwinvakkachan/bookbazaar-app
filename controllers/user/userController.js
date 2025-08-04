@@ -89,12 +89,20 @@ const pageNotFound = async (req,res)=>{
 
 const loadHomepage = async (req,res)=>{
 try {
-return res.render('home')
+    const user = req.session.user;
+    if(user){
+        const userData  = await User.findOne({_id:user._id})
+        res.render('home',{user:userData})
+    }else{
+        return res.render('home');
+    }
+
 } catch (error) {
     console.error('Home page rendering failed',error.message)
     res.status(500).send('Home page rendering error')
 }
 }
+
 
 const securePassword = async (password) =>{
     try {
@@ -193,9 +201,11 @@ const login = async(req,res)=>{
         if(!isMatch){
             return res.render('login',{message:'password do not match'})
         }
-         req.session.user = {
-            id: findUser._id,
-        };
+        //  req.session.user = {
+        //     id: findUser._id,
+        // };
+// uncommend above
+         req.session.user = findUser;
 
         res.redirect('/');
 
@@ -204,6 +214,22 @@ const login = async(req,res)=>{
         res.status(500).render('login',{message:'Something went wrong. Please try again later'})
     }
 };
+
+
+const logout = async(req,res)=>{
+    try {
+        req.session.destroy((error)=>{
+            if(error){
+                console.log('session destruction error',error.message);
+                return res.redirect('/pageNotFound')
+            }
+            return res.redirect('/login');
+        })
+    } catch (error) {
+        console.error('logout error',error);
+        res.redirect('/pageNotFound')
+    }
+}
 
 module.exports = {
     loadHomepage,
@@ -214,4 +240,5 @@ module.exports = {
     resendOTP,
     loadLogin,
     login,
+    logout,
 };
