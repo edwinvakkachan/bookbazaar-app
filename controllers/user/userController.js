@@ -160,6 +160,51 @@ const resendOTP = async (req,res)=>{
     }
 }
 
+
+
+
+const loadLogin = async (req,res)=>{
+    try {
+        if(!req.session.user){
+            return res.render('login')
+        }else{
+            res.redirect('/')
+        }
+    } catch (error) {
+        console.error('user login error',error)
+        res.redirect('/pageNotFound')
+        
+    }
+}
+
+
+const login = async(req,res)=>{
+    try {
+        const {email,password}=req.body;
+        const findUser = await User.findOne({isAdmin:false,email:email});
+        if(!findUser){
+            return res.render('login',{message:'user not found'})
+        }
+        if(findUser.isBlocked){
+            return res.render('login',{message:'User is blocked by admin'})
+        }
+
+        const isMatch = await bcrypt.compare(password,findUser.password);
+        if(!isMatch){
+            return res.render('login',{message:'password do not match'})
+        }
+         req.session.user = {
+            id: findUser._id,
+        };
+
+        res.redirect('/');
+
+    } catch (error) {
+        console.error('error when user login',error);
+        res.status(500).render('login',{message:'Something went wrong. Please try again later'})
+    }
+};
+
 module.exports = {
     loadHomepage,
     pageNotFound,
@@ -167,4 +212,6 @@ module.exports = {
     signup,
     verifyOtp,
     resendOTP,
+    loadLogin,
+    login,
 };
