@@ -6,6 +6,7 @@ const env = require('dotenv').config();
 const db = require("./config/db")
 const passport = require('./config/passport')
 const userRoute = require('./routes/userRoute')
+const adminRoute = require('./routes/adminRoute')
 db()
 
 app.use(express.json());
@@ -44,6 +45,7 @@ app.use(express.static(path.join(__dirname, "public")))  // path corrected shoul
 
 
 app.use('/',userRoute)
+app.use('/admin',adminRoute)
 
 
 
