@@ -45,8 +45,20 @@ const loadDashboard = async (req,res)=>{
     }
 }
 
+const logout = async (req, res) => {
+    req.session.destroy(error => {
+        if (error) {
+            console.log('Error destroying admin session:', error);
+            return res.redirect('/pageNotFound');
+        }
+        res.redirect('/admin/login');
+    });
+};
+
+
 module.exports={
     loadLogin,
     login,
     loadDashboard,
+    logout,
 }

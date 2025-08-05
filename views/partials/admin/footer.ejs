@@ -7,7 +7,65 @@
     </footer>
 
     <script>
-  
+   // Dropdown toggle functionality
+        const userAvatar = document.getElementById('admintest');
+        const dropdown = document.getElementById('userDropdown');
+
+        userAvatar.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!userAvatar.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        dropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Navigation functions
+        function setActive(element) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // Dropdown menu functions
+        function goToProfile() {
+            console.log('Navigate to profile');
+            // Add your profile navigation logic here
+            // window.location.href = '/admin/profile';
+            dropdown.classList.remove('show');
+        }
+
+        function goToSettings() {
+            console.log('Navigate to settings');
+            // Add your settings navigation logic here
+            // window.location.href = '/admin/settings';
+            dropdown.classList.remove('show');
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                console.log('Logging out...');
+                // Add your logout logic here
+                // This could be an AJAX call to your logout endpoint
+                // fetch('/admin/logout', { method: 'POST' })
+                //     .then(() => window.location.href = '/admin/login');
+                
+                // For demonstration, just redirect to login page
+                // window.location.href = '/admin/login';
+               // alert('Logout functionality would be implemented here');
+                window.location.href = "/admin/logout";
+            }
+            dropdown.classList.remove('show');
+        }
     </script>
 </body>
 </html>

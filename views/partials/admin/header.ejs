@@ -63,6 +63,7 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            position: relative;
         }
 
         .user-avatar {
@@ -75,12 +76,97 @@
             justify-content: center;
             cursor: pointer;
             color: #666666;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
-        /* Main Layout */
-        .dashboard-container {
+        .user-avatar:hover {
+            background: #e0e0e0;
+            transform: scale(1.05);
+        }
+
+        /* Dropdown Menu Styles */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 180px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-menu::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 12px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid white;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f0f0f0;
             display: flex;
-            min-height: calc(100vh - 80px);
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-item:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .dropdown-item:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        .dropdown-item.logout:hover {
+            background-color: #fee;
+            color: #dc3545;
+        }
+
+        .admin-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .admin-role {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 4px 0;
         }
 
         /* Sidebar */
@@ -108,6 +194,12 @@
             border-left-color: #333333;
             color: #333333;
             font-weight: 600;
+        }
+
+        /* Main Layout */
+        .dashboard-container {
+            display: flex;
+            min-height: calc(100vh - 80px);
         }
 
         /* Main Content */
@@ -337,6 +429,11 @@
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+
+            .dropdown-menu {
+                right: 0;
+                left: auto;
+            }
         }
     </style>
 </head>
@@ -349,7 +446,28 @@
                 <input type="text" placeholder="Search..." id="searchInput">
             </div>
             <div class="user-menu">
-                <div class="user-avatar">👤</div>
+                <div class="user-avatar" id="admintest">
+                    👤
+                    <div class="dropdown-menu" id="userDropdown">
+                        <div class="dropdown-item">
+                            <div>
+                                <div class="admin-name">Admin User</div>
+                                <div class="admin-role">Administrator</div>
+                            </div>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="dropdown-item" onclick="goToProfile()">
+                            👤 Profile
+                        </div>
+                        <div class="dropdown-item" onclick="goToSettings()">
+                            ⚙️ Settings
+                        </div>
+                        <div class="divider"></div>
+                        <div class="dropdown-item logout" onclick="handleLogout()">
+                            🚪 Logout
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -366,8 +484,6 @@
             <div class="nav-item" onclick="setActive(this)">Category</div>
             <div class="nav-item" onclick="setActive(this)">Banner Management</div>
             <div class="nav-item" onclick="setActive(this)">Offer Management</div>
-            <div class="nav-item" onclick="setActive(this)">Settings</div>
-            <div class="nav-item" onclick="setActive(this)">Logout</div>
         </nav>
 
         <!-- Main Content Area -->
