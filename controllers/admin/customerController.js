@@ -9,7 +9,7 @@ const customerInfo = async (req,res)=>{
             .select('-password -__v -resetPasswordToken -resetPasswordExpire')
             .sort({ createdAt: -1 }); // Newest first
         
-        res.render('admin/customer', { 
+        res.render('customer', { 
             title: 'Customer Management',
             users,
             currentPage: 'customers'
