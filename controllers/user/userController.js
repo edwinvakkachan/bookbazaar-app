@@ -129,7 +129,8 @@ const verifyOtp = async(req,res)=>{
                 password:passwordHash,
             })
             await saveUserData.save();
-            req.session.user = saveUserData._id;
+            // req.session.user = saveUserData._id;
+            req.session.user = saveUserData;
             delete req.session.userOtp;
             delete req.session.userData;
             res.json({success:true,redirectUrl:'/'})

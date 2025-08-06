@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/admin/head') %>
+    <title><%= title %> | Admin Panel</title>
+</head>
+<body class="admin">
+    <%- include('../partials/admin/header') %>
+    
+    <div class="admin-container">
+        <%- include('../partials/admin/sidebar', { currentPage }) %>
+        
+        <main class="admin-content">
+            <div class="page-header">
+                <h1><%= title %></h1>
+                <div class="actions">
+                    <a href="/admin/customers/add" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Customer
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <% if (users.length > 0) { %>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="customersTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Status</th>
+                                        <th>Joined</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% users.forEach(user => { %>
+                                        <tr>
+                                            <td>#<%= user._id.toString().substring(18, 24) %></td>
+                                            <td><%= user.name %></td>
+                                            <td><%= user.email %></td>
+                                            <td><%= user.phone || 'N/A' %></td>
+                                            <td>
+                                                <span class="badge <%= user.isActive ? 'bg-success' : 'bg-secondary' %>">
+                                                    <%= user.isActive ? 'Active' : 'Inactive' %>
+                                                </span>
+                                            </td>
+                                            <td><%= new Date(user.createdAt).toLocaleDateString() %></td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="/admin/customers/<%= user._id %>" 
+                                                       class="btn btn-sm btn-outline-primary"
+                                                       data-bs-toggle="tooltip" 
+                                                       title="View">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="/admin/customers/edit/<%= user._id %>" 
+                                                       class="btn btn-sm btn-outline-secondary"
+                                                       data-bs-toggle="tooltip" 
+                                                       title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button class="btn btn-sm btn-outline-danger delete-customer" 
+                                                            data-id="<%= user._id %>"
+                                                            data-bs-toggle="tooltip" 
+                                                            title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <div class="alert alert-info">No customers found</div>
+                    <% } %>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#customersTable').DataTable({
+                responsive: true,
+                order: [[5, 'desc']] // Sort by join date
+            });
+            
+            // Delete customer handler
+            $('.delete-customer').on('click', function() {
+                const customerId = $(this).data('id');
+                if (confirm('Are you sure you want to delete this customer?')) {
+                    fetch(`/admin/customers/${customerId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Error deleting customer');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error deleting customer');
+                    });
+                }
+            });
+            
+            // Enable tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+</body>
+</html>

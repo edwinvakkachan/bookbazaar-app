@@ -18,6 +18,56 @@
             color: #2c3e50;
         }
 
+        /* customer */
+.search-form {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    padding: 8px;
+    flex-grow: 1;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-button {
+    padding: 8px 16px;
+    background-color: #2e8b57;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-button:hover {
+    background-color: #246b45;
+}
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a {
+    margin: 0 5px;
+    padding: 6px 12px;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #333;
+}
+
+.pagination a.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+
+/* customer end here*/
+
         /* Header Styles */
         .header {
             background: #ffffff;
@@ -476,6 +526,10 @@
         <!-- Sidebar Navigation -->
         <nav class="sidebar">
             <div class="nav-item active" onclick="setActive(this)">Dashboard</div>
+            <div class="nav-item" onclick="setActive(this)">
+  <a href="/admin/customers">Customers</a>
+</div>
+
             <div class="nav-item" onclick="setActive(this)">Products</div>
             <div class="nav-item" onclick="setActive(this)">Order Lists</div>
             <div class="nav-item" onclick="setActive(this)">Users</div>
