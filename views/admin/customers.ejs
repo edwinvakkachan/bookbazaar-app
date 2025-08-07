@@ -1,0 +1,71 @@
+<%- include('../partials/admin/header') %>
+
+<h2 class="page-title">Customers</h2>
+
+<!-- Search & Sort Form -->
+<form action="/admin/customers" method="get" class="search-form">
+    <input type="text" class="search-input" placeholder="Search customers..." name="search" value="<%= search || '' %>">
+    
+    <select name="sortBy" class="search-input">
+        <option value="">Sort By</option>
+        <option value="name" <%= sortBy === 'name' ? 'selected' : '' %>>Name</option>
+        <option value="email" <%= sortBy === 'email' ? 'selected' : '' %>>Email</option>
+    </select>
+
+    <button class="search-button" type="submit">Search</button>
+</form>
+
+<!-- Customers Table -->
+<div class="data-table mt-4">
+    <div class="table-header">
+        <h3 class="table-title">Customer List</h3>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone No</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (customers.length === 0) { %>
+                <tr>
+                    <td colspan="4" style="text-align:center;">No users found</td>
+                </tr>
+            <% } else { %>
+                <% customers.forEach(customer => { %>
+                    <tr>
+                        <td><%= customer.name %></td>
+                        <td><%= customer.email %></td>
+                        <td><%= customer.phone %></td>
+                        <td>
+                             <% if (customer.isBlocked) { %>
+                            <form action="/admin/unblockUser/<%= customer._id %>" method="POST" style="display:inline;">
+                             <button type="submit" class="search-button" style="background-color: #28a745;">Unblock</button>
+                             </form>
+                                <% } else { %>
+                             <form action="/admin/blockUser/<%= customer._id %>" method="POST" style="display:inline;">
+                                     <button type="submit" class="search-button" style="background-color: #dc3545;">Block</button>
+                            </form>
+                                <% } %>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="?page=<%= i %><%= search ? `&search=${search}` : '' %><%= sortBy ? `&sortBy=${sortBy}` : '' %>" class="<%= i === currentPage ? 'active' : '' %>">
+            <%= i %>
+        </a>
+    <% } %>
+</div>
+
+<%- include('../partials/admin/footer') %>
