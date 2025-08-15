@@ -72,11 +72,52 @@ const getUnlistCategory = async (req,res)=>{
     }
 }
 
+const geteditCategory = async (req,res)=>{
+    try {
+        const id = req.query.id;
+        const category = await Category.findOne({_id:id});
+        res.render('editCategory',{
+            category:category,
+        })
+    } catch (error) {
+        console.error('editcategory error',error)
+    }
+}
+
+const editCategory = async (req,res)=>{
+    try {
+        const id = req.params.id;
+        const {categoryName,description} = req.body;
+        const existingCategory = await Category.findOne({name:categoryName})
+        if(existingCategory){
+            return res.status(400).json({
+               error:'category already exists try again'})
+        }
+        const updateCategory = await Category.findByIdAndUpdate(id,{
+            name:categoryName,
+            description:description,
+        },{new:true})
+
+        if(updateCategory){
+            res.redirect('/admin/category')
+        }else{
+            res.status(404).json({error:'category not found'})
+
+            
+        }
+    } catch (error) {
+        console.error('edit category error',error);
+       res.status(500).json({error:'edit category error'});
+       
+    }
+}
 
 module.exports={
     categoryInfo,
     addCategory,
     getListCategory,
     getUnlistCategory,
+    geteditCategory,
+    editCategory,
 
 }
