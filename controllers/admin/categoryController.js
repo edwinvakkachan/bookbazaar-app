@@ -51,12 +51,32 @@ const addCategory =  async (req,res)=>{
 }
 
 
+const getListCategory = async (req,res)=>{
+    try {
+        let id = req.query.id;
+        await Category.updateOne({_id:id},{$set:{isListed:false}});
+        res.redirect('/admin/category')
+    } catch (error) {
+        console.error('category update fails to set false error',error)
+        
+    }
+}
 
-
+const getUnlistCategory = async (req,res)=>{
+    try {
+        let id = req.query.id;
+        await Category.updateOne({_id:id},{$set:{isListed:true}});
+        res.redirect('/admin/category')
+    } catch (error) {
+         console.error('category update fails to set true error',error)
+    }
+}
 
 
 module.exports={
     categoryInfo,
     addCategory,
+    getListCategory,
+    getUnlistCategory,
 
 }

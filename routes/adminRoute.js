@@ -20,8 +20,9 @@ router.post('/unblockUser/:id', customerController.unblockUser);
 
 //categoryManagement
 router.get('/category',adminAuth,categoryController.categoryInfo)
-router.post('/addCategory',categoryController.addCategory)
-
+router.post('/addCategory',adminAuth,categoryController.addCategory)
+router.get('/listCategory',adminAuth,categoryController.getListCategory)
+router.get('/unlistCategory',adminAuth,categoryController.getUnlistCategory)
 
 
 
