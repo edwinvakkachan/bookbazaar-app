@@ -15,7 +15,7 @@ const customerInfo = async (req, res) => {
     }
 
     let sortBy = req.query.sortBy || ''; 
-    const limit = 3;
+    const limit = 5;//changed
 
     let sortOption = {};
     if (sortBy === 'name') {

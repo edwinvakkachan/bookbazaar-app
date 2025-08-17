@@ -1,0 +1,135 @@
+<%- include('../partials/admin/header') %>
+
+<section class="content-main">
+  <div class="content-header mb-4">
+    <div>
+      <h2 class="content-title card-title">Brands</h2>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row">
+        <!-- Brand Form -->
+        <div class="col-md-3">
+          <form method="post" action="/admin/addBrand" enctype="multipart/form-data">
+            
+            <div class="mb-4">
+              <label for="brand_name" class="form-label">Brand Name</label>
+              <input
+                type="text"
+                id="brand_name"
+                name="name"
+                placeholder="Type here"
+                class="form-control"
+              />
+            </div>
+
+            <div class="mb-4">
+  <label for="brand_image" class="form-label">Brand Image</label>
+  <div class="d-flex align-items-center gap-2">
+    <img id="preview" 
+     src="#" 
+     alt="Preview" 
+     class="rounded-circle border d-none" 
+     style="width:40px; height:40px; object-fit:cover;" />
+    <input class="form-control w-auto flex-grow-1" 
+           id="brand_image" 
+           name="image" 
+           type="file" />
+              </div>
+            </div>
+
+            <div class="d-grid">
+              <button class="btn btn-primary mt-3" type="submit">
+                Add Brand
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Brand Table -->
+        <div class="col-md-9">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>Brand</th>
+                  <th>Logo</th>
+                  <th>Status</th>
+                  <th>Block/Unblock/Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+               <%data.forEach((brand,index)=>{%>
+                <tr>
+                  <td class="text-start"><%=brand.brandName%></td>
+                  <td class="text-start">
+                    <div class="d-flex align-items-center justify-content-center rounded-circle overflow-hidden" style="width:40px; height:40px;">
+                      <img src="/uploads/reimage/<%=brand.brandImage[0]%>" alt="<%=brand.brandName%>" class="img-fluid" />
+                    </div>
+                  </td>
+                  <td class="text-start">
+                    <%if(brand.isBlocked){%>
+                    <span class="badge bg-danger rounded-pill px-3">Blocked</span>
+                    <%}else {%>
+                    <span class="badge bg-success rounded-pill px-3">Active</span>
+                    <%}%>
+                  </td>
+                  <td class="text-start">
+                    <%if(brand.isBlocked === false){%>
+                    <a href="/admin/blockBrand?id=<%=brand._id%>" class="btn btn-danger btn-sm me-2">Block</a>
+                    <%}else{%>
+                    <a href="/admin/unblockBrand?id=<%=brand._id%>" class="btn btn-success btn-sm me-2">Unblock</a>
+                    <%}%>
+                    <a href="/admin/deleteBrand?id=<%=brand._id%>" class="btn btn-outline-danger btn-sm">Delete</a>
+                  
+                  </td>
+                </tr>
+               <%})%>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+<div class="pagination-container mt-4">
+  <ul class="pagination justify-content-center">
+    <% if (currentPage > 1) { %>
+      <li class="page-item">
+        <a class="page-link" href="/admin/brands?page=<%= currentPage - 1 %>">Previous</a>
+      </li>
+    <% } %>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+        <a class="page-link" href="/admin/brands?page=<%= i %>"><%= i %></a>
+      </li>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <li class="page-item">
+        <a class="page-link" href="/admin/brands?page=<%= currentPage + 1 %>">Next</a>
+      </li>
+    <% } %>
+  </ul>
+</div>
+
+</section>
+<script>
+document.getElementById("brand_image").addEventListener("change", function (event) {
+  const preview = document.getElementById("preview");
+  const file = event.target.files[0];
+  if (file) {
+    preview.src = URL.createObjectURL(file);
+    preview.classList.remove("d-none");
+  }
+});
+
+
+</script>
+
+<%- include('../partials/admin/footer') %>
