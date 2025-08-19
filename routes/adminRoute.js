@@ -4,12 +4,16 @@ const adminController = require('../controllers/admin/adminController')
 const {userAuth,adminAuth} = require('../middlewares/auth')
 const customerController = require('../controllers/admin/customerController');
 const categoryController = require('../controllers/admin/categoryController');
-
+const productController = require('../controllers/admin/productController')
 const brandController = require('../controllers/admin/brandController')
-const multer = require('multer');
-const storage = require('../helpers/multer')
-const uploads = multer({storage:storage});
 
+
+// const multer = require('multer');
+// const storage = require('../helpers/multer')
+// const uploads = multer({storage:storage});
+
+const uploads = require('../helpers/multer');
+console.log('multer export keys:', Object.keys(uploads));
 
 
 router.get('/login',adminController.loadLogin);
@@ -36,6 +40,13 @@ router.post('/addBrand',adminAuth,uploads.single("image"),brandController.addBra
 router.get('/blockBrand',adminAuth,brandController.blockBrand);
 router.get('/unblockBrand',adminAuth,brandController.unblockBrand)
 router.get('/deleteBrand',adminAuth,brandController.deleteBrand)
+
+//productMangement
+router.get('/addProducts',adminAuth,productController.getproductAddPage)
+router.post('/addProducts',adminAuth,uploads.array("images",4),productController.addProducts)
+
+
+
 
 
 

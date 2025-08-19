@@ -1,16 +1,22 @@
+
 const multer = require('multer');
-const path = require('path');
 
-const storage = multer.diskStorage({
-    destination:(req,file,cb)=>{
-        cb(null,path.join(__dirname,"../public/uploads/reimage"));
-    },
-    filename:(req,file,cb)=>{
-        cb(null,Date.now()+"-"+file.originalname)
-    }
-})
 
-//const upload = multer({ storage: storage });
-//module.exports = upload;
+const storage = multer.memoryStorage();
 
-module.exports = storage;
+const limits = {
+  files: 4,
+  fileSize: 5 * 1024 * 1024, 
+};
+
+function fileFilter(req, file, cb) {
+  if (/^image\/(png|jpe?g|webp)$/i.test(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only PNG/JPG/WebP images are allowed'), false);
+  }
+}
+
+
+const upload = multer({ storage, limits, fileFilter });
+module.exports = upload;
