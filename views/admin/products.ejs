@@ -48,8 +48,11 @@
         <td><%=data[i].quantity%></td>
 
         <td class="d-flex gap-2">
-          <a href="#" class="btn btn-danger btn-sm text-white" style="width: 80px;">Block</a>
-          <a href="#" class="btn btn-success btn-sm text-white" style="width: 80px;">Unblock</a>
+          <%if(data[i].isBlocked===false){%>
+          <a href="/admin/blockProduct?id=<%=data[i]._id%>" class="btn btn-danger btn-sm text-white" style="width: 80px;">Block</a>
+          <%}else{%>
+          <a href="/admin/unblockProduct?id=<%=data[i]._id%>" class="btn btn-success btn-sm text-white" style="width: 80px;">Unblock</a>
+          <%}%>
         </td>
 
         <td>

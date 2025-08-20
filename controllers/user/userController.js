@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 
 const Product  = require('../../models/productSchema');
 const Category = require('../../models/categorySchema')
+const Brand = require('../../models/brandSchema')
 
 
 
@@ -124,7 +125,7 @@ try {
 
                              bestCategoryData.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
                             bestCategoryData = bestCategoryData.slice(0,4);  
-                            console.log(bestCategoryData)
+                            // console.log(bestCategoryData)
 
 const unique = [];
 const seen = new Set();
@@ -282,6 +283,51 @@ const logout = async(req,res)=>{
     }
 }
 
+
+
+const loadshoppingPage = async (req,res)=>{
+    try {
+        const user = req.session.user;
+        const userData = await User.findOne({_id:user});
+        const categories = await Category.find({isListed:true});
+        const categoryIds = categories.map((a)=>a._id.toString());
+        // console.log(categoryIds);
+        const page = parseInt(req.query.page) || 1;
+        const limit = 9;
+        const skip = (page-1)*limit;
+        const products = await Product.find({
+            isBlocked:false,
+            category:{$in:categoryIds},
+            quantity:{$gt:0},
+        }).sort({createdAt:-1}).skip(skip).limit(limit);
+
+        const totalProducts = await Product.countDocuments({
+            isBlocked:false,
+            category:{$in:categoryIds},
+            quantity:{$gt:0},
+        });
+        const totalPages = Math.ceil(totalProducts/limit);
+        // console.log("total pages are ",totalPages)
+
+        const brands = await Brand.find({isBlocked:false});
+        const categoriesWithIds = categories.map(category=>({_id:category._id,name:category.name}))
+         console.log(categoriesWithIds)
+    
+
+        res.render('shop',{
+            user:userData,
+            products:products,
+            category:categoriesWithIds,
+            brand:brands,
+            totalProducts:totalProducts,
+            currentPage:page,
+            totalPages:totalPages
+        })
+    } catch (error) {
+        console.error('shoping page render error',error)
+    }
+}
+
 module.exports = {
     loadHomepage,
     pageNotFound,
@@ -292,4 +338,5 @@ module.exports = {
     loadLogin,
     login,
     logout,
+    loadshoppingPage,
 };

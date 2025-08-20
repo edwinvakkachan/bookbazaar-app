@@ -45,6 +45,8 @@ router.get('/deleteBrand',adminAuth,brandController.deleteBrand)
 router.get('/addProducts',adminAuth,productController.getproductAddPage)
 router.post('/addProducts',adminAuth,upload.array("images",4),productController.addProducts)
 router.get('/products',adminAuth,productController.getAllProducts)
+router.get('/blockProduct',adminAuth,productController.blockProdcut)
+router.get('/unblockProduct',adminAuth,productController.unblockProdcut)
 
 
 

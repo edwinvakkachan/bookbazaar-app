@@ -129,8 +129,36 @@ const getAllProducts = async (req,res)=>{
     }
 }
 
+const blockProdcut = async (req,res)=>{
+    try {
+        let id = req.query.id;
+        console.log('id is: ',id);
+        await Product.updateOne({_id:id},{$set:{isBlocked:true}})
+        res.redirect('/admin/products')
+
+    } catch (error) {
+        console.error("product block error",error)
+    }
+}
+
+const unblockProdcut = async (req,res)=>{
+    try {
+        let id = req.query.id;
+        console.log('id is: ',id);
+        await Product.updateOne({_id:id},{$set:{isBlocked:false}})
+        res.redirect('/admin/products')
+
+    } catch (error) {
+        console.error("product unblock error",error)
+    }
+}
+
+
+
 module.exports = {
     getproductAddPage,
     addProducts,
     getAllProducts,
+    blockProdcut,
+    unblockProdcut,
 }
