@@ -3,6 +3,11 @@ const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
 
+const Product  = require('../../models/productSchema');
+const Category = require('../../models/categorySchema')
+
+
+
 
 const loadSignup = async (req,res)=>{
     try {
@@ -90,11 +95,40 @@ const pageNotFound = async (req,res)=>{
 const loadHomepage = async (req,res)=>{
 try {
     const user = req.session.user;
+
+    //prodcut to front page
+    const categories = await Category.find({isListed:true})
+    let productData = await Product.find({isBlocked:false,
+                            category:{$in:categories.map(category=>category._id)},
+                            quantity:{$gt:0}
+                            })    
+                            productData.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
+                            productData = productData.slice(0,4);  
+         
+        
+
+         //best selling products
+         let bestSellingData = await Product.find({isBlocked:false,
+                            category:{$in:categories.map(category=>category._id)},
+                            quantity:{$gt:0}
+                            })
+
+                            bestSellingData.sort((a,b)=>b.quantity - a.quantity)
+                            bestSellingData = bestSellingData.slice(0,4)
+                            console.log(bestSellingData)
+
+
+
+
+
     if(user){
         const userData  = await User.findOne({_id:user._id})
-        res.render('home',{user:userData})
+        res.render('home',{user:userData,products:productData,bestSelling:bestSellingData}) //prodcut data passed
     }else{
-        return res.render('home');
+        return res.render('home',{
+            products:productData,
+            bestSelling:bestSellingData
+        });
     }
 
 } catch (error) {
@@ -202,10 +236,7 @@ const login = async(req,res)=>{
         if(!isMatch){
             return res.render('login',{message:'password do not match'})
         }
-        //  req.session.user = {
-        //     id: findUser._id,
-        // };
-// uncommend above
+ 
          req.session.user = findUser;
 
         res.redirect('/');

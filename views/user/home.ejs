@@ -43,39 +43,33 @@
         <!-- Best Selling Books -->
         <section>
             <h2 class="section-title">Best Selling Books</h2>
-            <div class="bestsellers">
-                <div class="book-item">
-                    <!-- Option 1: Use actual image -->
-                    <!-- <img src="images/power-of-now.jpg" alt="The Power of Now" class="book-thumbnail"> -->
-                    
-                    <!-- Option 2: Use placeholder -->
-                    <div class="book-thumbnail-placeholder" style="background: linear-gradient(135deg, #ff6b6b, #ee5a52);">Book</div>
-                    <h4>The Power of Now</h4>
-                    <p>Eckhart Tolle</p>
-                    <div class="book-price">₹299</div>
-                </div>
-                <div class="book-item">
-                    <!-- <img src="images/atomic-habits-small.jpg" alt="Atomic Habits" class="book-thumbnail"> -->
-                    <div class="book-thumbnail-placeholder" style="background: linear-gradient(135deg, #4ecdc4, #44a08d);">Book</div>
-                    <h4>Atomic Habits</h4>
-                    <p>James Clear</p>
-                    <div class="book-price">₹349</div>
-                </div>
-                <div class="book-item">
-                    <!-- <img src="images/thinking-fast-slow.jpg" alt="Thinking Fast and Slow" class="book-thumbnail"> -->
-                    <div class="book-thumbnail-placeholder" style="background: linear-gradient(135deg, #45b7d1, #3498db);">Book</div>
-                    <h4>Think Fast and Slow</h4>
-                    <p>Daniel Kahneman</p>
-                    <div class="book-price">₹399</div>
-                </div>
-                <div class="book-item">
-                    <!-- <img src="images/7-habits.jpg" alt="The 7 Habits" class="book-thumbnail"> -->
-                    <div class="book-thumbnail-placeholder" style="background: linear-gradient(135deg, #f093fb, #f5576c);">Book</div>
-                    <h4>The 7 Habits</h4>
-                    <p>Stephen Covey</p>
-                    <div class="book-price">₹425</div>
-                </div>
-            </div>
+
+<div class="bestselling-books">
+  <% if (bestSelling && bestSelling.length) { %>
+    <% for (let i = 0; i < bestSelling.length; i++) { 
+         let p = bestSelling[i];
+         let img = (p.productImage && p.productImage.length) ? p.productImage[0] : null;
+         let coverStyle = img 
+           ? "background-image:url('" + img + "');background-size:cover;background-position:center;"
+           : "background: linear-gradient(135deg, #ff9a56, #ff6b35);";
+         let effectivePrice = (typeof p.salePrice === 'number' && p.salePrice > 0) ? p.salePrice : p.regularPrice;
+         let isDiscount = p.salePrice && p.salePrice < p.regularPrice;
+    %>
+      <div class="latest-book">
+  <div class="latest-book-cover" style="background-image:url('<%= p.productImage[0] %>');"></div>
+  <div class="latest-book-info">
+    <h4><%= p.productName %></h4>
+    <% if (p.brand) { %><p><%= p.brand %></p><% } %>
+    <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %>
+    <div class="latest-book-price">₹<%= p.salePrice || p.regularPrice %></div>
+  </div>
+</div>
+    <% } %>
+  <% } else { %>
+    <p>No bestselling books found.</p>
+  <% } %>
+</div>
+
         </section>
 
         <!-- About Us Section -->
@@ -85,44 +79,40 @@
 
         <!-- Latest Books -->
         <section>
-            <h2 class="section-title">Latest Books</h2>
-            <div class="latest-books">
-                <div class="latest-book">
-                    <div class="latest-book-cover"></div>
-                    <div class="latest-book-info">
-                        <h4>Deep Work</h4>
-                        <p>Cal Newport</p>
-                        <p>Focus in a distracted world</p>
-                        <div class="latest-book-price">₹375</div>
-                    </div>
-                </div>
-                <div class="latest-book">
-                    <div class="latest-book-cover" style="background: linear-gradient(135deg, #ff9a56, #ff6b35);"></div>
-                    <div class="latest-book-info">
-                        <h4>Mindset</h4>
-                        <p>Carol Dweck</p>
-                        <p>The new psychology of success</p>
-                        <div class="latest-book-price">₹325</div>
-                    </div>
-                </div>
-                <div class="latest-book">
-                    <div class="latest-book-cover" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
-                    <div class="latest-book-info">
-                        <h4>Sapiens</h4>
-                        <p>Yuval Noah Harari</p>
-                        <p>A brief history of humankind</p>
-                        <div class="latest-book-price">₹450</div>
-                    </div>
-                </div>
-                <div class="latest-book">
-                    <div class="latest-book-cover" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
-                    <div class="latest-book-info">
-                        <h4>Range</h4>
-                        <p>David Epstein</p>
-                        <p>Why generalists triumph</p>
-                        <div class="latest-book-price">₹395</div>
-                    </div>
-                </div>
-            </div>
+
+<h2 class="section-title">Latest Books</h2>
+
+<div class="latest-books">
+  <% if (products && products.length) { %>
+    <% for (let i = 0; i < products.length; i++) { 
+         let p = products[i];
+         let img = (p.productImage && p.productImage.length) ? p.productImage[0] : null;
+         let coverStyle = img 
+           ? "background-image:url('" + img + "');background-size:cover;background-position:center;"
+           : "background: linear-gradient(135deg, #667eea, #764ba2);";
+         let effectivePrice = (typeof p.salePrice === 'number' && p.salePrice > 0) ? p.salePrice : p.regularPrice;
+         let isDiscount = p.salePrice && p.salePrice < p.regularPrice;
+    %>
+      <div class="latest-book">
+        <div class="latest-book-cover" style="<%= coverStyle %>"></div>
+        <div class="latest-book-info">
+          <h4><%= p.productName %></h4>
+          <% if (p.brand) { %><p><%= p.brand %></p><% } %>
+          <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %>
+          <div class="latest-book-price">
+            ₹<%= effectivePrice %>
+            <% if (isDiscount) { %>
+              <span style="margin-left:8px; text-decoration: line-through; opacity: .7;">₹<%= p.regularPrice %></span>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  <% } else { %>
+    <p>No latest books found.</p>
+  <% } %>
+</div>
+
+
         </section>
    <%- include("../partials/user/footer.ejs") %>
