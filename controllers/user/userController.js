@@ -115,19 +115,38 @@ try {
 
                             bestSellingData.sort((a,b)=>b.quantity - a.quantity)
                             bestSellingData = bestSellingData.slice(0,4)
-                            console.log(bestSellingData)
+                           
+//best categories 
+        let bestCategoryData =  await Product.find({isBlocked:false,
+                            category:{$in:categories.map(category=>category._id)},
+                            quantity:{$gt:0}
+                            }).populate({ path: 'category', select: 'name' })
 
+                             bestCategoryData.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
+                            bestCategoryData = bestCategoryData.slice(0,4);  
+                            console.log(bestCategoryData)
 
+const unique = [];
+const seen = new Set();
+
+for (const p of bestCategoryData) {
+  const id = p.category?._id?.toString();
+  if (!id || seen.has(id)) continue;
+  seen.add(id);
+  unique.push(p);                 
+  if (unique.length === 4) break; 
+}
 
 
 
     if(user){
         const userData  = await User.findOne({_id:user._id})
-        res.render('home',{user:userData,products:productData,bestSelling:bestSellingData}) //prodcut data passed
+        res.render('home',{user:userData,products:productData,bestSelling:bestSellingData,popularCategory:unique}) //prodcut data passed
     }else{
         return res.render('home',{
             products:productData,
-            bestSelling:bestSellingData
+            bestSelling:bestSellingData, 
+            popularCategory:unique
         });
     }
 

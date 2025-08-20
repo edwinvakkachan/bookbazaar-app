@@ -18,27 +18,19 @@
         </section>
 
         <!-- Popular Categories -->
-        <section>
-            <h2 class="section-title">Popular Categories</h2>
-            <div class="categories">
-                <div class="category-card" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
-                    <h3>Science Books</h3>
-                    <p>Explore the wonders of science</p>
-                </div>
-                <div class="category-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
-                    <h3>Business & Economics</h3>
-                    <p>Build your business acumen</p>
-                </div>
-                <div class="category-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-                    <h3>Arts Books</h3>
-                    <p>Discover creative inspiration</p>
-                </div>
-                <div class="category-card" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
-                    <h3>Biography</h3>
-                    <p>Life stories that inspire</p>
-                </div>
-            </div>
-        </section>
+      <!-- Popular Categories -->
+<section class="popular-categories">
+  <h2 class="section-title">Popular Categories</h2>
+
+  <div class="categories">
+    <% for (let i = 0; i < popularCategory.length; i++) { %>
+      <div class="category-card">
+        <h3><%= popularCategory[i].category?.name || popularCategory[i].name %></h3>
+      </div>
+    <% } %>
+  </div>
+</section>
+
 
         <!-- Best Selling Books -->
         <section>
