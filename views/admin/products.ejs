@@ -1,0 +1,85 @@
+<%- include('../partials/admin/header') %>
+<!-- CHANGE: Removed extra <head> block; content now lives inside the <main> opened by header. -->
+
+<div class="content-header mb-3">
+  <h2 class="page-title">Products</h2>
+</div>
+
+<header class="card-header text-center mb-4">
+  <form action="" method="get" class="d-inline">
+    <div class="input-group input-group-sm border border-1 border-secondary rounded-pill mx-auto" style="max-width: 500px;">
+      <input type="text" class="form-control border-0 rounded-pill" placeholder="Search products or brands" name="search">
+      <button class="btn border-0" type="submit">Search</button>
+    </div>
+  </form>
+</header>
+
+<div class="mt-3">
+  <table class="table table-striped align-middle">
+    <thead>
+      <tr>
+        <th><b>Product name</b></th>
+        <th><b>Brand</b></th>
+        <th><b>Category</b></th>
+        <th><b>Sale Price</b></th>
+        <th><b>Offer Price</b></th>
+        <th><b>Offer</b></th>
+        <th><b>Quantity</b></th>
+        <th><b>Action</b></th>
+        <th><b>Edit</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <%for(let i=data.length-1;i>=0;i--) {%>
+      <!-- Example row (replace with your EJS loop) -->
+      <tr>
+        <td><%=data[i].productName%></td>
+        <td><%=data[i].brand%></td>
+        <td><%=data[i].category.name%></td>
+        <td><%=data[i].salePrice%></td>
+        <td></td>
+
+        <td class="d-flex gap-2">
+          <!-- CHANGE: Use <a> with btn classes instead of nesting <a> inside <button>. -->
+          <a href="#" class="btn btn-info btn-sm text-white" style="width: 100px;">Add Offer</a>
+          <a href="#" class="btn btn-info btn-sm text-white" style="width: 100px;">Remove</a>
+        </td>
+
+        <td><%=data[i].quantity%></td>
+
+        <td class="d-flex gap-2">
+          <a href="#" class="btn btn-danger btn-sm text-white" style="width: 80px;">Block</a>
+          <a href="#" class="btn btn-success btn-sm text-white" style="width: 80px;">Unblock</a>
+        </td>
+
+        <td>
+          <a href="#" class="btn btn-info btn-sm text-white" style="width: 80px;">Edit</a>
+        </td>
+      </tr>
+      <%}%>
+    </tbody>
+  </table>
+</div>
+
+<div class="container mt-3">
+   <nav aria-label="Page navigation">
+       <ul class="pagination justify-content-center mb-20" style="margin-right: 200px;">
+
+
+           <% for (let i = 1; i <= totalPages; i++) { %>
+           <li class="page-item <%=(i === currentPage) ? 'active' : '' %>">
+               <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+           </li>
+           <% } %>
+
+
+       </ul>
+   </nav>
+</div>
+
+
+<!-- Page-specific scripts (optional) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<%- include('../partials/admin/footer') %>

@@ -51,19 +51,7 @@ const addProducts = async (req,res)=>{
         } catch (error) {
           console.error("❌ Sharp failed for file:", files[i].originalname, error);
         }
-
-      
-
     }
-
-
-
-            
-
-
-
-
-
             const categoryId = await Category.findOne({name:products.category});
             if(!categoryId){
                 console.log('category id not exist') //update: pass the error for frontend
@@ -97,7 +85,52 @@ const addProducts = async (req,res)=>{
     }
 }
 
+
+const getAllProducts = async (req,res)=>{
+    try {
+        const search = req.query.search || "";
+        const page = req.query.page || 1;
+        const limit =4;
+
+        const productData = await Product.find({
+            $or:[
+                {productName:{$regex: new RegExp(".*"+search+".*","i")}},
+                {brand:{$regex: new RegExp(".*"+search+".*","i")}}
+            ],
+        }).limit(limit*1).skip((page-1)*limit).populate('category').exec();
+
+        const count = await Product.find({
+            $or:[
+                {productName:{$regex: new RegExp(".*"+search+".*","i")}},
+                {brand:{$regex: new RegExp(".*"+search+".*","i")}}
+            ],
+        }).countDocuments();
+
+
+        const category = await Category.find({isListed:true});
+        const brand = await Brand.find({isBlocked:false})
+
+        if(category && brand){
+            res.render('products',{
+                data:productData,
+                currentPage:page,
+                totalPages:page,
+                totalPages:Math.ceil(count/limit),
+                cat:category,
+                brand:brand,
+            })
+        }else {
+            console.log('product list error')
+        }
+
+
+    } catch (error) {
+        console.error('get all product error',error)
+    }
+}
+
 module.exports = {
     getproductAddPage,
     addProducts,
+    getAllProducts,
 }

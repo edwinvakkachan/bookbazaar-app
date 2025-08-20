@@ -1,5 +1,7 @@
 const Brand = require('../../models/brandSchema')
 const Product = require('../../models/productSchema')
+const fs = require('fs')
+const path = require("path");
 
 
 const getBrandPage = async (req,res)=>{
@@ -25,20 +27,53 @@ const getBrandPage = async (req,res)=>{
 
 const addBrand = async (req,res)=>{
     try {
-        const brand = req.body.name;
-        const findBrand = await Brand.findOne({brand});
-        if(!findBrand){
-            const image = req.file.filename;
-            const newBrand = new Brand({
-                brandName:brand,
-                brandImage:image,
-            })
-            await newBrand.save();
-        }
-        res.redirect('/admin/brands');
-    } catch (error) {
-        console.error('add brand error',error)
+    const brand = req.body.name.trim();
+
+    // Check if brand already exists
+    const findBrand = await Brand.findOne({ brandName: brand });
+    if (!findBrand) {
+      let filename = null;
+
+      if (req.file) {
+        // Generate unique filename
+        filename = `brand-${Date.now()}-${Math.round(Math.random() * 1e9)}.png`;
+
+        
+
+        // Absolute path to save file in /public/uploads/reimage
+        const uploadPath = path.join(
+          __dirname,
+          "..",
+          "..",
+          "public",
+          "uploads",
+          "reimage",
+          filename
+        );
+
+        // Ensure folder exists
+        fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+
+        console.log("req.file =>", req.file);
+console.log("req.body =>", req.body);
+
+        // Write buffer to disk
+        fs.writeFileSync(uploadPath, req.file.buffer);
+      }
+
+      const newBrand = new Brand({
+        brandName: brand,
+        brandImage: filename, // save filename in DB
+      });
+
+      await newBrand.save();
     }
+
+    res.redirect("/admin/brands");
+  } catch (error) {
+    console.error("add brand error", error);
+    res.status(500).send("Error adding brand");
+  }
 }
 
 const blockBrand = async (req,res)=>{

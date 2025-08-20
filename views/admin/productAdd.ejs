@@ -76,39 +76,43 @@
                 <div id="category-error" class="error-message"></div>
               </div>
 
-              <!-- Images -->
-              <div id="addedImagesContainer" class="mb-2"></div>
+       
 
-              <div class="card mb-3">
-                <div class="card-header">
-                  <h5>Choose Images</h5>
-                </div>
-                <div class="card-body">
-                  <div class="row g-3">
-                    <% for (let i = 1; i <= 4; i++) { %>
-                      <div class="col-md-6">
-                        <div class="mb-3">
-                          <img src="" alt="" id="imgView<%= i %>" class="img-fluid mb-2">
-                          <!-- IMPORTANT: same field name "images" for all 4 inputs (backend uses uploads.array('images',4)) -->
-                          <input
-                            class="form-control"
-                            type="file"
-                            name="images"
-                            id="input<%= i %>"
-                            accept="image/png, image/jpeg, image/jpg, image/webp"
-                            onchange="viewImage(event, <%= i %>)">
-                        </div>
-                        <!-- inline crop area -->
-                        <div class="image-cropper d-flex align-items-center mb-3" style="display:none; width: 300px; height: 200px;">
-                          <img src="" id="croppedImg<%= i %>" alt="">
-                          <button type="button" id="saveButton<%= i %>" class="btn btn-sm btn-primary ms-2">Save</button>
-                        </div>
-                      </div>
-                    <% } %>
-                  </div>
-                  <div id="images-error" class="error-message"></div>
-                </div>
-              </div>
+
+              <!-- Images -->
+<div id="addedImagesContainer" class="mb-2 d-flex flex-wrap gap-2"></div>
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h5>Choose & Crop Images</h5>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <% for (let i = 1; i <= 4; i++) { %>
+        <div class="col-md-6">
+          <div class="mb-2">
+            <img src="" alt="" id="imgView<%= i %>" class="img-fluid mb-2" style="display:none; max-height:280px; object-fit:contain;">
+            <input
+              class="form-control"
+              type="file"
+              name="images"
+              id="input<%= i %>"
+              accept="image/png, image/jpeg, image/jpg, image/webp"
+              onchange="viewImage(event, <%= i %>)">
+          </div>
+
+          <!-- Crop save -->
+          <div class="d-flex align-items-center mb-3" id="cropActions<%= i %>" style="display:none;">
+            <button type="button" id="saveButton<%= i %>" class="btn btn-sm btn-primary">Save Crop</button>
+            <button type="button" id="cancelButton<%= i %>" class="btn btn-sm btn-outline-secondary ms-2">Cancel</button>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    <div id="images-error" class="error-message"></div>
+  </div>
+</div>
+
 
               <!-- Submit -->
               <div>
@@ -123,21 +127,19 @@
   </div>
 </section>
 
-
 <link href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
 <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
 
 <script>
-
-  const croppers = {};   
+  const croppers = {};
   const saveHandlers = {};
-  const selectedImages = [];
+  const cancelHandlers = {};
+  const croppedThumbnails = {}; 
 
   function blobFromCanvas(canvas, type = 'image/jpeg', quality = 0.95) {
     return new Promise(resolve => canvas.toBlob(resolve, type, quality));
   }
 
- 
   function viewImage(event, index) {
     const input = event.target;
     const reader = new FileReader();
@@ -145,9 +147,12 @@
     reader.onload = function () {
       const dataURL = reader.result;
       const image = document.getElementById('imgView' + index);
+      const actions = document.getElementById('cropActions' + index);
       image.src = dataURL;
+      image.style.display = 'block';
+      actions.style.display = 'flex';
 
-     
+      
       if (croppers[index]) {
         try { croppers[index].destroy(); } catch(e) {}
         delete croppers[index];
@@ -163,20 +168,18 @@
         zoomable: true
       });
 
-     
-      const cropperContainer = document.querySelector('#croppedImg' + index).parentNode;
-      cropperContainer.style.display = 'block';
-
-      const saveButton = document.querySelector('#saveButton' + index);
+      const saveButton = document.getElementById('saveButton' + index);
+      const cancelButton = document.getElementById('cancelButton' + index);
 
       
-      if (saveHandlers[index]) {
-        saveButton.removeEventListener('click', saveHandlers[index]);
-      }
+      if (saveHandlers[index]) saveButton.removeEventListener('click', saveHandlers[index]);
+      if (cancelHandlers[index]) cancelButton.removeEventListener('click', cancelHandlers[index]);
 
-      
+      // SAVE 
       saveHandlers[index] = async function () {
-        const canvas = croppers[index].getCroppedCanvas();
+        const c = croppers[index];
+        if (!c) return;
+        const canvas = c.getCroppedCanvas();
         const blob = await blobFromCanvas(canvas, 'image/jpeg', 0.95);
         if (!blob) return;
 
@@ -186,16 +189,42 @@
         dt.items.add(file);
         document.getElementById('input' + index).files = dt.files;
 
-       
-        const croppedImage = document.getElementById('croppedImg' + index);
-        croppedImage.src = URL.createObjectURL(blob);
+        // cropped image 
+        const blobUrl = URL.createObjectURL(blob);
+        image.src = blobUrl;
 
-        cropperContainer.style.display = 'none';
+       
+        try { c.destroy(); } catch(e) {}
+        delete croppers[index];
+        actions.style.display = 'none';
+
+        
+        addOrUpdateCroppedThumb(index, blobUrl, () => {
+         
+          document.getElementById('input' + index).value = '';
+          image.src = '';
+          image.style.display = 'none';
+          if (croppedThumbnails[index]) {
+            URL.revokeObjectURL(croppedThumbnails[index].blobUrl);
+            croppedThumbnails[index].el.remove();
+            delete croppedThumbnails[index];
+          }
+        });
+      };
+
+      
+      cancelHandlers[index] = function () {
+       
+        document.getElementById('input' + index).value = '';
+        image.src = '';
+        image.style.display = 'none';
         try { croppers[index].destroy(); } catch(e) {}
         delete croppers[index];
+        actions.style.display = 'none';
       };
 
       saveButton.addEventListener('click', saveHandlers[index]);
+      cancelButton.addEventListener('click', cancelHandlers[index]);
     };
 
     if (input.files && input.files[0]) {
@@ -203,47 +232,47 @@
     }
   }
 
- 
-  ['input1','input2','input3','input4'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('change', handleFileSelect);
-  });
+  function addOrUpdateCroppedThumb(index, blobUrl, onRemove) {
+    const container = document.getElementById('addedImagesContainer');
 
-  function handleFileSelect(event) {
-    const addedImagesContainer = document.getElementById('addedImagesContainer');
-    addedImagesContainer.innerHTML = '';
-    const files = event.target.files || [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      selectedImages.push(file);
-
-      const thumbnail = document.createElement('div');
-      thumbnail.classList.add('thumbnail');
-
-      const img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-      img.alt = 'thumbnail';
-      img.style.width = '50px';
-      img.style.height = 'auto';
-
-      const removeIcon = document.createElement('span');
-      removeIcon.classList.add('remove-icon');
-      removeIcon.innerHTML = '&times;';
-      removeIcon.style.cursor = 'pointer';
-      removeIcon.addEventListener('click', function () {
-        const idx = selectedImages.indexOf(file);
-        if (idx !== -1) selectedImages.splice(idx, 1);
-        thumbnail.remove();
-      });
-
-      thumbnail.appendChild(img);
-      thumbnail.appendChild(removeIcon);
-      addedImagesContainer.appendChild(thumbnail);
+    // create or update
+    if (croppedThumbnails[index]) {
+      URL.revokeObjectURL(croppedThumbnails[index].blobUrl);
+      croppedThumbnails[index].el.querySelector('img').src = blobUrl;
+      croppedThumbnails[index].blobUrl = blobUrl;
+      return;
     }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'position-relative border p-1 rounded';
+    wrap.style.width = '64px';
+
+    const img = document.createElement('img');
+    img.src = blobUrl;
+    img.alt = 'cropped';
+    img.style.width = '100%';
+    img.style.height = '64px';
+    img.style.objectFit = 'cover';
+
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'btn btn-sm btn-danger position-absolute';
+    x.style.top = '-8px';
+    x.style.right = '-8px';
+    x.style.borderRadius = '50%';
+    x.style.lineHeight = '1';
+    x.textContent = '×';
+    x.addEventListener('click', onRemove);
+
+    wrap.appendChild(img);
+    wrap.appendChild(x);
+    container.appendChild(wrap);
+
+    croppedThumbnails[index] = { blobUrl, el: wrap };
   }
 
-  
   async function ensureAllCropsApplied() {
+   
     for (const idx of [1,2,3,4]) {
       if (croppers[idx]) {
         const canvas = croppers[idx].getCroppedCanvas();
@@ -255,9 +284,27 @@
           const dt = new DataTransfer();
           dt.items.add(file);
           input.files = dt.files;
+
+          const url = URL.createObjectURL(blob);
+          
+          const image = document.getElementById('imgView' + idx);
+          image.src = url;
+          image.style.display = 'block';
+          addOrUpdateCroppedThumb(idx, url, () => {
+            input.value = '';
+            image.src = '';
+            image.style.display = 'none';
+            if (croppedThumbnails[idx]) {
+              URL.revokeObjectURL(croppedThumbnails[idx].blobUrl);
+              croppedThumbnails[idx].el.remove();
+              delete croppedThumbnails[idx];
+            }
+          });
         }
         try { croppers[idx].destroy(); } catch(e) {}
         delete croppers[idx];
+        const actions = document.getElementById('cropActions' + idx);
+        if (actions) actions.style.display = 'none';
       }
     }
   }
@@ -285,7 +332,7 @@
     
     const inputs = [1,2,3,4].map(i => document.getElementById('input' + i));
     const hasAny = inputs.some(inp => inp && inp.files && inp.files.length > 0);
-    if (!hasAny) { displayErrorMessage('images-error', 'Please select an image.'); ok = false; }
+    if (!hasAny) { displayErrorMessage('images-error', 'Please add and save at least one cropped image.'); ok = false; }
 
     return ok;
   }
@@ -301,7 +348,7 @@
 
   async function validateAndSubmit() {
     if (!validateForm()) return;
-    await ensureAllCropsApplied();  
+    await ensureAllCropsApplied(); 
     document.forms[0].submit();
   }
 </script>

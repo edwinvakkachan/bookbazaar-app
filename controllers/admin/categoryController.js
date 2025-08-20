@@ -7,7 +7,7 @@ const categoryInfo = async (req,res)=>{
         const limit = 4;
         const skip = (page-1)*limit;
         const categoryData = await Category.find({})
-        .sort({createdAt:-1})
+        .sort({createdAt:1}) //change here for sorting 
         .skip(skip)
         .limit(limit);
 
