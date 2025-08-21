@@ -47,14 +47,14 @@ const addProducts = async (req,res)=>{
             .toFile(filepath);
 
           imagePaths.push("/uploads/productImages/" + filename);
-          console.log("✅ Saved:", filepath);
+         // console.log(" image Saved:", filepath);
         } catch (error) {
-          console.error("❌ Sharp failed for file:", files[i].originalname, error);
+         // console.error(" Sharp failed for file:", files[i].originalname, error);
         }
     }
             const categoryId = await Category.findOne({name:products.category});
             if(!categoryId){
-                console.log('category id not exist') //update: pass the error for frontend
+                console.log('category id not exist') 
                  return res.redirect('/admin/addProducts');
             } 
             const newProduct = new Product({
@@ -155,6 +155,7 @@ const unblockProdcut = async (req,res)=>{
 
 
 
+
 module.exports = {
     getproductAddPage,
     addProducts,
@@ -162,3 +163,5 @@ module.exports = {
     blockProdcut,
     unblockProdcut,
 }
+
+

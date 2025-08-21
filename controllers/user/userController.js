@@ -311,7 +311,7 @@ const loadshoppingPage = async (req,res)=>{
 
         const brands = await Brand.find({isBlocked:false});
         const categoriesWithIds = categories.map(category=>({_id:category._id,name:category.name}))
-         console.log(categoriesWithIds)
+         //console.log(categoriesWithIds)
     
 
         res.render('shop',{
@@ -328,6 +328,45 @@ const loadshoppingPage = async (req,res)=>{
     }
 }
 
+const filterProduct = async (req,res)=>{
+    try {
+        const user = req.session.user;
+        const category = req.query.category
+        console.log('the category id : ',category)
+        const brand = req.query.brand
+        const findCategory = await Category.findOne({_id:category})
+        const findBrand = await Brand.findOne({_id:brand})
+        const brands = await Brand.find({}).lean();
+        const query ={
+            isBlocked:false,
+            quantity:{$gt:0},
+
+        }
+
+        if(findCategory){
+            query.category = findCategory._id;
+        }
+        if(findBrand){
+            query.brand = findBrand.brandName;
+        }
+
+
+    } catch (error) {
+        
+    }
+}
+
+const test = async (req,res)=>{
+    
+    try {
+        res.render('test')
+        console.log('success')
+    } catch (error) {
+        console.error('test page error',error)
+    }
+}
+
+
 module.exports = {
     loadHomepage,
     pageNotFound,
@@ -339,4 +378,6 @@ module.exports = {
     login,
     logout,
     loadshoppingPage,
+    filterProduct,
+    test,
 };

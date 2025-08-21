@@ -17,7 +17,16 @@ router.get('/login',userController.loadLogin);
 router.post('/login',userController.login);
 router.get('/logout',userController.logout);
 
+//product page
 router.get('/shop',userAuth, userController.loadshoppingPage);
+router.get('/filter',userController.filterProduct);
+
+
+//testing
+
+router.get('/test',userController.test)
+
+
 
 
 module.exports = router;
