@@ -12,9 +12,17 @@ const getproductAddPage = async (req,res)=>{
     try {
         const category = await Category.find({isListed:true});
         const brand = await Brand.find({isBlocked:false});
+
+        const adminData = req.session.admin;
+        const adminEmail = await User.findById(adminData,{email:1})
+
         res.render('productAdd',{
             cat:category,
             brand:brand,
+            admin:adminEmail,
+            activePage:'',
+            search:'',
+            // category:categoryData,
         })
     } catch (error) {
         console.error('product page load error',error)
@@ -25,7 +33,13 @@ const getproductAddPage = async (req,res)=>{
 
 const addProducts = async (req,res)=>{
     try {
+
+        console.log("Reached addProducts controller");
+console.log("req.body:", req.body);
+console.log("req.files:", req.files);
+
         const products = req.body;
+        console.log(products)
         const productExists = await Product.findOne({
             productName:products.productName
         })
@@ -33,6 +47,9 @@ const addProducts = async (req,res)=>{
         if(!productExists){
  
  const files = req.files;
+ console.log(files)
+
+
     let imagePaths = [];
 
     for (let i = 0; i < files.length; i++) {
@@ -47,9 +64,9 @@ const addProducts = async (req,res)=>{
             .toFile(filepath);
 
           imagePaths.push("/uploads/productImages/" + filename);
-         // console.log(" image Saved:", filepath);
+          console.log(" image Saved:", filepath);
         } catch (error) {
-         // console.error(" Sharp failed for file:", files[i].originalname, error);
+          console.error(" Sharp failed for file:", files[i].originalname, error);
         }
     }
             const categoryId = await Category.findOne({name:products.category});
@@ -110,6 +127,10 @@ const getAllProducts = async (req,res)=>{
         const category = await Category.find({isListed:true});
         const brand = await Brand.find({isBlocked:false})
 
+        const adminData = req.session.admin;
+        const adminEmail = await User.findById(adminData,{email:1})
+        
+
         if(category && brand){
             res.render('products',{
                 data:productData,
@@ -118,6 +139,10 @@ const getAllProducts = async (req,res)=>{
                 totalPages:Math.ceil(count/limit),
                 cat:category,
                 brand:brand,
+                admin:adminEmail,
+                activePage:'products',
+                search:'',
+                category:productData,
             })
         }else {
             console.log('product list error')

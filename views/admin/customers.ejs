@@ -1,71 +1,134 @@
 <%- include('../partials/admin/header') %>
 
-<h2 class="page-title">Customers</h2>
+<h2 class="page-title mb-3">Customers</h2>
 
-<!-- Search & Sort Form -->
-<form action="/admin/customers" method="get" class="search-form">
-    <input type="text" class="search-input" placeholder="Search customers..." name="search" value="<%= search || '' %>">
-    
-    <select name="sortBy" class="search-input">
+<!-- Search & Sort -->
+<form action="/admin/customers" method="get" class="mb-3">
+  <div class="row g-2 align-items-center">
+    <div class="col-12 col-md-6 col-lg-5">
+      <input type="text" class="form-control" placeholder="Search customers..." name="search" value="<%= search || '' %>">
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+      <select name="sortBy" class="form-select">
         <option value="">Sort By</option>
-        <option value="name" <%= sortBy === 'name' ? 'selected' : '' %>>Name</option>
+        <option value="name"  <%= sortBy === 'name'  ? 'selected' : '' %>>Name</option>
         <option value="email" <%= sortBy === 'email' ? 'selected' : '' %>>Email</option>
-    </select>
-
-    <button class="search-button" type="submit">Search</button>
+      </select>
+    </div>
+    <div class="col-6 col-md-auto">
+      <button class="btn btn-success" type="submit">Search</button>
+    </div>
+  </div>
 </form>
 
 <!-- Customers Table -->
-<div class="data-table mt-4">
-    <div class="table-header">
-        <h3 class="table-title">Customer List</h3>
-    </div>
-    
-    <table>
-        <thead>
+<div class="card">
+  <div class="card-header">
+    <h3 class="h6 m-0">Customer List</h3>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle m-0">
+      <thead class="table-light">
+        <tr>
+          <th>NAME</th>
+          <th>EMAIL</th>
+          <th>PHONE NO</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (customers.length === 0) { %>
+          <tr>
+            <td colspan="4" class="text-center">No users found</td>
+          </tr>
+        <% } else { %>
+          <% customers.forEach(customer => { %>
             <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone No</th>
-                <th>Action</th>
+              <td><%= customer.name %></td>
+              <td><%= customer.email %></td>
+              <td><%= customer.phone %></td>
+              <td>
+                <% if (customer.isBlocked) { %>
+    <button 
+      class="btn btn-sm btn-success toggle-user" 
+      data-id="<%= customer._id %>" 
+      data-action="unblock">
+      Unblock
+    </button>
+                <% } else { %>
+    <button 
+      class="btn btn-sm btn-danger toggle-user" 
+      data-id="<%= customer._id %>" 
+      data-action="block">
+      Block
+    </button>
+                <% } %>
+              </td>
             </tr>
-        </thead>
-        <tbody>
-            <% if (customers.length === 0) { %>
-                <tr>
-                    <td colspan="4" style="text-align:center;">No users found</td>
-                </tr>
-            <% } else { %>
-                <% customers.forEach(customer => { %>
-                    <tr>
-                        <td><%= customer.name %></td>
-                        <td><%= customer.email %></td>
-                        <td><%= customer.phone %></td>
-                        <td>
-                             <% if (customer.isBlocked) { %>
-                            <form action="/admin/unblockUser/<%= customer._id %>" method="POST" style="display:inline;">
-                             <button type="submit" class="search-button" style="background-color: #28a745;">Unblock</button>
-                             </form>
-                                <% } else { %>
-                             <form action="/admin/blockUser/<%= customer._id %>" method="POST" style="display:inline;">
-                                     <button type="submit" class="search-button" style="background-color: #dc3545;">Block</button>
-                            </form>
-                                <% } %>
-                        </td>
-                    </tr>
-                <% }) %>
-            <% } %>
-        </tbody>
+          <% }) %>
+        <% } %>
+      </tbody>
     </table>
+  </div>
 </div>
 
 <!-- Pagination -->
-<div class="pagination">
+<nav class="mt-3">
+  <ul class="pagination">
     <% for (let i = 1; i <= totalPages; i++) { %>
-        <a href="?page=<%= i %><%= search ? `&search=${search}` : '' %><%= sortBy ? `&sortBy=${sortBy}` : '' %>" class="<%= i === currentPage ? 'active' : '' %>">
-            <%= i %>
-        </a>
+      <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+        <a class="page-link"
+           href="?page=<%= i %><%= search ? `&search=${search}` : '' %><%= sortBy ? `&sortBy=${sortBy}` : '' %>"><%= i %></a>
+      </li>
     <% } %>
-</div>
+  </ul>
+</nav>
+
+
+<script>
+document.addEventListener("click", async function(e) {
+  if (e.target.classList.contains("toggle-user")) {
+    e.preventDefault();
+
+    const userId = e.target.dataset.id;
+    const action = e.target.dataset.action;
+
+    try {
+      const res = await fetch(`/admin/${action}User/${userId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // update button + status instantly
+        if (action === "block") {
+          e.target.innerText = "Unblock";
+          e.target.classList.remove("btn-danger");
+          e.target.classList.add("btn-success");
+          e.target.dataset.action = "unblock";
+          e.target.closest("tr").querySelector("td:nth-child(1)").style.opacity = "0.5"; // optional visual cue
+        } else {
+          e.target.innerText = "Block";
+          e.target.classList.remove("btn-success");
+          e.target.classList.add("btn-danger");
+          e.target.dataset.action = "block";
+          e.target.closest("tr").querySelector("td:nth-child(1)").style.opacity = "1";
+        }
+      } else {
+        alert("Failed: " + (data.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong!");
+    }
+  }
+});
+</script>
+
+
 
 <%- include('../partials/admin/footer') %>

@@ -1,5 +1,8 @@
 <%- include('../partials/admin/header') %>
 
+<link href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css"> -->
+
 <section class="content-main">
   <div class="container-fluid">
     <div class="row">
@@ -13,12 +16,12 @@
       <div class="col-lg-8">
         <div class="card mb-4">
           <div class="card-body">
-            <form method="POST" action="/admin/addProducts" enctype="multipart/form-data" onsubmit="return false;">
+            <form id="productForm" method="POST" action="/admin/addProducts" enctype="multipart/form-data"> 
               <!-- Product Name -->
               <div class="mb-3">
                 <label for="product_name" class="form-label">Product Name</label>
                 <input type="text" placeholder="Type here" name="productName" class="form-control" id="product_name">
-                <div id="productName-error" class="error-message"></div>
+                <div id="productName-error" class="invalid-feedback"></div>
               </div>
 
               <!-- Brand -->
@@ -29,14 +32,14 @@
                     <option value="<%= brand[i].brandName %>"><%= brand[i].brandName %></option>
                   <% } %>
                 </select>
-                <div id="brand-error" class="error-message"></div>
+                <div id="brand-error" class="invalid-feedback"></div>
               </div>
 
               <!-- Description -->
               <div class="mb-3">
                 <label class="form-label">Full Description</label>
                 <textarea placeholder="Type here" id="descriptionid" name="description" class="form-control" rows="4"></textarea>
-                <div id="description-error" class="error-message"></div>
+                <div id="description-error" class="invalid-feedback"></div>
               </div>
 
               <!-- Price / Quantity Row -->
@@ -44,17 +47,17 @@
                 <div class="col-md-4 mb-3">
                   <label class="form-label">Regular Price</label>
                   <input placeholder="₹" name="regularPrice" type="text" class="form-control">
-                  <div id="regularPrice-error" class="error-message"></div>
+                  <div id="regularPrice-error" class="invalid-feedback"></div>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label">Sale Price</label>
                   <input placeholder="₹" name="salePrice" type="text" class="form-control">
-                  <div id="salePrice-error" class="error-message"></div>
+                  <div id="salePrice-error" class="invalid-feedback"></div>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label">Quantity</label>
                   <input name="quantity" type="number" class="form-control" min="0">
-                  <div id="quantity-error" class="error-message"></div>
+                  <div id="quantity-error" class="invalid-feedback"></div>
                 </div>
               </div>
 
@@ -62,7 +65,7 @@
               <div class="mb-3">
                 <label class="form-label">Color</label>
                 <input name="color" type="text" class="form-control">
-                <div id="color-error" class="error-message"></div>
+                <div id="color-error" class="invalid-feedback"></div>
               </div>
 
               <!-- Category -->
@@ -73,7 +76,7 @@
                     <option value="<%= cat[i].name %>"><%= cat[i].name %></option>
                   <% } %>
                 </select>
-                <div id="category-error" class="error-message"></div>
+                <div id="category-error" class="invalid-feedback"></div>
               </div>
 
        
@@ -109,14 +112,17 @@
         </div>
       <% } %>
     </div>
-    <div id="images-error" class="error-message"></div>
+    <div id="images-error" class="invalid-feedback"></div>
   </div>
 </div>
 
 
               <!-- Submit -->
               <div>
-                <button class="btn btn-primary" type="button" onclick="validateAndSubmit()">Publish</button>
+                <button class="btn btn-primary" type="button" onclick="validateAndSubmit()">Publish</button> <!-- FIXED -->
+                <div id="successMessage" class="alert alert-success mt-3 d-none" role="alert">
+    ✅ Successfully Submitted!
+  </div>
               </div>
             </form>
           </div>
@@ -127,8 +133,11 @@
   </div>
 </section>
 
-<link href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
-<script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+
+
+
+ <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+
 
 <script>
   const croppers = {};
@@ -337,20 +346,73 @@
     return ok;
   }
 
-  function displayErrorMessage(id, msg) {
-    const el = document.getElementById(id);
-    if (el) { el.innerText = msg; el.style.display = 'block'; }
+  function displayErrorMessage(id, msg) {  
+  const el = document.getElementById(id);
+  const input = el?.previousElementSibling; 
+  if (el) {
+    el.innerText = msg;
+    el.style.display = 'block';
   }
+  if (input && (input.classList.contains("form-control") || input.classList.contains("form-select"))) {
+    input.classList.add("is-invalid");  
+  }
+}
 
-  function clearErrorMessages() {
-    document.querySelectorAll('.error-message').forEach(el => { el.innerText = ''; el.style.display = 'none'; });
-  }
+ function clearErrorMessages() {   
+  document.querySelectorAll('.invalid-feedback').forEach(el => {  
+    el.innerText = '';
+    el.style.display = 'none';
+  });
+  document.querySelectorAll('.form-control, .form-select').forEach(inp => inp.classList.remove('is-invalid')); 
+}
 
   async function validateAndSubmit() {
-    if (!validateForm()) return;
-    await ensureAllCropsApplied(); 
-    document.forms[0].submit();
+  if (!validateForm()) return;
+
+  await ensureAllCropsApplied();
+
+  const form = document.getElementById("productForm");
+  const formData = new FormData(form);
+  const successMessage = document.getElementById("successMessage");
+
+  try {
+    const res = await fetch(form.action, {
+      method: "POST",
+      body: formData
+    });
+
+    if (res.ok) {
+      successMessage.classList.remove("d-none");
+      form.reset();
+
+        document.getElementById("addedImagesContainer").innerHTML = "";
+  [1, 2, 3, 4].forEach(i => {
+    const img = document.getElementById("imgView" + i);
+    if (img) {
+      img.src = "";
+      img.style.display = "none";
+    }
+    const input = document.getElementById("input" + i);
+    if (input) input.value = "";  
+  });
+
+
+     
+      setTimeout(() => {
+        successMessage.classList.add("d-none");
+      }, 3000);
+    } else {
+      console.error("Server returned error:", res.status);
+    }
+  } catch (err) {
+    console.error("Error:", err);
   }
+}
+
 </script>
+
+
+
+
 
 <%- include('../partials/admin/footer') %>

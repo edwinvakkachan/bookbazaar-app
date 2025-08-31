@@ -359,7 +359,10 @@ const filterProduct = async (req,res)=>{
 const test = async (req,res)=>{
     
     try {
-        res.render('test')
+        res.render('test',{
+            admin:"",
+            activePage:""
+        })
         console.log('success')
     } catch (error) {
         console.error('test page error',error)

@@ -49,7 +49,7 @@ router.get('/blockProduct',adminAuth,productController.blockProdcut)
 router.get('/unblockProduct',adminAuth,productController.unblockProdcut)
 
 
-
+router.get('/test',categoryController.test)
 
 
 

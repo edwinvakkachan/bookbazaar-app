@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 
-const loadLogin = (req,res)=>{
+const loadLogin = async (req,res)=>{
+    
     if(req.session.admin){
         return res.redirect('/admin/dashboard')
     }
@@ -34,7 +35,13 @@ const login = async (req,res)=>{
 const loadDashboard = async (req,res)=>{
     try {
         if(req.session.admin){
-            res.render('dashboard');
+            const adminData = req.session.admin;
+            const email = await User.findById(adminData,{email:1})
+            res.render('dashboard',{
+                admin:email,
+                activePage:'dashboard'
+
+            });
         }else {
             
             return res.redirect('/admin/login');
@@ -56,9 +63,33 @@ const logout = async (req, res) => {
 };
 
 
+//testing controller
+
+const testadmin = async (req,res)=>{
+    try {
+       const id = req.session.admin;
+       const adminName = await User.findById(id,{name:1,email:1})
+      const email = adminName.email
+
+       console.log('admin',adminName)
+
+        res.render('test',{
+            admin:email,
+            activePage:"dashboard"
+        })
+        
+     
+        console.log('success')
+    } catch (error) {
+        console.error('error',error)
+    }
+}
+
+
 module.exports={
     loadLogin,
     login,
     loadDashboard,
     logout,
+    testadmin,
 }

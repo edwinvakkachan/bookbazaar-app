@@ -15,7 +15,7 @@ const customerInfo = async (req, res) => {
     }
 
     let sortBy = req.query.sortBy || ''; 
-    const limit = 5;//changed
+    const limit = 5;
 
     let sortOption = {};
     if (sortBy === 'name') {
@@ -46,7 +46,14 @@ const customerInfo = async (req, res) => {
 
     const totalPages = Math.ceil(count / limit);
 
+
+     const adminData = req.session.admin;
+    const email = await User.findById(adminData,{email:1})
+
     res.render('customers', {
+       title: 'Customers',
+      activePage:'customers',
+      admin: email,
       customers: userData,
       currentPage: page,
       totalPages,
@@ -72,20 +79,20 @@ const customerInfo = async (req, res) => {
 const blockUser = async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.params.id, { isBlocked: true });
-    res.redirect('/admin/customers');
+     res.json({ success: true, userId: req.params.id, action: 'blocked' });
   } catch (error) {
     console.error('Error blocking user:', error);
-    res.status(500).send('Something went wrong');
+     res.status(500).json({ success: false, message: 'Something went wrong' });
   }
 };
 
 const unblockUser = async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.params.id, { isBlocked: false });
-    res.redirect('/admin/customers');
+     res.json({ success: true, userId: req.params.id, action: 'unblocked' });
   } catch (error) {
     console.error('Error unblocking user:', error);
-    res.status(500).send('Something went wrong');
+    res.status(500).json({ success: false, message: 'Something went wrong' });
   }
 };
 

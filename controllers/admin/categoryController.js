@@ -1,4 +1,5 @@
 const Category = require('../../models/categorySchema')
+const User = require('../../models/userSchema')
 
 const categoryInfo = async (req,res)=>{
     try {
@@ -7,18 +8,28 @@ const categoryInfo = async (req,res)=>{
         const limit = 4;
         const skip = (page-1)*limit;
         const categoryData = await Category.find({})
-        .sort({createdAt:1}) //change here for sorting 
+        .sort({createdAt:-1}) //change here for sorting 
         .skip(skip)
         .limit(limit);
 
         const totalCategories = await Category.countDocuments();
         const totalPages = Math.ceil(totalCategories/limit);
+
+        //rendering 
+
+        const adminData = req.session.admin;
+        const adminEmail = await User.findById(adminData,{email:1})
+
+
         res.render('category',{
             cat:categoryData,
             currentPage:page,
             totalPages:totalPages,
             totalCategories:totalCategories,
-            
+            admin:adminEmail,
+            activePage:'category',
+            search:'',
+            category:categoryData,
         });
     } catch (error) {
         console.log('categeoryInfo controller error',error);
@@ -112,6 +123,22 @@ const editCategory = async (req,res)=>{
     }
 }
 
+const test = async (req,res)=>{
+    try {
+        // const id = req.session.admin;
+        //        const adminName = await User.findById(id,{name:1,email:1})
+        //       const email = adminName.email
+
+         res.render('test',{
+            admin:'abc',
+            activePage:"dashboard",
+        })
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 module.exports={
     categoryInfo,
     addCategory,
@@ -119,5 +146,6 @@ module.exports={
     getUnlistCategory,
     geteditCategory,
     editCategory,
+    test,
 
 }

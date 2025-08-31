@@ -79,9 +79,9 @@
   </nav>
 
   <div class="container-fluid">
-    <div class="row">
+    <div class="row g-0">
       <!-- Sidebar (desktop) -->
-      <aside class="admin-sidebar col-lg-auto d-none d-lg-block bg-white border-end min-vh-100 p-3">
+      <aside class="admin-sidebar d-none d-lg-block bg-white border-end min-vh-100 p-3">
         <nav class="nav flex-column">
           <a class="nav-link <%= activePage==='dashboard' ? 'active' : '' %>" href="/admin"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
           <a class="nav-link <%= activePage==='customers' ? 'active' : '' %>" href="/admin/customers"><i class="bi bi-people me-2"></i>Customers</a>
@@ -121,4 +121,4 @@
       </div>
 
       <!-- Main content wrapper starts -->
-      <main class="col px-3 py-3">
+      <main class="col-lg-10 ms-auto px-3 py-3">
