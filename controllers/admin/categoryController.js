@@ -87,8 +87,15 @@ const geteditCategory = async (req,res)=>{
     try {
         const id = req.query.id;
         const category = await Category.findOne({_id:id});
+
+        const adminData = req.session.admin;
+        const adminEmail = await User.findById(adminData,{email:1})
+
         res.render('editCategory',{
             category:category,
+            admin:adminEmail,
+            activePage:'',
+            // category:"",
         })
     } catch (error) {
         console.error('editcategory error',error)
@@ -122,6 +129,7 @@ const editCategory = async (req,res)=>{
        
     }
 }
+
 
 const test = async (req,res)=>{
     try {
