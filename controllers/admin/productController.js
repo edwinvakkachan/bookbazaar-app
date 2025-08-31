@@ -20,7 +20,7 @@ const getproductAddPage = async (req,res)=>{
             cat:category,
             brand:brand,
             admin:adminEmail,
-            activePage:'',
+            activePage:'addProduct',
             search:'',
             // category:categoryData,
         })
@@ -109,12 +109,18 @@ const getAllProducts = async (req,res)=>{
         const page = req.query.page || 1;
         const limit =4;
 
-        const productData = await Product.find({
-            $or:[
-                {productName:{$regex: new RegExp(".*"+search+".*","i")}},
-                {brand:{$regex: new RegExp(".*"+search+".*","i")}}
-            ],
-        }).limit(limit*1).skip((page-1)*limit).populate('category').exec();
+       const productData = await Product.find({
+    $or: [
+        { productName: { $regex: new RegExp(".*" + search + ".*", "i") } },
+        { brand: { $regex: new RegExp(".*" + search + ".*", "i") } }
+    ]
+})
+.sort({ createdAt: -1 }) // newest first
+.limit(limit * 1)
+.skip((page - 1) * limit)
+.populate('category')
+.exec();
+
 
         const count = await Product.find({
             $or:[
@@ -135,14 +141,14 @@ const getAllProducts = async (req,res)=>{
             res.render('products',{
                 data:productData,
                 currentPage:page,
-                totalPages:page,
+                //totalPages:page,
                 totalPages:Math.ceil(count/limit),
                 cat:category,
                 brand:brand,
                 admin:adminEmail,
                 activePage:'products',
-                search:'',
-                category:productData,
+                search,
+                // category:productData,
             })
         }else {
             console.log('product list error')

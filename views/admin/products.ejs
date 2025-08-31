@@ -1,6 +1,6 @@
 <%- include('../partials/admin/header') %>
 <!-- CHANGE: Removed extra <head> block; content now lives inside the <main> opened by header. -->
-<link rel="stylesheet" href="/css/product.css">
+<!-- <link rel="stylesheet" href="/css/product.css"> -->
 
 <div class="content-header mb-3">
   <h2 class="page-title">Products</h2>
@@ -31,7 +31,7 @@
       </tr>
     </thead>
     <tbody>
-        <%for(let i=data.length-1;i>=0;i--) {%>
+        <%for(let i=0;i<data.length;i++) {%>
       <!-- Example row (replace with your EJS loop) -->
       <tr>
         <td><%=data[i].productName%></td>

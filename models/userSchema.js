@@ -35,5 +35,5 @@ const userSchema = new Schema({
         type:Boolean,
         default:false,
     }
-});
+},{timestamps:true});
 module.exports = mongoose.model('User', userSchema);
