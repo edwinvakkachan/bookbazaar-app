@@ -1,498 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create an account - BookBazaar</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .signup-container {
-            display: flex;
-            background: white;
-            border-radius: 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            max-width: 900px;
-            width: 100%;
-            min-height: 600px;
-        }
-
-        .image-section {
-            flex: 1;
-            background-color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .image-placeholder {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #2c2c2c, #404040);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #888;
-            font-size: 1.2rem;
-        }
-
-        .logo-overlay {
-            position: absolute;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            color: white;
-        }
-
-        .logo-text {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            letter-spacing: 2px;
-        }
-
-        .logo-subtitle {
-            font-size: 1.8rem;
-            font-weight: 300;
-            letter-spacing: 8px;
-        }
-
-        .form-section {
-            flex: 1;
-            padding: 60px 50px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .form-title {
-            font-size: 2rem;
-            font-weight: 400;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-subtitle {
-            color: #666;
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .form-row .form-group {
-            flex: 1;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.75rem 0;
-            border: none;
-            border-bottom: 1px solid #ddd;
-            background: transparent;
-            font-size: 1rem;
-            color: #333;
-            outline: none;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-input:focus {
-            border-bottom-color: #333;
-        }
-
-        .form-input::placeholder {
-            color: #999;
-            font-size: 0.95rem;
-        }
-
-        .create-btn {
-            width: 100%;
-            padding: 1rem;
-            background-color: #000;
-            color: white;
-            border: none;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-bottom: 1rem;
-            transition: background-color 0.3s ease;
-        }
-
-        .create-btn:hover {
-            background-color: #222;
-        }
-
-        .google-btn {
-            width: 100%;
-            padding: 1rem;
-            background-color: white;
-            color: #333;
-            border: 1px solid #ddd;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 2rem;
-            transition: background-color 0.3s ease;
-        }
-
-        .google-btn:hover {
-            background-color: #f9f9f9;
-        }
-
-        .google-icon {
-            width: 20px;
-            height: 20px;
-            background: conic-gradient(from -45deg, #ea4335, #4285f4, #34a853, #fbbc05, #ea4335);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .google-icon::after {
-            content: 'G';
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        .login-link {
-            text-align: center;
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        .login-link a {
-            color: #333;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-.signup-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* Ensures image covers the space */
-    display: block; /* Removes extra space below image */
-}
-.image-section {
-    position: relative;
-    overflow: hidden; /* Prevents image overflow */
-}
-.errorMessage{
-    color: red;
-    font-size: 0.75rem;
-    display: none;
-}
-.successMessage {
-    display: none;
-    color: green;
-    font-weight: bold;
-    margin-top: 1rem;
-    text-align: center;
-}
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-          .form-section {
-        padding: 2.5rem 2rem;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create an account - BookBazaar</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+  
+    .google-icon {
+      width: 20px;
+      height: 20px;
+      background: conic-gradient(from -45deg, #ea4335, #4285f4, #34a853, #fbbc05, #ea4335);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-            .signup-container {
-                flex-direction: column;
-                max-width: 400px;
-                margin: 1rem;
-            }
-
-            .image-section {
-                min-height: 200px;
-            }
-
-            .form-section {
-                padding: 2rem 1.5rem;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
-
-            .logo-text {
-                font-size: 2rem;
-            }
-
-            .logo-subtitle {
-                font-size: 1.4rem;
-                letter-spacing: 4px;
-            }
-        }
-    </style>
+    .google-icon::after {
+      content: 'G';
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .errorMessage {
+      color: red;
+      font-size: 0.8rem;
+      display: none;
+    }
+    .successMessage {
+      display: none;
+      color: green;
+      font-weight: bold;
+      margin-top: 1rem;
+      text-align: center;
+    }
+  </style>
 </head>
-<body>
-    <div class="signup-container">
-        <!-- Left side - Image section -->
-        <div class="image-section">
-            <!-- Placeholder for image - you can replace this with your actual image -->
-            <div class="image-placeholder">
-                <img src="/images/signup.png" alt="BookBazaar signup illustration" class="signup-image">
-            </div>
-            
-            <!-- Logo overlay -->
-            <!-- <div class="logo-overlay">
-                <div class="logo-text">BB</div>
-                <div class="logo-subtitle">BOOKBAZAAR</div>
-            </div> -->
-        </div>
+<body class="bg-light d-flex align-items-center justify-content-center vh-100">
 
-        <!-- Right side - Form section -->
-        <div class="form-section">
-            <h1 class="form-title">Create an account</h1>
-            <p class="form-subtitle">Enter your details below</p>
+  <div class="container">
+    <div class="row shadow bg-white overflow-hidden" style="max-width:900px; margin:auto; min-height:600px;">
 
+      <!-- Left side - Image section -->
+      <div class="col-md-6 d-flex align-items-center justify-content-center bg-dark p-0">
+        <img src="/images/signup.png" alt="BookBazaar signup illustration" class="img-fluid w-100 h-100" style="object-fit: contain;">
+      </div>
 
+      <!-- Right side - Form section -->
+      <div class="col-md-6 d-flex flex-column justify-content-center p-5">
+        <h1 class="h3 mb-2">Create an account</h1>
+        <p class="text-muted mb-4">Enter your details below</p>
 
+        <form method="post" action="/signup" id="signupForm">
+          <!-- Name -->
+          <div class="mb-3">
+            <input type="text" class="form-control border-0 border-bottom" placeholder="Full Name" name="name" id="name" required>
+            <div id="errorName" class="errorMessage"></div>
+          </div>
 
-            <form method="post" action="/signup" id="signupForm" >
-                <!-- Name fields -->
-                <div class="form-row">
-                   
-                    <div class="form-group">
-                        <input type="text" class="form-input" placeholder="Full Name" name="name" id="name" required>
-                    <div id="errorName" class="errorMessage"></div>
-                    </div>
-                </div>
+          <!-- Phone -->
+          <div class="mb-3">
+            <input type="tel" class="form-control border-0 border-bottom" placeholder="Phone" name="phone" id="phone" required>
+            <div id="errorPhone" class="errorMessage"></div>
+          </div>
 
-                <!-- Phone field -->
-                <div class="form-group">
-                    <input type="tel" class="form-input" placeholder="Phone" name="phone" id="phone" required>
-                    <div id="errorPhone" class="errorMessage"></div>
-                </div>
+          <!-- Email -->
+          <div class="mb-3">
+            <input type="email" class="form-control border-0 border-bottom" placeholder="Email" name="email" id="email" required>
+            <div id="errorEmail" class="errorMessage"></div>
+          </div>
 
-                <!-- Email field -->
-                <div class="form-group">
-                    <input type="email" class="form-input" placeholder="Email" name="email" id="email" required>
-                    <div id="errorEmail" class="errorMessage"></div>
-                </div>
+          <!-- Password -->
+          <div class="mb-3">
+            <input type="password" class="form-control border-0 border-bottom" placeholder="Password" name="password" id="password" required>
+            <div id="errorPassword" class="errorMessage"></div>
+          </div>
 
-                <!-- Password field -->
-                <div class="form-group">
-                    <input type="password" class="form-input" placeholder="Password" name="password" id="password" required>
-                    <div id="errorPassword" class="errorMessage"></div>
-                </div>
+          <!-- Confirm Password -->
+          <div class="mb-3">
+            <input type="password" class="form-control border-0 border-bottom" placeholder="Confirm Password" name="confirmPassword" id="confirmPassword" required>
+            <div id="errorConfirmPassword" class="errorMessage"></div>
+          </div>
 
-                <!-- Confirm Password field -->
-                <div class="form-group">
-                    <input type="password" class="form-input" placeholder="Confirm Password" name="confirmPassword" id="confirmPassword" required>
-                    <div id="errorConfirmPassword" class="errorMessage"></div>
-                </div>
+          <% if (locals.message && message.length > 0) { %>
+            <div class="alert alert-danger text-center"><%= message %></div>
+          <% } %>
 
-<% if (locals.message && message.length > 0) { %>
-    <div class="alert alert-danger text-center" style="
-        padding: 15px;
-        margin: 20px auto;
-        border-radius: 5px;
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        max-width: 80%;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        font-weight: 500;
-        animation: fadeIn 0.3s ease-in-out;
-    ">
-        <%= message %>
+          <!-- Create button -->
+          <button type="submit" class="btn btn-dark w-100 mb-3">Create Account</button>
+          <p class="successMessage" id="successMessage">Signup successful!</p>
+
+          <!-- Google signup -->
+          <a href="auth/google" class="btn btn-outline-secondary w-100 mb-4 d-flex align-items-center justify-content-center gap-2 text-decoration-none">
+            <div class="google-icon"></div>
+            Sign up with Google
+          </a>
+
+          <!-- Login link -->
+          <div class="text-center">
+            <small class="text-muted">Already have an account? <a href="/login" onclick="goToLogin()" class="fw-semibold text-decoration-none">Log in</a></small>
+          </div>
+        </form>
+      </div>
+
     </div>
-<% } %>
+  </div>
 
-<style>
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+  <script>
+   
+    const name = document.getElementById('name');
+    const phone = document.getElementById('phone');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const errorName = document.getElementById('errorName');
+    const errorPhone = document.getElementById('errorPhone');
+    const errorEmail = document.getElementById('errorEmail');
+    const errorPassword = document.getElementById('errorPassword');
+    const errorConfirmPassword = document.getElementById('errorConfirmPassword');
+    const signupForm = document.getElementById('signupForm');
 
-                <!-- Create Account button -->
-                <button type="submit" class="create-btn">Create Account</button>
-                 <p class="successMessage" id="successMessage">Signup successful!</p>
-
-                <!-- Google signup button -->
-                <a href="auth/google" class="google-btn" style="text-decoration: none;">
-                    <div class="google-icon"></div>
-                    Sign up with Google
-                </a>
-
-                <!-- Login link -->
-                <div class="login-link">
-                    Already have account? <a href="#" onclick="goToLogin()">Log in</a>
-                </div>
-               
-
-            </form>
-        </div>
-    </div>
-
-   <script> 
-
-const name = document.getElementById('name')
-const phone = document.getElementById('phone');
-const email = document.getElementById('email');
-const password = document.getElementById('password');
-const confirmPassword = document.getElementById('confirmPassword')
-const errorName = document.getElementById('errorName');
-const errorPhone = document.getElementById('errorPhone');
-const errorEmail = document.getElementById('errorEmail');
-const errorPassword=document.getElementById('errorPassword');
-const errorConfirmPassword = document.getElementById('errorConfirmPassword');
-const signupForm = document.getElementById('signupForm')
-
-function nameValidateChecking(){
-    const nameval = name.value;
-    const namePattern = /^[A-Za-z\s]+$/;
-    if(nameval.trim()===""){
+    function nameValidateChecking(){
+      const nameval = name.value;
+      const namePattern = /^[A-Za-z\s]+$/;
+      if(nameval.trim()===""){
         errorName.style.display='block';
-        errorName.innerHTML='please enter a valid name';
+        errorName.innerHTML='Please enter a valid name';
         return false;
-    }else if(!namePattern.test(nameval)){
+      }else if(!namePattern.test(nameval)){
         errorName.style.display='block';
         errorName.innerHTML='Name can only contain letters and spaces';
         return false;
-    }
-    else {
-        errorName.style.display='none';
-        errorName.innerHTML=''; 
-        return true;
-    }
-    
-}
-
-function emailValidateChecking() {
-    const emailval = email.value;
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-       if(emailval.trim()===""){
-        errorEmail.style.display='block';
-        errorEmail.innerHTML='please enter a valid email';
-        return false;
-    }else if(!emailPattern.test(emailval)){
-        errorEmail.style.display='block';
-        errorEmail.innerHTML='email id in invalid format';
-        return false;
-    }
-    else {
-        errorEmail.style.display='none';
-        errorEmail.innerHTML=''; 
-        return true;
-    }
-}
-
-function phoneValidateChecking() {
-    const phoneval = phone.value;
-    const phonepattern = /^(\+91[\-\s]?)?[0]?(6|7|8|9)\d{9}$/;
-     if(phoneval.trim()===""){
-        errorPhone.style.display='block';
-        errorPhone.innerHTML='please enter a valid phone number';
-        return false;
-    }else if(!phonepattern.test(phoneval)){
-       errorPhone.style.display='block';
-        errorPhone.innerHTML='phone number is in invalid format';
-        return false;
-    }
-    else {
-        errorPhone.style.display='none';
-        errorPhone.innerHTML=''; 
-        return true;
-    }
-}
-
-function passwordValidateChecking(){
-    const passwordval = password.value;
-    const confirmPasswordval = confirmPassword.value;
-    const passwordPattern =  /^[A-Za-z0-9]{8,}$/;
-    if(passwordval.trim()===""){
-        errorPassword.style.display='block';
-        errorPassword.innerHTML='password should not be empty';
-        return false;
-    }else if(!passwordPattern.test(passwordval)){
-      errorPassword.style.display='block';
-        errorPassword.innerHTML='password should contain atleast 8 letters and only letters and digits are allowed';
-        return false;
-    }else if(passwordval !== confirmPasswordval){
-       errorConfirmPassword.style.display='block';
-        errorConfirmPassword.innerHTML='password donot match'; 
-        return false;
-    }
-    else {
-        errorPassword.style.display='none';
-        errorPassword.innerHTML=''; 
-        return true;
+      } else {
+        errorName.style.display='none'; return true;
+      }
     }
 
-    function confirmPasswordValidateChecking() {
-    const passwordval = password.value;
-    const confirmPasswordval = confirmPassword.value;
-
-    if (confirmPasswordval.trim() === "") {
-        errorConfirmPassword.style.display = 'block';
-        errorConfirmPassword.innerHTML = 'Please confirm your password';
-        return false;
-    } else if (passwordval !== confirmPasswordval) {
-        errorConfirmPassword.style.display = 'block';
-        errorConfirmPassword.innerHTML = 'Passwords do not match';
-        return false;
-    } else {
-        errorConfirmPassword.style.display = 'none';
-        errorConfirmPassword.innerHTML = '';
-        return true;
+    function emailValidateChecking() {
+      const emailval = email.value;
+      const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if(emailval.trim()===""){
+        errorEmail.style.display='block'; errorEmail.innerHTML='Please enter a valid email'; return false;
+      }else if(!emailPattern.test(emailval)){
+        errorEmail.style.display='block'; errorEmail.innerHTML='Email format invalid'; return false;
+      } else {
+        errorEmail.style.display='none'; return true;
+      }
     }
-}
 
-    
+    function phoneValidateChecking() {
+      const phoneval = phone.value;
+      const phonepattern = /^(\+91[\-\s]?)?[0]?(6|7|8|9)\d{9}$/;
+      if(phoneval.trim()===""){
+        errorPhone.style.display='block'; errorPhone.innerHTML='Please enter a valid phone number'; return false;
+      }else if(!phonepattern.test(phoneval)){
+        errorPhone.style.display='block'; errorPhone.innerHTML='Invalid phone number format'; return false;
+      } else {
+        errorPhone.style.display='none'; return true;
+      }
+    }
 
+    function passwordValidateChecking(){
+      const passwordval = password.value;
+      const confirmPasswordval = confirmPassword.value;
+      const passwordPattern = /^[A-Za-z0-9]{8,}$/;
+      if(passwordval.trim()===""){
+        errorPassword.style.display='block'; errorPassword.innerHTML='Password should not be empty'; return false;
+      }else if(!passwordPattern.test(passwordval)){
+        errorPassword.style.display='block'; errorPassword.innerHTML='Password must be at least 8 characters (letters/digits only)'; return false;
+      }else if(passwordval !== confirmPasswordval){
+        errorConfirmPassword.style.display='block'; errorConfirmPassword.innerHTML='Passwords do not match'; return false;
+      } else {
+        errorPassword.style.display='none'; errorConfirmPassword.style.display='none'; return true;
+      }
+    }
 
-}
-
-
-document.addEventListener('DOMContentLoaded',()=>{
-    signupForm.addEventListener('submit',(e)=>{
-
-   const nameValid= nameValidateChecking();
-   const emailValid= emailValidateChecking();
-   const phoneValid = phoneValidateChecking();
-  const passwordValid = passwordValidateChecking();
-   const confirmPasswordValid = confirmPasswordValidateChecking();
-
-if (!(nameValid && emailValid && phoneValid && passwordValid && confirmPasswordValid)) {
-            e.preventDefault(); 
-        }
-
-    })
-})
-
-</script>
+    document.addEventListener('DOMContentLoaded',()=>{
+      signupForm.addEventListener('submit',(e)=>{
+        const valid = nameValidateChecking() && emailValidateChecking() && phoneValidateChecking() && passwordValidateChecking();
+        if(!valid){ e.preventDefault(); }
+      });
+    });
+  </script>
 </body>
 </html>
