@@ -352,6 +352,59 @@ try {
   }
 }
 
+const getBookDetails = async (req,res)=>{
+
+
+    try {
+    const productId = req.params.id;
+    const product = await Product.findById(productId).populate("category");
+
+    if (!product) {
+      return res.status(404).send("Book not found");
+    }
+
+    // Map DB product 
+    const book = {
+      title: product.productName,
+      author: product.brand || "Unknown Author",
+      pages: product.pages || 0, // default
+      language: product.language || "English",
+      published: product.createdAt ? product.createdAt.toDateString() : "N/A",
+      isbn: product.isbn || "N/A",
+      price: product.salePrice || 0,
+      oldPrice: product.regularPrice || 0,
+      stock: product.quantity > 0,
+      rating: product.rating || 4.0,       // default
+      reviews: product.reviews || 0,       // default
+      description: product.description || "No description available.",
+      benefits: product.benefits && product.benefits.length > 0 
+                  ? product.benefits 
+                  : [
+                      "Sustainable Change",
+                      "Compounding Growth",
+                      "Improved Discipline"
+                    ], // default
+      coverImg: product.productImage && product.productImage.length > 0 
+                  ? product.productImage[0] 
+                  : "/images/no-image.png",
+      thumbnails: product.productImage && product.productImage.length > 1 
+                    ? product.productImage.slice(1) 
+                    : []
+    };
+
+    res.render("bookDetails", {
+      book,
+      user: req.session.user || null,
+      active: "books"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+}
+
+
 const filterProduct = async (req,res)=>{
     try {
         const user = req.session.user;
@@ -381,6 +434,8 @@ const filterProduct = async (req,res)=>{
 }
 
 const test = async (req,res)=>{
+
+
     
     try {
         res.render('test',{
@@ -405,6 +460,7 @@ module.exports = {
     login,
     logout,
     loadshoppingPage,
+    getBookDetails,
     filterProduct,
     test,
 };

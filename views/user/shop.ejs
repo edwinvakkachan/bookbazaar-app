@@ -112,24 +112,34 @@
         </div>
 
         <!-- Product Grid -->
+
+
         <div class="row">
-          <% for (let i = 0; i < products.length; i++) { %>
-            <div class="col-md-4 mb-4">
-              <div class="card h-100">
-                <img src="<%= products[i].productImage[0] %>" class="card-img-top" alt="<%= products[i].productName %>">
-                <div class="card-body">
-                  <h6 class="card-title"><%= products[i].productName %></h6>
-                  <p class="mb-1">Brand: <%= products[i].brand %></p>
-                  <p>
-                    ₹<%= products[i].salePrice %>
-                    <span class="text-muted"><strike>₹<%= products[i].regularPrice %></strike></span>
-                  </p>
-                  <button class="btn btn-sm btn-primary">Add to Cart</button>
-                </div>
-              </div>
-            </div>
-          <% } %>
+  <% for (let i = 0; i < products.length; i++) { %>
+    <div class="col-md-4 mb-4">
+      <div class="card h-100">
+        <img src="<%= products[i].productImage[0] %>" class="card-img-top" alt="<%= products[i].productName %>">
+        <div class="card-body">
+          <h6 class="card-title"><%= products[i].productName %></h6>
+          <p class="mb-1">Brand: <%= products[i].brand %></p>
+          <p>
+            ₹<%= products[i].salePrice %>
+            <span class="text-muted"><strike>₹<%= products[i].regularPrice %></strike></span>
+          </p>
+          
+          <div class="d-flex justify-content-between">
+            <a href="/book/<%= products[i]._id %>" class="btn btn-sm btn-outline-info">
+              View Details
+            </a>
+            <button class="btn btn-sm btn-primary">Add to Cart</button>
+          </div>
         </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+
 
         <!-- Pagination -->
         <div class="pagination mt-4">

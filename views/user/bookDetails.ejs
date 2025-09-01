@@ -1,0 +1,72 @@
+<%- include("../partials/user/header.ejs") %>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item"><a href="/shop">Books</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Book Details</li>
+        </ol>
+      </nav>
+
+      <!-- Book Details Card -->
+      <div class="card shadow-sm">
+        <div class="row g-0">
+          <!-- Book Images -->
+           
+          <div class="col-md-4 text-center p-3">
+            <img src="<%= book.coverImg %>" class="img-fluid rounded border mb-3" alt="<%= book.title %>">
+            <div class="d-flex justify-content-center gap-2">
+              <% book.thumbnails.forEach(img => { %>
+                <img src="<%= img %>" class="img-thumbnail" style="width:80px; height:auto;" alt="Thumbnail">
+              <% }) %>
+            </div>
+          </div>
+
+          <!-- Book Info -->
+          <div class="col-md-8 p-3">
+            <h4><%= book.title %></h4>
+            <p class="text-muted mb-1">by <%= book.author %></p>
+            <p>
+              <strong><%= book.pages %></strong> pages | <%= book.language %><br>
+              Published: <%= book.published %><br>
+              ISBN: <%= book.isbn %>
+            </p>
+
+            <div class="mb-2">
+              ⭐ <%= book.rating %> (<%= book.reviews %> Reviews)
+              <% if (book.stock) { %>
+                <span class="badge bg-success">In Stock</span>
+              <% } else { %>
+                <span class="badge bg-danger">Out of Stock</span>
+              <% } %>
+            </div>
+
+            <h5 class="text-success">₹<%= book.price %> 
+              <small class="text-muted text-decoration-line-through">₹<%= book.oldPrice %></small>
+            </h5>
+
+            <p class="mt-3"><%= book.description %></p>
+
+            <h6>Benefits</h6>
+            <ul>
+              <% book.benefits.forEach(benefit => { %>
+                <li><%= benefit %></li>
+              <% }) %>
+            </ul>
+
+            <div class="mt-3">
+              <p><i class="bi bi-truck"></i> Free Delivery</p>
+              <p><i class="bi bi-arrow-repeat"></i> Free 30 Days Delivery Returns</p>
+            </div>
+          </div>
+        </div>
+      </div><!-- /card -->
+    </div>
+  </div>
+</div>
+
+ <%- include("../partials/user/footer.ejs") %>
