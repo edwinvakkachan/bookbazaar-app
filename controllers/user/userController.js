@@ -142,12 +142,18 @@ for (const p of bestCategoryData) {
 
     if(user){
         const userData  = await User.findOne({_id:user._id})
-        res.render('home',{user:userData,products:productData,bestSelling:bestSellingData,popularCategory:unique}) //prodcut data passed
+        res.render('home',{
+            user:userData,
+            products:productData,
+            bestSelling:bestSellingData,
+            active: "home", 
+            popularCategory:unique}) //prodcut data passed
     }else{
         return res.render('home',{
             products:productData,
             bestSelling:bestSellingData, 
-            popularCategory:unique
+            popularCategory:unique,
+            active: "home",
         });
     }
 
@@ -286,46 +292,64 @@ const logout = async(req,res)=>{
 
 
 const loadshoppingPage = async (req,res)=>{
-    try {
-        const user = req.session.user;
-        const userData = await User.findOne({_id:user});
-        const categories = await Category.find({isListed:true});
-        const categoryIds = categories.map((a)=>a._id.toString());
-        // console.log(categoryIds);
-        const page = parseInt(req.query.page) || 1;
-        const limit = 9;
-        const skip = (page-1)*limit;
-        const products = await Product.find({
-            isBlocked:false,
-            category:{$in:categoryIds},
-            quantity:{$gt:0},
-        }).sort({createdAt:-1}).skip(skip).limit(limit);
+try {
+    let { category, brand, price, sort, page = 1 } = req.query;
 
-        const totalProducts = await Product.countDocuments({
-            isBlocked:false,
-            category:{$in:categoryIds},
-            quantity:{$gt:0},
-        });
-        const totalPages = Math.ceil(totalProducts/limit);
-        // console.log("total pages are ",totalPages)
+    const limit = 9; // products per page
+    const skip = (page - 1) * limit;
 
-        const brands = await Brand.find({isBlocked:false});
-        const categoriesWithIds = categories.map(category=>({_id:category._id,name:category.name}))
-         //console.log(categoriesWithIds)
-    
+    let query = {};
 
-        res.render('shop',{
-            user:userData,
-            products:products,
-            category:categoriesWithIds,
-            brand:brands,
-            totalProducts:totalProducts,
-            currentPage:page,
-            totalPages:totalPages
-        })
-    } catch (error) {
-        console.error('shoping page render error',error)
+    // Category filter (single or multiple)
+    if (category) {
+      // allow multiple categories with comma separated ids
+      query.category = { $in: category.split(",") };
     }
+
+    // Brand filter
+    if (brand) {
+      query.brand = { $in: brand.split(",") };
+    }
+
+    // Price filter
+    if (price) {
+      if (price === "under100") query.salePrice = { $lt: 100 };
+      if (price === "100-250") query.salePrice = { $gte: 100, $lte: 250 };
+      if (price === "250-500") query.salePrice = { $gte: 250, $lte: 500 };
+      if (price === "above500") query.salePrice = { $gt: 500 };
+    }
+
+    // Sorting
+    let sortQuery = {};
+    if (sort === "popularity") sortQuery.sold = -1; // assume "sold" field in Product
+    if (sort === "newest") sortQuery.createdAt = -1;
+    if (sort === "priceAsc") sortQuery.salePrice = 1;
+    if (sort === "priceDesc") sortQuery.salePrice = -1;
+
+    // Fetch products
+    const products = await Product.find(query)
+      .sort(sortQuery)
+      .skip(skip)
+      .limit(limit);
+
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    // Render view
+    res.render("shop", {
+      products,
+      category: await Category.find(),
+      brand: await Brand.find(),
+      currentPage: Number(page),
+      totalPages,
+      active: "books",
+      query: req.query, //check this 
+      sort, // pass current sort
+    });
+  } catch (error) {
+    console.error("Shop error:", error);
+    res.status(500).send("Server Error");
+  }
 }
 
 const filterProduct = async (req,res)=>{

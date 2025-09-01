@@ -1,103 +1,183 @@
 <%- include("../partials/user/header.ejs") %>
 
-
-
 <div class="main-container">
- <section class="shop-page container">
-   <div class="shop-topbar">
-     <div class="search-bar">
-       <form action="" method="POST" class="search-form">
-         <input type="text" name="query" placeholder="Search items..." class="search-input" />
-         <button type="submit" class="search-button">Search</button>
-       </form>
-     </div>
-   </div>
-  
-   <div class="product-list-container">
-     <aside class="sidebar">
-       <div class="filter-section">
-         <div class="filter-title">Categories</div>
-         <div class="category-brand-container">
-           <ul>
-            <%for(let i=0;i<category.length;i++){%>
-               <li class="filter-item">
-                 <a href="/filter?category=<%category[i]._id%>"><%=category[i].name%></a>
-               </li>
-               <%}%>
-           </ul>
-         </div>
-       </div>
+  <section class="shop-page container">
+    <div class="row">
+      <!-- Sidebar Filters -->
+
+<aside class="col-md-3">
+  <div class="filter-box border p-3 rounded">
+    <h5 class="fw-bold">Filters</h5>
+    <hr>
+
+    <!-- Category Filter -->
+    <div class="mb-3">
+      <h6 class="d-flex justify-content-between align-items-center">
+        Categories
+      </h6>
+      <% for (let i = 0; i < category.length; i++) { %>
+        <div class="form-check">
 
 
-      
-       <div class="filter-section">
-         <div class="filter-title">Brands</div>
-         <div class="category-brand-container">
-           <ul>
-            <%for(let i=0;i<brand.length;i++){%>
-               <li class="filter-item">
-                 <a href="/filter?brand=<%brand[i]._id%>"><%=brand[i].brandName%></a>
-               </li>
-               <%}%>
-           </ul>
-         </div>
-       </div>
+         <input class="form-check-input"
+       type="checkbox"
+       id="cat-<%= category[i]._id %>"
+       onclick="applyFilter('category','<%= category[i]._id %>')"
+       <%= (query.category && query.category.split(',').includes(category[i]._id.toString())) 
+            ? 'checked' : '' %> >
 
 
-      
-       <div class="price-filter">
-         <div class="filter-title">Filter by Price</div>
-         <form id="price-filter-form">
-           <div class="price-options">
-             <a href=""><button type="button" class="price-button">Under ₹100</button></a>
-             <a href=""><button type="button" class="price-button">₹100 - ₹250</button></a>
-             <a href=""><button type="button" class="price-button">₹250- ₹500</button></a>
-             <a href=""><button type="button" class="price-button">Above ₹500</button></a>
-           </div>
-         </form>
-       </div>
-     </aside>
 
 
-     <main class="product-grid">
-        <%for(let i=0;i<products.length;i++){%>
-         <div class="product-card">
-           <span class="wishlist-btn" onclick="">❤️</span>
-           <a href="" style="color:black; text-decoration:none;">
-             <img src="<%=products[i].productImage[0]%>" alt="<%=products[i].productName%>" />
-             <h4><%=products[i].productName%></h4>
-             <p>Brand:<%=products[i].brand%></p>
-             <p>Price:₹<%=products[i].salePrice%> <span class="text-muted "><strike style="color: red;">₹<%=products[i].regularPrice%></strike></span></p>
-           </a>
-           <button class="add-to-cart-btn" onclick="">Add to Cart</button>
-         </div>
-         <%}%>
-     </main>
-   </div>
+          <label class="form-check-label" for="cat-<%= category[i]._id %>">
+            <%= category[i].name %>
+          </label>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Brand Filter -->
+    <div class="mb-3">
+      <h6>Brands</h6>
+      <% for (let i = 0; i < brand.length; i++) { %>
+        <div class="form-check">
 
 
-<!-- Pagination -->
-   <div class="pagination">
-     <% if (currentPage > 1) { %>
-       <a class="btn" href="/shop?page=<%= currentPage - 1 %>">Prev</a>
-     <% } %>
+      <input class="form-check-input"
+       type="checkbox"
+       id="brand-<%= brand[i].brandName %>"
+       onclick="applyFilter('brand','<%= brand[i].brandName %>')"
+       <%= (query.brand && query.brand.split(',').includes(brand[i].brandName)) 
+            ? 'checked' : '' %> >
+
+<label class="form-check-label" for="brand-<%= brand[i].brandName %>">
+  <%= brand[i].brandName %>
+</label>
 
 
-     <% for (let i = 1; i <= totalPages; i++) { %>
-       <a class="btn <%= currentPage === i ? 'active' : '' %>" href="/shop?page=<%= i %>"><%= i %></a>
-     <% } %>
 
 
-     <% if (currentPage < totalPages) { %>
-       <a class="btn" href="/shop?page=<%= currentPage + 1 %>">Next</a>
-     <% } %>
+        </div>
+      <% } %>
+    </div>
 
-   </div>
-  
- </section>
+    <!-- Price Filter -->
+    <div class="mb-3">
+      <h6>Price</h6>
+      <div class="d-flex flex-column gap-2">
+        
+        <button type="button" class="btn btn-outline-primary 
+                <%= query.price === 'under100' ? 'active' : '' %>"
+                onclick="applyFilter('price','under100')">Under ₹100</button>
+
+        <button type="button" class="btn btn-outline-primary 
+                <%= query.price === '100-250' ? 'active' : '' %>"
+                onclick="applyFilter('price','100-250')">₹100 - ₹250</button>
+
+        <button type="button" class="btn btn-outline-primary 
+                <%= query.price === '250-500' ? 'active' : '' %>"
+                onclick="applyFilter('price','250-500')">₹250 - ₹500</button>
+
+        <button type="button" class="btn btn-outline-primary 
+                <%= query.price === 'above500' ? 'active' : '' %>"
+                onclick="applyFilter('price','above500')">Above ₹500</button>
+      </div>
+    </div>
+  </div>
+</aside>
+
+
+      <!-- Products + Sorting -->
+      <main class="col-md-9">
+        <!-- Sort bar -->
+        <div class="d-flex justify-content-end mb-3">
+          <ul class="nav nav-pills">
+            <li class="nav-item">
+              <a class="nav-link <%= sort === 'popularity' ? 'active' : '' %>"
+                 href="/shop?sort=popularity">Popularity</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= sort === 'newest' ? 'active' : '' %>"
+                 href="/shop?sort=newest">Newest First</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= sort === 'priceAsc' ? 'active' : '' %>"
+                 href="/shop?sort=priceAsc">Price Low - High</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= sort === 'priceDesc' ? 'active' : '' %>"
+                 href="/shop?sort=priceDesc">Price High - Low</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="row">
+          <% for (let i = 0; i < products.length; i++) { %>
+            <div class="col-md-4 mb-4">
+              <div class="card h-100">
+                <img src="<%= products[i].productImage[0] %>" class="card-img-top" alt="<%= products[i].productName %>">
+                <div class="card-body">
+                  <h6 class="card-title"><%= products[i].productName %></h6>
+                  <p class="mb-1">Brand: <%= products[i].brand %></p>
+                  <p>
+                    ₹<%= products[i].salePrice %>
+                    <span class="text-muted"><strike>₹<%= products[i].regularPrice %></strike></span>
+                  </p>
+                  <button class="btn btn-sm btn-primary">Add to Cart</button>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination mt-4">
+          <% if (currentPage > 1) { %>
+            <a class="btn btn-outline-dark" href="/shop?page=<%= currentPage - 1 %>">Prev</a>
+          <% } %>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <a class="btn <%= currentPage === i ? 'btn-dark' : 'btn-outline-dark' %>"
+               href="/shop?page=<%= i %>"><%= i %></a>
+          <% } %>
+          <% if (currentPage < totalPages) { %>
+            <a class="btn btn-outline-dark" href="/shop?page=<%= currentPage + 1 %>">Next</a>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </section>
 </div>
 
-   <%- include("../partials/user/footer.ejs") %>
+
+<script>
+  function applyFilter(type, value) {
+    const params = new URLSearchParams(window.location.search);
+    let current = params.get(type) ? params.get(type).split(",") : [];
+
+    if (type === "price") {
+      // price is single-select → replace value
+      params.set(type, value);
+    } else {
+      // categories / brands → allow multiple selections
+      if (current.includes(value)) {
+        current = current.filter(v => v !== value); // remove
+      } else {
+        current.push(value); // add
+      }
+
+      if (current.length > 0) {
+        params.set(type, current.join(","));
+      } else {
+        params.delete(type);
+      }
+    }
+
+    params.set("page", 1); // reset pagination when filtering
+    window.location.href = "/shop?" + params.toString();
+  }
+</script>
 
 
 
+<%- include("../partials/user/footer.ejs") %>

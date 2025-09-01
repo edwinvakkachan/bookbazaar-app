@@ -32,12 +32,23 @@ app.use((req, res, next) => {
 
 //middleware for frontend 
 // app.js
+// app.use((req, res, next) => {
+//   res.locals.active = '';                 // default for nav highlight
+//   res.locals.user = req.user || null;     // always defined
+//   res.locals.cartCount = 0;               // or compute from session
+//   next();
+// });
+
 app.use((req, res, next) => {
-  res.locals.active = '';                 // default for nav highlight
-  res.locals.user = req.user || null;     // always defined
-  res.locals.cartCount = 0;               // or compute from session
+    // res.locals.active = ''; 
+  res.locals.user = req.session.user || null;
+  res.locals.cartCount = req.session.cartCount || 0; // optional
   next();
 });
+
+
+
+
 
 
 app.use((req, res, next) => {
