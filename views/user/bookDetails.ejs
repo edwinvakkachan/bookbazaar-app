@@ -97,17 +97,65 @@
 
             <p class="mt-3"><%= book.description %></p>
 
-            <h6>Benefits</h6>
+              <!-- Action Buttons -->
+<div class="d-flex align-items-center gap-2 mt-4">
+  <!-- Quantity Selector -->
+  <div class="input-group" style="width: 120px;">
+    <button class="btn btn-outline-secondary" type="button">-</button>
+    <input type="text" class="form-control text-center" value="1">
+    <button class="btn btn-outline-secondary" type="button">+</button>
+  </div>
+
+  <!-- Add to Cart -->
+  <button class="btn btn-dark">Add to Cart</button>
+
+  <!-- Wishlist -->
+  <button class="btn btn-outline-secondary">
+    <i class="bi bi-heart"></i>
+  </button>
+</div>
+
+<!-- Buy Now -->
+<div class="mt-3">
+  <button class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
+</div>
+
+
+<!-- Delivery Info -->
+<div class="mt-4 border rounded">
+  <div class="p-3 border-bottom">
+    <h6 class="mb-1 d-flex align-items-center text-dark">
+      <i class="bi bi-truck me-2 fs-5"></i> Free Delivery
+    </h6>
+    <small class="text-dark">
+      <a href="#" class="text-decoration-underline text-dark">Enter your postal code for Delivery Availability</a>
+    </small>
+  </div>
+  <div class="p-3">
+    <h6 class="mb-1 d-flex align-items-center text-dark">
+      <i class="bi bi-arrow-repeat me-2 fs-5"></i> Return Delivery
+    </h6>
+    <small class="text-dark">
+      Free 30 Days Delivery Returns. 
+      <a href="#" class="text-decoration-underline text-dark">Details</a>
+    </small>
+  </div>
+</div>
+
+
+
+
+            <!-- <h6>Benefits</h6>
             <ul>
               <% book.benefits.forEach(benefit => { %>
                 <li><%= benefit %></li>
               <% }) %>
-            </ul>
+            </ul> -->
 
-            <div class="mt-3">
+            <!-- <div class="mt-3">
               <p><i class="bi bi-truck"></i> Free Delivery</p>
               <p><i class="bi bi-arrow-repeat"></i> Free 30 Days Delivery Returns</p>
-            </div>
+            </div> -->
           </div>
         </div>
       </div><!-- /card -->
