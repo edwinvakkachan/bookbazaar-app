@@ -84,7 +84,7 @@ const signup = async(req,res)=>{
 
 const pageNotFound = async (req,res)=>{
     try {
-        return res.render('page-404') 
+        return res.render('pageNotFound') 
     } catch (error) {
         console.error('page not found rendering error',error.message);
         res.redirect('/pageNotFound')
@@ -289,29 +289,164 @@ const logout = async(req,res)=>{
     }
 }
 
+const loadForgotPassword = async (req,res)=>{
+    try {
+        res.render('forgotPassword')
+    } catch (error) {
+        console.error('Error loading forgot passsword',error)
+        res.redirect('/pageNotFound')
+    }
+}
+
+const forgotPasswordSendOtp =async (req,res)=>{
+     try {
+    const { email } = req.body;
+
+    
+    if (!email || email.trim() === "") {
+      return res.render("forgotPassword", { error: "Email is required"});
+    }
+
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.render("forgotPassword", { error: "Please enter a valid email address"});
+    }
+
+    
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.render("forgotPassword", { error: "No account found with this email"});
+    }
+
+    
+    const otp = generateOtp();
+    const emailSent = await sendVerificationEmail(email, otp);
+
+    if (emailSent) {
+      req.session.forgotOtp = otp;
+      req.session.resetEmail = email;
+      console.log("Forgot password OTP:", otp);
+
+      return res.render("resetPassword", {
+        email,
+        success: "OTP sent to your email!",
+      });
+    } else {
+      return res.render("forgotPassword", {
+        error: "Failed to send OTP. Please try again."
+      });
+    }
+  } catch (error) {
+    console.error("Error sending forgot password OTP:", error);
+    res.render("forgotPassword", { error: "Something went wrong. Please try again." });
+  }
+}
+
+const loadResetPassword = async (req,res)=>{
+    try {
+        res.render('resetPassword')
+    } catch (error) {
+        console.error('error loading resetPassword page',error)
+        res.redirect('/pageNotFound')
+    }
+}
+
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, password, confirmPassword } = req.body;
+
+    
+    if (!req.session.forgotOtp || !req.session.resetEmail) {
+      return res.render('forgotPassword', { error: 'OTP expired. Try again.' });
+    }
+
+    
+    if (otp.toString() !== req.session.forgotOtp.toString() || email !== req.session.resetEmail) {
+      return res.render('resetPassword', { email, error: 'Invalid OTP' });
+    }
+
+    
+    if (password.length < 6) {
+      return res.render('resetPassword', { email, error: 'Password must be at least 6 characters long.' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.render('resetPassword', { email, error: 'Passwords do not match' });
+    }
+
+  
+    const hashedPassword = await securePassword(password);
+    await User.findOneAndUpdate({ email }, { password: hashedPassword });
+
+    
+    delete req.session.forgotOtp;
+    delete req.session.resetEmail;
+
+    return res.redirect('/login');
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.redirect('/pageNotFound');
+  }
+};
+
+
+
+
+const resendForgotOtp = async (req, res) => {
+  try {
+    const email = req.session.resetEmail;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Session expired. Please request again.'
+      });
+    }
+
+    const otp = generateOtp();
+    req.session.forgotOtp = otp;
+
+    const emailSent = await sendVerificationEmail(email, otp);
+    if (emailSent) {
+      console.log('Resent forgot password OTP:', otp);
+      return res.json({ success: true, message: 'A new OTP has been sent to your email!' });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to resend OTP. Please try again.'
+      });
+    }
+  } catch (error) {
+    console.error('Error resending forgot password OTP:', error);
+    
+    res.status(500).json({ success: false, message: 'Internal server error. Try again.' });
+  }
+};
+
 
 
 const loadshoppingPage = async (req,res)=>{
 try {
     let { category, brand, price, sort, page = 1 } = req.query;
 
-    const limit = 9; // products per page
+    const limit = 9; // book  per page
     const skip = (page - 1) * limit;
 
     let query = {};
 
-    // Category filter (single or multiple)
+    
     if (category) {
-      // allow multiple categories with comma separated ids
+      
       query.category = { $in: category.split(",") };
     }
 
-    // Brand filter
+   
     if (brand) {
       query.brand = { $in: brand.split(",") };
     }
 
-    // Price filter
+    
     if (price) {
       if (price === "under100") query.salePrice = { $lt: 100 };
       if (price === "100-250") query.salePrice = { $gte: 100, $lte: 250 };
@@ -319,14 +454,14 @@ try {
       if (price === "above500") query.salePrice = { $gt: 500 };
     }
 
-    // Sorting
+    
     let sortQuery = {};
-    if (sort === "popularity") sortQuery.sold = -1; // assume "sold" field in Product
+    if (sort === "popularity") sortQuery.sold = -1; 
     if (sort === "newest") sortQuery.createdAt = -1;
     if (sort === "priceAsc") sortQuery.salePrice = 1;
     if (sort === "priceDesc") sortQuery.salePrice = -1;
 
-    // Fetch products
+    
     const products = await Product.find(query)
       .sort(sortQuery)
       .skip(skip)
@@ -335,7 +470,7 @@ try {
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
 
-    // Render view
+   
     res.render("shop", {
       products,
       category: await Category.find(),
@@ -461,6 +596,11 @@ module.exports = {
     logout,
     loadshoppingPage,
     getBookDetails,
+    loadForgotPassword,
+    forgotPasswordSendOtp,
+    loadResetPassword,
+    resetPassword,
+    resendForgotOtp,
     filterProduct,
     test,
 };

@@ -25,19 +25,31 @@ app.use(session({
 }))
 app.use(passport.initialize());
 app.use(passport.session());
-app.use((req, res, next) => {
-    res.locals.user = req.user || req.session.user || null;
-    next();
-});
 
-// middleware for user deatails nav bar
 
-app.use((req, res, next) => {
+// app.use((req, res, next) => {
+//     res.locals.user = req.user || req.session.user || null;
+//     next();
+// });
+
+// // middleware for user deatails nav bar
+
+// app.use((req, res, next) => {
     
-  res.locals.user = req.session.user || null;
-  res.locals.cartCount = req.session.cartCount || 0; 
+//   res.locals.user = req.session.user || null;
+//   res.locals.cartCount = req.session.cartCount || 0; 
+//   res.locals.active = '';
+//   next();
+// });
+
+
+app.use((req, res, next) => {
+  res.locals.user = req.user || req.session.user || null;
+  res.locals.cartCount = req.session.cartCount || 0;
+  res.locals.active = '';
   next();
 });
+
 
 
 
@@ -64,7 +76,7 @@ app.use('/admin',adminRoute)
 
 
 app.listen(process.env.PORT,()=>{
-    console.log('server is running in the port 3000')
+    console.log(`server is running in the port ${process.env.PORT}`)
 })
 
 module.exports = app;

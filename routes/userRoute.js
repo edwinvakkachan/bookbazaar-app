@@ -17,6 +17,12 @@ router.get('/login',userController.loadLogin);
 router.post('/login',userController.login);
 router.get('/logout',userController.logout);
 
+router.get('/forgotPassword',userController.loadForgotPassword)
+router.post('/forgotPassword',userController.forgotPasswordSendOtp)
+router.get('/resetPassword',userController.loadResetPassword)
+router.post('/resetPassword',userController.resetPassword)
+router.post('/forgotPassword/resend', userController.resendForgotOtp);
+
 //product page
 router.get('/shop',userAuth, userController.loadshoppingPage);
 router.get('/filter',userController.filterProduct);
