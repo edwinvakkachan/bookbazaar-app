@@ -16,15 +16,61 @@
       <div class="card shadow-sm">
         <div class="row g-0">
           <!-- Book Images -->
-           
+
           <div class="col-md-4 text-center p-3">
-            <img src="<%= book.coverImg %>" class="img-fluid rounded border mb-3" alt="<%= book.title %>">
-            <div class="d-flex justify-content-center gap-2">
-              <% book.thumbnails.forEach(img => { %>
-                <img src="<%= img %>" class="img-thumbnail" style="width:80px; height:auto;" alt="Thumbnail">
-              <% }) %>
-            </div>
+  <!-- Main Image -->
+  <img id="mainImage" 
+       src="<%= book.coverImg %>" 
+       class="img-fluid rounded border mb-3" 
+       alt="<%= book.title %>" 
+       style="cursor: zoom-in;"
+       data-bs-toggle="modal" data-bs-target="#imageModal">
+
+  <!-- Thumbnails -->
+  <div class="d-flex justify-content-center gap-2">
+    <% book.thumbnails.forEach((img, index) => { %>
+      <img src="<%= img %>" 
+           class="img-thumbnail thumb-image <%= index === 0 ? 'border border-2 border-primary' : '' %>" 
+           style="width:80px; height:auto; cursor:pointer;" 
+           alt="Thumbnail">
+    <% }) %>
+  </div>
+</div>
+
+
+
+
+<!-- Image Preview Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0">
+        <div id="imageCarousel" class="carousel slide" data-bs-ride="false">
+          <div class="carousel-inner">
+            <% [book.coverImg, ...book.thumbnails].forEach((img, index) => { %>
+              <div class="carousel-item <%= index === 0 ? 'active' : '' %> text-center">
+                <img src="<%= img %>" 
+                     class="img-fluid w-100" 
+                     style="max-height: 80vh; object-fit: contain;" 
+                     alt="Preview">
+              </div>
+            <% }) %>
           </div>
+          <!-- Controls -->
+          <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon bg-dark rounded-circle p-3"></span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon bg-dark rounded-circle p-3"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 
           <!-- Book Info -->
           <div class="col-md-8 p-3">
@@ -68,5 +114,42 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const mainImage = document.getElementById("mainImage");
+    const thumbs = document.querySelectorAll(".thumb-image");
+    const carousel = document.getElementById("imageCarousel");
+    const carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
+
+    // When main image clicked → open modal and sync carousel to current image
+    mainImage.addEventListener("click", function() {
+      const currentSrc = this.src;
+      const items = carousel.querySelectorAll(".carousel-item");
+      items.forEach((item, index) => {
+        const img = item.querySelector("img");
+        if (img.src.includes(currentSrc)) {
+          carouselInstance.to(index);
+        }
+      });
+    });
+
+    // Thumbnails → update main image + highlight + sync carousel
+    thumbs.forEach((thumb, index) => {
+      thumb.addEventListener("click", function() {
+        mainImage.src = this.src;
+
+        // Highlight selected thumb
+        thumbs.forEach(t => t.classList.remove("border", "border-2", "border-primary"));
+        this.classList.add("border", "border-2", "border-primary");
+
+        // Sync carousel to clicked thumb
+        carouselInstance.to(index + 1); // +1 because coverImg is index 0
+      });
+    });
+  });
+</script>
+
+
 
  <%- include("../partials/user/footer.ejs") %>

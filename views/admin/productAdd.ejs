@@ -168,14 +168,26 @@
       }
 
       
+      
+
       croppers[index] = new Cropper(image, {
-        aspectRatio: 1,
-        viewMode: 1,
-        guides: true,
+        aspectRatio: 1,          
+        viewMode: 0,             
+        autoCropArea: 1,        
         background: false,
-        autoCropArea: 1,
-        zoomable: true
-      });
+        guides: true,
+
+  
+  cropBoxMovable: false,
+  cropBoxResizable: false,
+
+  
+  dragMode: 'move',
+  movable: true,
+  zoomable: true
+});
+
+
 
       const saveButton = document.getElementById('saveButton' + index);
       const cancelButton = document.getElementById('cancelButton' + index);
