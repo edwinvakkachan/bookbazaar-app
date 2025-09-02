@@ -1,0 +1,84 @@
+<%- include("../partials/user/header.ejs") %>
+
+<div class="container mt-5 mb-5">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-transparent p-0 m-0">
+      <li class="breadcrumb-item">
+        <a href="/" class="text-dark text-decoration-none">Home</a>
+      </li>
+      <li class="breadcrumb-item active text-dark" aria-current="page">Contact</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm p-4 mb-4">
+        <div class="d-flex align-items-start mb-3">
+          <i class="bi bi-telephone-fill fs-3 me-3"></i>
+          <div>
+            <h6 class="fw-bold mb-1">Call To Us</h6>
+            <p class="small text-muted mb-1">We are available 24/7, 7 days a week.</p>
+            <p class="mb-0">Phone: +8801611112222</p>
+          </div>
+        </div>
+        <hr>
+        <div class="d-flex align-items-start">
+          <i class="bi bi-envelope-fill fs-3 me-3"></i>
+          <div>
+            <h6 class="fw-bold mb-1">Write To Us</h6>
+            <p class="small text-muted mb-1">Fill out our form and we will contact you within 24 hours.</p>
+            <p class="mb-1">Email: customer@bookbazzar.com</p>
+            <p class="mb-0">Email: support@bookbazzar.com</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm p-4">
+        <form action="/contact" method="post">
+          
+          <!-- Success / Error messages -->
+          <% if (success) { %>
+            <div class="alert alert-success alert-dismissible fade show mb-4 w-100" role="alert">
+              <i class="bi bi-check-circle-fill me-2"></i> <%= success %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% } %>
+
+          <% if (error) { %>
+            <div class="alert alert-danger alert-dismissible fade show mb-4 w-100" role="alert">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i> <%= error %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% } %>
+
+          <!-- Inputs -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <input type="text" name="name" class="form-control" placeholder="Your Name *" required>
+            </div>
+            <div class="col-md-4">
+              <input type="email" name="email" class="form-control" placeholder="Your Email *" required>
+            </div>
+            <div class="col-md-4">
+              <input type="tel" name="phone" class="form-control" placeholder="Your Phone *" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <textarea name="message" class="form-control" rows="6" placeholder="Your Message"></textarea>
+          </div>
+
+          <div class="text-end">
+            <button type="submit" class="btn btn-dark px-4 py-2">Send Message</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("../partials/user/footer.ejs") %>

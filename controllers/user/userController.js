@@ -80,6 +80,95 @@ const signup = async(req,res)=>{
     }
 }
 
+const about = async (req,res)=>{
+  try {
+    res.render('about',{
+      active:'about'
+    })
+  } catch (error) {
+    console.error('about page load error',error)
+    res.redirect('/pageNotFound')
+  }
+}
+
+
+
+function createTransporter() {
+  return nodemailer.createTransport({
+    service: "gmail",
+    port: 587,
+    secure: false,
+    requireTLS: true,
+    auth: {
+      user: process.env.NODEMAILER_EMAIL,
+      pass: process.env.NODEMAILER_PASSWORD,
+    },
+  });
+}
+
+
+async function sendContactEmail(name, email, phone, message) {
+  try {
+    const transporter = createTransporter();
+
+    const info = await transporter.sendMail({
+      from: process.env.NODEMAILER_EMAIL,
+      to: process.env.NODEMAILER_EMAIL, 
+      subject: "New Contact Form Submission",
+      html: `
+        <h3>New Contact Request</h3>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+      `,
+    });
+
+    return info.accepted.length > 0;
+  } catch (error) {
+    console.error("Error sending contact email:", error);
+    return false;
+  }
+}
+
+
+const contact = async (req, res) => {
+  try {
+    const success = req.session.success;
+    const error = req.session.error;
+
+    
+    req.session.success = null;
+    req.session.error = null;
+
+    return res.render("contact", { active: "contact", success, error });
+  } catch (error) {
+    console.error("contact page load error", error);
+    res.redirect("/pageNotFound");
+  }
+};
+
+const sendContact = async (req, res) => {
+  try {
+    const { name, email, phone, message } = req.body;
+
+    const emailSent = await sendContactEmail(name, email, phone, message);
+
+    if (emailSent) {
+      req.session.success = "Message sent successfully!";
+    } else {
+      req.session.error = "Failed to send message. Please try again.";
+    }
+
+    return res.redirect("/contact"); 
+  } catch (error) {
+    console.error("contact form error", error);
+    req.session.error = "Something went wrong!";
+    res.redirect("/contact");
+  }
+};
+
 
 
 const pageNotFound = async (req,res)=>{
@@ -540,6 +629,10 @@ const getBookDetails = async (req,res)=>{
 }
 
 
+
+
+
+
 const filterProduct = async (req,res)=>{
     try {
         const user = req.session.user;
@@ -601,6 +694,9 @@ module.exports = {
     loadResetPassword,
     resetPassword,
     resendForgotOtp,
+    about,
+    contact,
+    sendContact,
     filterProduct,
     test,
 };
