@@ -74,6 +74,13 @@
             <div class="alert alert-danger text-center"><%= message %></div>
           <% } %>
 
+          <% if (blocked) { %>
+  <div class="alert alert-danger text-center">
+    Your account has been blocked by the admin.
+  </div>
+<% } %>
+
+
           <!-- Forgot password -->
           <div class="text-end mb-3">
             <a href="/forgotPassword" class="text-danger text-decoration-none" onclick="forgotPassword()">Forget Password?</a>

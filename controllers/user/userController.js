@@ -262,6 +262,7 @@ const securePassword = async (password) =>{
         throw error;
     }
 };
+
 const verifyOtp = async(req,res)=>{
     try {
         const {otp} = req.body;
@@ -321,46 +322,48 @@ const resendOTP = async (req,res)=>{
 
 
 
-const loadLogin = async (req,res)=>{
-    try {
-        if(!req.session.user){
-            return res.render('login')
-        }else{
-            res.redirect('/')
-        }
-    } catch (error) {
-        console.error('user login error',error)
-        res.redirect('/pageNotFound')
-        
+
+
+const loadLogin = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      const blocked = req.query.blocked || false; 
+      return res.render("login", { message: null, blocked });
+    } else {
+      res.redirect("/");
     }
-}
+  } catch (error) {
+    console.error("user login error", error);
+    res.redirect("/pageNotFound");
+  }
+};
 
 
-const login = async(req,res)=>{
-    try {
-        const {email,password}=req.body;
-        console.log('user sign in ',email)
-        const findUser = await User.findOne({isAdmin:false,email:email});
-        if(!findUser){
-            return res.render('login',{message:'user not found'})
-        }
-        if(findUser.isBlocked){
-            return res.render('login',{message:'User is blocked by admin'})
-        }
 
-        const isMatch = await bcrypt.compare(password,findUser.password);
-        if(!isMatch){
-            return res.render('login',{message:'password do not match'})
-        }
- 
-         req.session.user = findUser;
 
-        res.redirect('/');
-
-    } catch (error) {
-        console.error('error when user login',error);
-        res.status(500).render('login',{message:'Something went wrong. Please try again later'})
+const login = async (req,res)=>{
+  try {
+    const {email,password}=req.body;
+    const findUser = await User.findOne({isAdmin:false,email:email});
+    if(!findUser){
+      return res.render('login',{message:'user not found', blocked: false});
     }
+    if(findUser.isBlocked){
+      
+      return res.redirect('/login?blocked=true');
+    }
+
+    const isMatch = await bcrypt.compare(password,findUser.password);
+    if(!isMatch){
+      return res.render('login',{message:'password do not match', blocked: false});
+    }
+
+    req.session.user = findUser;
+    res.redirect('/');
+  } catch (error) {
+    console.error('error when user login',error);
+    res.status(500).render('login',{message:'Something went wrong. Please try again later', blocked: false});
+  }
 };
 
 
