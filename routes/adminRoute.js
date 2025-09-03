@@ -19,7 +19,7 @@ const upload = require('../helpers/multer');
 router.get('/login',adminController.loadLogin);
 router.post('/login',adminController.login);
 router.get('/dashboard',adminAuth,adminController.loadDashboard);
-router.get('/logout',adminController.logout);
+router.post('/logout',adminController.logout);
 
 //userManagement
 router.get('/customers',adminAuth,customerController.customerInfo);

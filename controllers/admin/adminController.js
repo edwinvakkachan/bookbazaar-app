@@ -52,15 +52,17 @@ const loadDashboard = async (req,res)=>{
     }
 }
 
-const logout = async (req, res) => {
-    req.session.destroy(error => {
-        if (error) {
-            console.log('Error destroying admin session:', error);
-            return res.redirect('/pageNotFound');
-        }
+
+const logout = async (req,res)=>{
+    try {
+        console.log('logout');
+        delete req.session.admin;
         res.redirect('/admin/login');
-    });
-};
+    } catch (error) {
+        console.error('admin logout error',error)
+        res.redirect('/pageNotFound')
+    }
+}
 
 
 //testing controller

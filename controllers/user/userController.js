@@ -363,20 +363,17 @@ const login = async(req,res)=>{
 };
 
 
-const logout = async(req,res)=>{
-    try {
-        req.session.destroy((error)=>{
-            if(error){
-                console.log('session destruction error',error.message);
-                return res.redirect('/pageNotFound')
-            }
-            return res.redirect('/login');
-        })
-    } catch (error) {
-        console.error('logout error',error);
-        res.redirect('/pageNotFound')
-    }
+
+const logout = async (req,res)=>{
+  try {
+    delete req.session.user;
+    res.redirect('/')
+  } catch (error) {
+    console.error('user logout error',error);
+    res.redirect('/pageNotFound')
+  }
 }
+
 
 const loadForgotPassword = async (req,res)=>{
     try {
