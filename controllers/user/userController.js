@@ -518,6 +518,7 @@ const resendForgotOtp = async (req, res) => {
 const loadshoppingPage = async (req,res)=>{
 try {
     let { category, brand, price, sort, page = 1 } = req.query;
+    console.log('default sorting',sort)
 
     const limit = 9; // book  per page
     const skip = (page - 1) * limit;
@@ -544,11 +545,18 @@ try {
     }
 
     
-    let sortQuery = {};
-    if (sort === "popularity") sortQuery.sold = -1; 
-    if (sort === "newest") sortQuery.createdAt = -1;
-    if (sort === "priceAsc") sortQuery.salePrice = 1;
-    if (sort === "priceDesc") sortQuery.salePrice = -1;
+  
+let sortQuery = { createdAt: -1 }; 
+if (sort === "popularity") {
+  sortQuery = { sold: -1 };
+} else if (sort === "newest") {
+  sortQuery = { createdAt: -1 };
+} else if (sort === "priceAsc") {
+  sortQuery = { salePrice: 1 };
+} else if (sort === "priceDesc") {
+  sortQuery = { salePrice: -1 };
+}
+
 
     
     const products = await Product.find(query)
@@ -576,10 +584,9 @@ try {
   }
 }
 
+
 const getBookDetails = async (req,res)=>{
-
-
-    try {
+  try {
     const productId = req.params.id;
     const product = await Product.findById(productId).populate("category");
 
@@ -587,37 +594,70 @@ const getBookDetails = async (req,res)=>{
       return res.status(404).send("Book not found");
     }
 
+   
+    const relatedItems = await Product.find({
+      category: product.category._id,
+      _id: { $ne: product._id }
+    })
+    .limit(4); 
+
     // Map DB product 
     const book = {
       title: product.productName,
       author: product.brand || "Unknown Author",
-      pages: product.pages || 0, // default
+      pages: product.pages || 0,
       language: product.language || "English",
       published: product.createdAt ? product.createdAt.toDateString() : "N/A",
       isbn: product.isbn || "N/A",
       price: product.salePrice || 0,
       oldPrice: product.regularPrice || 0,
       stock: product.quantity > 0,
-      rating: product.rating || 4.0,       // default
-      reviews: product.reviews || 0,       // default
+      rating: product.rating || 4.0,
+      reviews: product.reviews || 0,
       description: product.description || "No description available.",
+      longDescription: product.longDescription || "No detailed description available.",
       benefits: product.benefits && product.benefits.length > 0 
                   ? product.benefits 
                   : [
-                      "Sustainable Change",
-                      "Compounding Growth",
-                      "Improved Discipline"
-                    ], // default
+                      "Sustainable Change: Small, incremental adjustments to daily routines lead to lasting habits without overwhelming effort.",
+                      "Compounding Growth: Tiny changes accumulate over time, resulting in significant improvements.",
+                      "Improved Discipline: A system-focused approach enhances self-discipline."
+                    ],
       coverImg: product.productImage && product.productImage.length > 0 
                   ? product.productImage[0] 
                   : "/images/no-image.png",
       thumbnails: product.productImage && product.productImage.length > 1 
                     ? product.productImage.slice(1) 
-                    : []
+                    : [],
+
+      // New review-related fields
+      avgRating: product.avgRating || 4.8,
+      ratingBreakdown: product.ratingBreakdown || { 5: 70, 4: 15, 3: 10, 2: 3, 1: 2 },
+      reviewsList: product.reviewsList && product.reviewsList.length > 0
+                    ? product.reviewsList
+                    : [
+                        { user: "Nicolas Cage", date: "3 Days ago", rating: 5, title: "Great Product", content: "great product. very good quality" },
+                        { user: "Sr. Robert Downey", date: "3 Days ago", rating: 5, title: "The best product in Market", content: "great product. very good quality" }
+                      ]
     };
+
+
+
+    
+    const related = relatedItems.map(item => ({
+      id: item._id,
+      title: item.productName,
+      price: item.salePrice || 0,
+      oldPrice: item.regularPrice || 0,
+      rating: item.rating || 4,
+      coverImg: item.productImage?.[0] || "/images/no-image.png"
+    }));
+
+
 
     res.render("bookDetails", {
       book,
+      related,
       user: req.session.user || null,
       active: "books"
     });
@@ -627,6 +667,7 @@ const getBookDetails = async (req,res)=>{
     res.status(500).send("Server error");
   }
 }
+
 
 
 

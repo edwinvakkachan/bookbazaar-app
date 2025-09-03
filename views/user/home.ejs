@@ -47,15 +47,23 @@
          let effectivePrice = (typeof p.salePrice === 'number' && p.salePrice > 0) ? p.salePrice : p.regularPrice;
          let isDiscount = p.salePrice && p.salePrice < p.regularPrice;
     %>
-      <div class="latest-book">
-  <div class="latest-book-cover" style="background-image:url('<%= p.productImage[0] %>');"></div>
-  <div class="latest-book-info">
-    <h4><%= p.productName %></h4>
-    <% if (p.brand) { %><p><%= p.brand %></p><% } %>
-    <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %>
-    <div class="latest-book-price">₹<%= p.salePrice || p.regularPrice %></div>
+
+
+      <a href="/book/<%= p._id %>" class="text-decoration-none text-dark">
+  <div class="latest-book">
+    <div class="latest-book-cover" style="background-image:url('<%= p.productImage[0] %>');"></div>
+    <div class="latest-book-info">
+      <h4><%= p.productName %></h4>
+      <% if (p.brand) { %><p><%= p.brand %></p><% } %>
+      <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %>
+      <div class="latest-book-price">₹<%= p.salePrice || p.regularPrice %></div>
+    </div>
   </div>
-</div>
+</a>
+
+
+
+
     <% } %>
   <% } else { %>
     <p>No bestselling books found.</p>
@@ -85,20 +93,30 @@
          let effectivePrice = (typeof p.salePrice === 'number' && p.salePrice > 0) ? p.salePrice : p.regularPrice;
          let isDiscount = p.salePrice && p.salePrice < p.regularPrice;
     %>
-      <div class="latest-book">
-        <div class="latest-book-cover" style="<%= coverStyle %>"></div>
-        <div class="latest-book-info">
-          <h4><%= p.productName %></h4>
-          <% if (p.brand) { %><p><%= p.brand %></p><% } %>
-          <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %>
-          <div class="latest-book-price">
-            ₹<%= effectivePrice %>
-            <% if (isDiscount) { %>
-              <span style="margin-left:8px; text-decoration: line-through; opacity: .7;">₹<%= p.regularPrice %></span>
-            <% } %>
-          </div>
-        </div>
+
+
+
+     <a href="/book/<%= p._id %>" class="text-decoration-none text-dark">
+  <div class="latest-book">
+    <div class="latest-book-cover" style="<%= coverStyle %>"></div>
+    <div class="latest-book-info">
+      <h4><%= p.productName %></h4>
+      <% if (p.brand) { %><p><%= p.brand %></p><% } %>
+      <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %>
+      <div class="latest-book-price">
+        ₹<%= effectivePrice %>
+        <% if (isDiscount) { %>
+          <span style="margin-left:8px; text-decoration: line-through; opacity: .7;">₹<%= p.regularPrice %></span>
+        <% } %>
       </div>
+    </div>
+  </div>
+</a>
+
+
+
+
+
     <% } %>
   <% } else { %>
     <p>No latest books found.</p>

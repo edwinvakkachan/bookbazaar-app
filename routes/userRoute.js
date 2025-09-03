@@ -32,7 +32,7 @@ router.get('/filter',userController.filterProduct);
 
 
 
-router.get('/book/:id',userController.getBookDetails);
+router.get('/book/:id',userAuth,userController.getBookDetails);
 
 
 //testing

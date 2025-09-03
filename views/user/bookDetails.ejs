@@ -16,61 +16,54 @@
       <div class="card shadow-sm">
         <div class="row g-0">
           <!-- Book Images -->
-
           <div class="col-md-4 text-center p-3">
-  <!-- Main Image -->
-  <img id="mainImage" 
-       src="<%= book.coverImg %>" 
-       class="img-fluid rounded border mb-3" 
-       alt="<%= book.title %>" 
-       style="cursor: zoom-in;"
-       data-bs-toggle="modal" data-bs-target="#imageModal">
+            <!-- Main Image -->
+            <img id="mainImage" 
+                 src="<%= book.coverImg %>" 
+                 class="img-fluid rounded border mb-3" 
+                 alt="<%= book.title %>" 
+                 style="cursor: zoom-in;"
+                 data-bs-toggle="modal" data-bs-target="#imageModal">
 
-  <!-- Thumbnails -->
-  <div class="d-flex justify-content-center gap-2">
-    <% book.thumbnails.forEach((img, index) => { %>
-      <img src="<%= img %>" 
-           class="img-thumbnail thumb-image <%= index === 0 ? 'border border-2 border-primary' : '' %>" 
-           style="width:80px; height:auto; cursor:pointer;" 
-           alt="Thumbnail">
-    <% }) %>
-  </div>
-</div>
-
-
-
-
-<!-- Image Preview Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content bg-transparent border-0">
-      <div class="modal-body p-0">
-        <div id="imageCarousel" class="carousel slide" data-bs-ride="false">
-          <div class="carousel-inner">
-            <% [book.coverImg, ...book.thumbnails].forEach((img, index) => { %>
-              <div class="carousel-item <%= index === 0 ? 'active' : '' %> text-center">
+            <!-- Thumbnails -->
+            <div class="d-flex justify-content-center gap-2">
+              <% book.thumbnails.forEach((img, index) => { %>
                 <img src="<%= img %>" 
-                     class="img-fluid w-100" 
-                     style="max-height: 80vh; object-fit: contain;" 
-                     alt="Preview">
-              </div>
-            <% }) %>
+                     class="img-thumbnail thumb-image <%= index === 0 ? 'border border-2 border-primary' : '' %>" 
+                     style="width:80px; height:auto; cursor:pointer;" 
+                     alt="Thumbnail">
+              <% }) %>
+            </div>
           </div>
-          <!-- Controls -->
-          <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon bg-dark rounded-circle p-3"></span>
-          </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon bg-dark rounded-circle p-3"></span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-
-
+          <!-- Image Preview Modal -->
+          <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+              <div class="modal-content bg-transparent border-0">
+                <div class="modal-body p-0">
+                  <div id="imageCarousel" class="carousel slide" data-bs-ride="false">
+                    <div class="carousel-inner">
+                      <% [book.coverImg, ...book.thumbnails].forEach((img, index) => { %>
+                        <div class="carousel-item <%= index === 0 ? 'active' : '' %> text-center">
+                          <img src="<%= img %>" 
+                               class="img-fluid w-100" 
+                               style="max-height: 80vh; object-fit: contain;" 
+                               alt="Preview">
+                        </div>
+                      <% }) %>
+                    </div>
+                    <!-- Controls -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+                      <span class="carousel-control-prev-icon bg-dark rounded-circle p-3"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+                      <span class="carousel-control-next-icon bg-dark rounded-circle p-3"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- Book Info -->
           <div class="col-md-8 p-3">
@@ -92,73 +85,213 @@
             </div>
 
             <h5 class="text-success">₹<%= book.price %> 
-              <small class="text-muted text-decoration-line-through">₹<%= book.oldPrice %></small>
+              <% if (book.oldPrice) { %>
+                <small class="text-muted text-decoration-line-through">₹<%= book.oldPrice %></small>
+              <% } %>
             </h5>
 
             <p class="mt-3"><%= book.description %></p>
 
-              <!-- Action Buttons -->
-<div class="d-flex align-items-center gap-2 mt-4">
-  <!-- Quantity Selector -->
-  <div class="input-group" style="width: 120px;">
-    <button class="btn btn-outline-secondary" type="button">-</button>
-    <input type="text" class="form-control text-center" value="1">
-    <button class="btn btn-outline-secondary" type="button">+</button>
-  </div>
+            <!-- Action Buttons -->
+            <div class="d-flex align-items-center gap-2 mt-4">
+              <!-- Quantity Selector -->
+              <div class="input-group w-auto" style="max-width: 120px;">
+                <button class="btn btn-outline-secondary" type="button" id="decreaseQty" aria-label="Decrease quantity">-</button>
+                <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1">
+                <button class="btn btn-outline-secondary" type="button" id="increaseQty" aria-label="Increase quantity">+</button>
+              </div>
 
-  <!-- Add to Cart -->
-  <button class="btn btn-dark">Add to Cart</button>
+              <!-- Add to Cart -->
+              <button class="btn btn-dark">Add to Cart</button>
 
-  <!-- Wishlist -->
-  <button class="btn btn-outline-secondary">
-    <i class="bi bi-heart"></i>
-  </button>
-</div>
+              <!-- Wishlist -->
+              <button class="btn btn-outline-secondary">
+                <i class="bi bi-heart"></i>
+              </button>
+            </div>
 
-<!-- Buy Now -->
-<div class="mt-3">
-  <button class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
-</div>
+            <!-- Buy Now -->
+            <div class="mt-3">
+              <button class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
+            </div>
 
+            <!-- Delivery Info -->
+            <div class="mt-4 border rounded">
+              <div class="p-3 border-bottom">
+                <h6 class="mb-1 d-flex align-items-center text-dark">
+                  <i class="bi bi-truck me-2 fs-5"></i> Free Delivery
+                </h6>
+                <small class="text-dark">
+                  <a href="#" class="text-decoration-underline text-dark">Enter your postal code for Delivery Availability</a>
+                </small>
+              </div>
+              <div class="p-3">
+                <h6 class="mb-1 d-flex align-items-center text-dark">
+                  <i class="bi bi-arrow-repeat me-2 fs-5"></i> Return Delivery
+                </h6>
+                <small class="text-dark">
+                  Free 30 Days Delivery Returns. 
+                  <a href="#" class="text-decoration-underline text-dark">Details</a>
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /card -->
 
-<!-- Delivery Info -->
-<div class="mt-4 border rounded">
-  <div class="p-3 border-bottom">
-    <h6 class="mb-1 d-flex align-items-center text-dark">
-      <i class="bi bi-truck me-2 fs-5"></i> Free Delivery
-    </h6>
-    <small class="text-dark">
-      <a href="#" class="text-decoration-underline text-dark">Enter your postal code for Delivery Availability</a>
-    </small>
-  </div>
-  <div class="p-3">
-    <h6 class="mb-1 d-flex align-items-center text-dark">
-      <i class="bi bi-arrow-repeat me-2 fs-5"></i> Return Delivery
-    </h6>
-    <small class="text-dark">
-      Free 30 Days Delivery Returns. 
-      <a href="#" class="text-decoration-underline text-dark">Details</a>
-    </small>
-  </div>
-</div>
+      <!-- Product Tabs -->
+      <div class="mt-5">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" id="bookTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc" type="button" role="tab" aria-controls="desc" aria-selected="true">
+              Description
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">
+              Reviews
+            </button>
+          </li>
+        </ul>
 
+        <!-- Tab content -->
+        <div class="tab-content p-4 border border-top-0 rounded-bottom" id="bookTabContent">
+          <!-- Description Tab -->
+          <div class="tab-pane fade show active" id="desc" role="tabpanel" aria-labelledby="desc-tab">
+            <h5>Product Description</h5>
+            <p><%= book.longDescription %></p>
 
-
-
-            <!-- <h6>Benefits</h6>
+            <h6 class="mt-4">Benefits</h6>
             <ul>
               <% book.benefits.forEach(benefit => { %>
                 <li><%= benefit %></li>
               <% }) %>
-            </ul> -->
+            </ul>
+          </div>
 
-            <!-- <div class="mt-3">
-              <p><i class="bi bi-truck"></i> Free Delivery</p>
-              <p><i class="bi bi-arrow-repeat"></i> Free 30 Days Delivery Returns</p>
-            </div> -->
+          <!-- Reviews Tab -->
+          <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+
+            <!-- Customer Feedback -->
+            <h5 class="mb-3">Customers Feedback</h5>
+            <div class="row mb-4">
+              <div class="col-md-3 text-center">
+                <h1 class="display-4 text-primary"><%= book.avgRating %></h1>
+                <div class="text-warning">
+                  <% for (let i=1; i<=5; i++) { %>
+                    <i class="bi <%= i <= Math.floor(book.avgRating) ? 'bi-star-fill' : (i - book.avgRating < 1 ? 'bi-star-half' : 'bi-star') %>"></i>
+                  <% } %>
+                </div>
+                <p class="mb-0">Product Rating</p>
+              </div>
+              <div class="col-md-9">
+                <% [5,4,3,2,1].forEach(star => { %>
+                  <div class="d-flex align-items-center mb-2">
+                    <span class="me-2"><%= star %> <i class="bi bi-star-fill text-warning"></i></span>
+                    <div class="progress flex-grow-1 me-2" style="height:8px;">
+                      <div class="progress-bar bg-success" style="width:<%= book.ratingBreakdown[star] %>%"></div>
+                    </div>
+                    <span><%= book.ratingBreakdown[star] %>%</span>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+
+            <!-- Reviews List -->
+            <h5 class="mb-3">Reviews</h5>
+            <% book.reviewsList.forEach(r => { %>
+              <div class="border-bottom pb-3 mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width:40px; height:40px;">
+                    <%= r.user.split(" ")[0][0] %>
+                  </div>
+                  <div>
+                    <strong><%= r.user %></strong> <small class="text-muted"><%= r.date %></small>
+                    <div class="text-warning">
+                      <% for (let i=1; i<=5; i++) { %>
+                        <i class="bi <%= i <= r.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+                <h6><%= r.title %></h6>
+                <p><%= r.content %></p>
+                <div class="d-flex gap-3">
+                  <a href="#" class="text-muted small"><i class="bi bi-hand-thumbs-up"></i> Like</a>
+                  <a href="#" class="text-muted small">Reply</a>
+                </div>
+              </div>
+            <% }) %>
+
+            <div class="text-center mb-4">
+              <a href="#" class="fw-bold">View All Reviews</a>
+            </div>
+
+            <!-- Write a Review -->
+            <h5 class="mb-3">Write a Review</h5>
+            <form>
+              <div class="mb-3">
+                <label class="form-label">What is it like to Product?</label>
+                <div class="text-warning fs-5">
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star"></i>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Review Content</label>
+                <textarea class="form-control" rows="4" placeholder="Write your review..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-dark">Submit Review</button>
+            </form>
           </div>
         </div>
-      </div><!-- /card -->
+
+
+
+        <!-- Related Items -->
+<div class="mt-5">
+  <h5 class="mb-4">
+    <i class="bi bi-columns-gap me-2"></i> Related Items
+  </h5>
+  <div class="row">
+    <% if (related && related.length > 0) { %>
+      <% related.forEach(item => { %>
+        <div class="col-md-3 col-6 mb-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <a href="/book/<%= item.id %>">
+              <img src="<%= item.coverImg %>" class="card-img-top" alt="<%= item.title %>" style="height:250px; object-fit:contain;">
+            </a>
+            <div class="card-body text-center">
+              <h6 class="card-title"><%= item.title %></h6>
+              <p class="mb-1">
+                ₹<%= item.price %>
+                <% if (item.oldPrice) { %>
+                  <small class="text-muted text-decoration-line-through">₹<%= item.oldPrice %></small>
+                <% } %>
+              </p>
+              <div class="text-warning">
+                <% for (let i=1; i<=5; i++) { %>
+                  <i class="bi <%= i <= item.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <p class="text-muted">No related items available.</p>
+    <% } %>
+  </div>
+</div>
+
+
+
+
+      </div>
     </div>
   </div>
 </div>
@@ -170,7 +303,7 @@
     const carousel = document.getElementById("imageCarousel");
     const carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
 
-    // When main image clicked → open modal and sync carousel to current image
+    
     mainImage.addEventListener("click", function() {
       const currentSrc = this.src;
       const items = carousel.querySelectorAll(".carousel-item");
@@ -182,22 +315,33 @@
       });
     });
 
-    // Thumbnails → update main image + highlight + sync carousel
+    
     thumbs.forEach((thumb, index) => {
       thumb.addEventListener("click", function() {
         mainImage.src = this.src;
-
-        // Highlight selected thumb
         thumbs.forEach(t => t.classList.remove("border", "border-2", "border-primary"));
         this.classList.add("border", "border-2", "border-primary");
-
-        // Sync carousel to clicked thumb
-        carouselInstance.to(index + 1); // +1 because coverImg is index 0
+        carouselInstance.to(index + 1); 
       });
+    });
+
+    
+    const qtyInput = document.getElementById("quantityInput");
+    const btnMinus = document.getElementById("decreaseQty");
+    const btnPlus = document.getElementById("increaseQty");
+
+    btnMinus.addEventListener("click", function() {
+      let current = parseInt(qtyInput.value) || 1;
+      if (current > 1) {
+        qtyInput.value = current - 1;
+      }
+    });
+
+    btnPlus.addEventListener("click", function() {
+      let current = parseInt(qtyInput.value) || 1;
+      qtyInput.value = current + 1;
     });
   });
 </script>
 
-
-
- <%- include("../partials/user/footer.ejs") %>
+<%- include("../partials/user/footer.ejs") %>
