@@ -339,6 +339,7 @@ const loadLogin = async (req,res)=>{
 const login = async(req,res)=>{
     try {
         const {email,password}=req.body;
+        console.log('user sign in ',email)
         const findUser = await User.findOne({isAdmin:false,email:email});
         if(!findUser){
             return res.render('login',{message:'user not found'})
@@ -364,15 +365,31 @@ const login = async(req,res)=>{
 
 
 
-const logout = async (req,res)=>{
+const logout = async (req, res) => {
   try {
-    delete req.session.user;
-    res.redirect('/')
+    req.logout(err => {
+      if (err) {
+        console.error("passport logout error:", err);
+      }
+
+      
+      delete req.session.user;
+
+      
+      req.session.destroy(error => {
+        if (error) {
+          console.log("session destruction error", error.message);
+          return res.redirect("/pageNotFound");
+        }
+        
+        res.redirect("/login");
+      });
+    });
   } catch (error) {
-    console.error('user logout error',error);
-    res.redirect('/pageNotFound')
+    console.error("user logout error", error);
+    res.redirect("/pageNotFound");
   }
-}
+};
 
 
 const loadForgotPassword = async (req,res)=>{
