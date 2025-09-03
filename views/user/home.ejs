@@ -17,7 +17,6 @@
             </div>
         </section>
 
-        <!-- Popular Categories -->
       <!-- Popular Categories -->
 <section class="popular-categories">
   <h2 class="section-title">Popular Categories</h2>
@@ -54,8 +53,8 @@
     <div class="latest-book-cover" style="background-image:url('<%= p.productImage[0] %>');"></div>
     <div class="latest-book-info">
       <h4><%= p.productName %></h4>
-      <% if (p.brand) { %><p><%= p.brand %></p><% } %>
-      <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %>
+      <% if (p.brand) { %><p><%= p.brand?.brandName || "N/A" %></p><% } %>
+      <!-- <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %> -->
       <div class="latest-book-price">₹<%= p.salePrice || p.regularPrice %></div>
     </div>
   </div>
@@ -101,8 +100,8 @@
     <div class="latest-book-cover" style="<%= coverStyle %>"></div>
     <div class="latest-book-info">
       <h4><%= p.productName %></h4>
-      <% if (p.brand) { %><p><%= p.brand %></p><% } %>
-      <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %>
+      <% if (p.brand) { %><p><%= p.brand?.brandName || "N/A" %></p><% } %>
+      <!-- <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %> -->
       <div class="latest-book-price">
         ₹<%= effectivePrice %>
         <% if (isDiscount) { %>

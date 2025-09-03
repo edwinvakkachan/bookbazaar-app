@@ -43,14 +43,15 @@
         <div class="form-check">
 
 
-      <input class="form-check-input"
+
+<input class="form-check-input"
        type="checkbox"
-       id="brand-<%= brand[i].brandName %>"
-       onclick="applyFilter('brand','<%= brand[i].brandName %>')"
-       <%= (query.brand && query.brand.split(',').includes(brand[i].brandName)) 
+       id="brand-<%= brand[i]._id %>"
+       onclick="applyFilter('brand','<%= brand[i]._id %>')"
+       <%= (query.brand && query.brand.split(',').includes(brand[i]._id.toString())) 
             ? 'checked' : '' %> >
 
-<label class="form-check-label" for="brand-<%= brand[i].brandName %>">
+<label class="form-check-label" for="brand-<%= brand[i]._id %>">
   <%= brand[i].brandName %>
 </label>
 
@@ -121,7 +122,9 @@
         <img src="<%= products[i].productImage[0] %>" class="card-img-top" alt="<%= products[i].productName %>">
         <div class="card-body">
           <h6 class="card-title"><%= products[i].productName %></h6>
-          <p class="mb-1">Brand: <%= products[i].brand %></p>
+          <!-- <p class="mb-1">Brand: <%= products[i].brand %></p> -->
+           <p class="mb-1">Brand: <%= products[i].brand?.brandName || "N/A" %></p>
+
           <p>
             ₹<%= products[i].salePrice %>
             <span class="text-muted"><strike>₹<%= products[i].regularPrice %></strike></span>

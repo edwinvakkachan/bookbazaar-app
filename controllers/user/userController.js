@@ -5,7 +5,8 @@ const bcrypt = require('bcrypt');
 
 const Product  = require('../../models/productSchema');
 const Category = require('../../models/categorySchema')
-const Brand = require('../../models/brandSchema')
+const Brand = require('../../models/brandSchema');
+const { addProducts } = require("../admin/productController");
 
 
 
@@ -188,10 +189,14 @@ try {
 
     //prodcut to front page
     const categories = await Category.find({isListed:true})
+    const allowedBrands = await Brand.find({ isBlocked: false }).select("_id"); // added
+
     let productData = await Product.find({isBlocked:false,
                             category:{$in:categories.map(category=>category._id)},
+                            brand: { $in: allowedBrands.map(b => b._id) }, 
                             quantity:{$gt:0}
-                            })    
+                            }).populate("brand", "brandName")    
+                              .populate("category", "name");       
                             productData.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
                             productData = productData.slice(0,4);  
          
@@ -200,8 +205,10 @@ try {
          //best selling products
          let bestSellingData = await Product.find({isBlocked:false,
                             category:{$in:categories.map(category=>category._id)},
+                            brand: { $in: allowedBrands.map(b => b._id) }, 
                             quantity:{$gt:0}
-                            })
+                            }).populate("brand", "brandName")    
+                              .populate("category", "name");      
 
                             bestSellingData.sort((a,b)=>b.quantity - a.quantity)
                             bestSellingData = bestSellingData.slice(0,4)
@@ -209,6 +216,7 @@ try {
 //best categories 
         let bestCategoryData =  await Product.find({isBlocked:false,
                             category:{$in:categories.map(category=>category._id)},
+                             brand: { $in: allowedBrands.map(b => b._id) },
                             quantity:{$gt:0}
                             }).populate({ path: 'category', select: 'name' })
 
@@ -531,29 +539,23 @@ const resendForgotOtp = async (req, res) => {
 };
 
 
-
 const loadshoppingPage = async (req,res)=>{
-try {
+  try {
     let { category, brand, price, sort, page = 1 } = req.query;
-    // console.log('default sorting',sort)
 
-    const limit = 9; // book  per page
+    const limit = 9; 
     const skip = (page - 1) * limit;
 
-    let query = {};
+    let query = { isBlocked: false };  
 
-    
     if (category) {
-      
       query.category = { $in: category.split(",") };
     }
 
-   
     if (brand) {
       query.brand = { $in: brand.split(",") };
     }
 
-    
     if (price) {
       if (price === "under100") query.salePrice = { $lt: 100 };
       if (price === "100-250") query.salePrice = { $gte: 100, $lte: 250 };
@@ -561,41 +563,52 @@ try {
       if (price === "above500") query.salePrice = { $gt: 500 };
     }
 
-    
+    let sortQuery = { createdAt: -1 }; 
+    if (sort === "popularity") {
+      sortQuery = { sold: -1 };
+    } else if (sort === "newest") {
+      sortQuery = { createdAt: -1 };
+    } else if (sort === "priceAsc") {
+      sortQuery = { salePrice: 1 };
+    } else if (sort === "priceDesc") {
+      sortQuery = { salePrice: -1 };
+    }
+
+   
+    const allowedCategories = await Category.find({ isListed: true }).select("_id");
+
+    if (!category) {
+      query.category = { $in: allowedCategories.map(c => c._id) };
+    }
+   
+ 
+const allowedbrands = await Brand.find({ isBlocked: false }).select("_id");
+
+    if (!brand) {
+      query.brand = { $in: allowedbrands.map(c => c._id) };
+    }
+
   
-let sortQuery = { createdAt: -1 }; 
-if (sort === "popularity") {
-  sortQuery = { sold: -1 };
-} else if (sort === "newest") {
-  sortQuery = { createdAt: -1 };
-} else if (sort === "priceAsc") {
-  sortQuery = { salePrice: 1 };
-} else if (sort === "priceDesc") {
-  sortQuery = { salePrice: -1 };
-}
-// console.log('sort query', sortQuery)
-
-
-
-    
     const products = await Product.find(query)
-      .sort(sortQuery)
-      .skip(skip)
-      .limit(limit);
+  .populate("category", "name")   
+  .populate("brand", "brandName")      
+  .sort(sortQuery)
+  .skip(skip)
+  .limit(limit);
 
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
-console.log('sorting log',sort)
-   
+    console.log('products',products);
+
     res.render("shop", {
       products,
-      category: await Category.find(),
-      brand: await Brand.find(),
+      category: await Category.find({ isListed: true }),   
+      brand: await Brand.find({isBlocked:false}), //changed
       currentPage: Number(page),
       totalPages,
       active: "books",
-      query: req.query, //check this 
-      sort:{name: 1}, // pass current sort
+      query: req.query,
+      sort:{name: 1}, 
     });
   } catch (error) {
     console.error("Shop error:", error);
@@ -632,7 +645,7 @@ const getBookDetails = async (req,res)=>{
   oldPrice: product.regularPrice,
   stock: product.quantity > 0,
   
-  // Ratings & reviews
+  // Ratings reviews
   rating: product.rating,
   avgRating: product.avgRating,
   reviews: product.reviews,
@@ -662,7 +675,7 @@ const getBookDetails = async (req,res)=>{
       coverImg: item.productImage?.[0] || "/images/no-image.png"
     }));
 
-
+console.log('book details',book)
 
     res.render("bookDetails", {
       book,

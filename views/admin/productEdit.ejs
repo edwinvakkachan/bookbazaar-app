@@ -1,0 +1,283 @@
+<%- include('../partials/admin/header') %>
+
+<link href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
+
+<section class="content-main">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12 mb-4">
+        <div class="content-header">
+          <h2 class="content-title">Edit Product</h2>
+        </div>
+      </div>
+
+      <!-- Product Form -->
+      <div class="col-lg-8">
+        <div class="card mb-4">
+          <div class="card-body">
+            <form id="productForm" method="POST" action="/admin/editProduct/<%= product._id %>" enctype="multipart/form-data"> 
+              
+              <!-- Product Name -->
+              <div class="mb-3">
+                <label class="form-label">Product Name</label>
+                <input type="text" name="productName" class="form-control" value="<%= product.productName %>">
+              </div>
+
+              <!-- Brand -->
+              <!-- Brand -->
+<div class="mb-3">
+  <label class="form-label">Brand</label>
+  <select class="form-select" name="brand" required>
+    <% brands.forEach(b => { %>
+      <option value="<%= b._id %>" <%= product.brand && product.brand._id.toString() === b._id.toString() ? "selected" : "" %>>
+        <%= b.brandName %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+
+
+              <!-- Author -->
+              <div class="mb-3">
+                <label class="form-label">Author</label>
+                <input type="text" name="author" class="form-control" value="<%= product.author %>">
+              </div>
+
+              <!-- Short Description -->
+              <div class="mb-3">
+                <label class="form-label">Short Description</label>
+                <textarea name="description" class="form-control" rows="3"><%= product.description %></textarea>
+              </div>
+
+              <!-- Long Description -->
+              <div class="mb-3">
+                <label class="form-label">Long Description</label>
+                <textarea name="longDescription" class="form-control" rows="5"><%= product.longDescription %></textarea>
+              </div>
+
+              <!-- Price / Quantity Row -->
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Regular Price</label>
+                  <input name="regularPrice" type="number" class="form-control" value="<%= product.regularPrice %>">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Sale Price</label>
+                  <input name="salePrice" type="number" class="form-control" value="<%= product.salePrice %>">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Quantity</label>
+                  <input name="quantity" type="number" class="form-control" value="<%= product.quantity %>">
+                </div>
+              </div>
+
+              <!-- Category -->
+              <div class="mb-3">
+                <label class="form-label">Category</label>
+                <select class="form-select" name="category">
+                  <% categories.forEach(cat => { %>
+                    <option value="<%= cat.name %>" <%= product.category.name === cat.name ? "selected" : "" %>>
+                      <%= cat.name %>
+                    </option>
+                  <% }) %>
+                </select>
+              </div>
+
+              <!-- Book Metadata -->
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Pages</label>
+                  <input name="pages" type="number" class="form-control" value="<%= product.pages %>">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Language</label>
+                  <input name="language" type="text" class="form-control" value="<%= product.language %>">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">ISBN</label>
+                  <input name="isbn" type="text" class="form-control" value="<%= product.isbn %>">
+                </div>
+              </div>
+
+              <!-- Benefits -->
+              <div class="mb-3">
+                <label class="form-label">Benefits / Highlights (comma separated)</label>
+                <input name="benefits" type="text" class="form-control" 
+                       value="<%= product.benefits ? product.benefits.join(', ') : '' %>">
+              </div>
+
+             
+<!-- Images -->
+<div id="addedImagesContainer" class="mb-2 d-flex flex-wrap gap-2"></div>
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h5>Edit & Replace Images</h5>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <% for (let i = 0; i < 4; i++) { 
+           let existingImg = product.productImage && product.productImage[i] ? product.productImage[i] : '';
+      %>
+        <div class="col-md-6">
+          <div class="mb-2 position-relative">
+            <!-- Preview -->
+            <img src="<%= existingImg %>" 
+                 alt="" 
+                 id="imgView<%= i+1 %>" 
+                 class="img-fluid mb-2 border rounded" 
+                 style="max-height:280px; object-fit:contain; <%= existingImg ? '' : 'display:none;' %>">
+
+            <!-- Remove Button -->
+            <% if (existingImg) { %>
+              <button type="button" 
+                      class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                      onclick="removeImage(<%= i+1 %>)">×</button>
+            <% } %>
+
+  
+
+
+  <input
+  class="form-control"
+  type="file"
+  name="images[<%= i %>]"
+  id="input<%= i+1 %>"
+  accept="image/png, image/jpeg, image/jpg, image/webp"
+  onchange="viewImage(event, <%= i+1 %>)">
+
+
+          </div>
+
+          <!-- Crop Actions -->
+          <div class="d-flex align-items-center mb-3" id="cropActions<%= i+1 %>" style="display:none;">
+            <button type="button" id="saveButton<%= i+1 %>" class="btn btn-sm btn-primary">Save Crop</button>
+            <button type="button" id="cancelButton<%= i+1 %>" class="btn btn-sm btn-outline-secondary ms-2">Cancel</button>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    <div id="images-error" class="invalid-feedback"></div>
+  </div>
+</div>
+
+
+              <!-- Submit -->
+              <div>
+                <button class="btn btn-primary" type="submit">Update Product</button>
+                <a href="/admin/products" class="btn btn-secondary">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<script>
+  const croppers = {};
+  const saveHandlers = {};
+  const cancelHandlers = {};
+
+  function blobFromCanvas(canvas, type = 'image/jpeg', quality = 0.95) {
+    return new Promise(resolve => canvas.toBlob(resolve, type, quality));
+  }
+
+  function viewImage(event, index) {
+    const input = event.target;
+    const reader = new FileReader();
+
+    reader.onload = function () {
+      const dataURL = reader.result;
+      const image = document.getElementById('imgView' + index);
+      const actions = document.getElementById('cropActions' + index);
+
+      image.src = dataURL;
+      image.style.display = 'block';
+      actions.style.display = 'flex';
+
+      if (croppers[index]) {
+        try { croppers[index].destroy(); } catch(e) {}
+        delete croppers[index];
+      }
+
+      croppers[index] = new Cropper(image, {
+        aspectRatio: 1,
+        viewMode: 0,
+        autoCropArea: 1,
+        background: false,
+        guides: true,
+        cropBoxMovable: false,
+        cropBoxResizable: false,
+        dragMode: 'move',
+        movable: true,
+        zoomable: true
+      });
+
+      const saveButton = document.getElementById('saveButton' + index);
+      const cancelButton = document.getElementById('cancelButton' + index);
+
+      if (saveHandlers[index]) saveButton.removeEventListener('click', saveHandlers[index]);
+      if (cancelHandlers[index]) cancelButton.removeEventListener('click', cancelHandlers[index]);
+
+      saveHandlers[index] = async function () {
+        const c = croppers[index];
+        if (!c) return;
+        const canvas = c.getCroppedCanvas();
+        const blob = await blobFromCanvas(canvas, 'image/jpeg', 0.95);
+        if (!blob) return;
+
+        const fileName = `cropped-${Date.now()}-${index}.jpg`;
+        const file = new File([blob], fileName, { type: blob.type });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('input' + index).files = dt.files;
+
+        const blobUrl = URL.createObjectURL(blob);
+        image.src = blobUrl;
+
+        try { c.destroy(); } catch(e) {}
+        delete croppers[index];
+        actions.style.display = 'none';
+      };
+
+      cancelHandlers[index] = function () {
+        document.getElementById('input' + index).value = '';
+        image.src = '';
+        image.style.display = 'none';
+        try { croppers[index].destroy(); } catch(e) {}
+        delete croppers[index];
+        actions.style.display = 'none';
+      };
+
+      saveButton.addEventListener('click', saveHandlers[index]);
+      cancelButton.addEventListener('click', cancelHandlers[index]);
+    };
+
+    if (input.files && input.files[0]) {
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function removeImage(index) {
+    const img = document.getElementById("imgView" + index);
+    const input = document.getElementById("input" + index);
+
+    if (img) {
+      img.src = "";
+      img.style.display = "none";
+    }
+    if (input) input.value = "";
+
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = "removeImages";
+    hidden.value = index - 1; // slot index (0–3)
+    document.getElementById("productForm").appendChild(hidden);
+  }
+</script>
+
+<%- include('../partials/admin/footer') %>

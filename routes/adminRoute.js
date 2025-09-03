@@ -48,6 +48,13 @@ router.get('/products',adminAuth,productController.getAllProducts)
 router.get('/blockProduct',adminAuth,productController.blockProdcut)
 router.get('/unblockProduct',adminAuth,productController.unblockProdcut)
 
+// Show edit product page
+router.get("/editProduct/:id", adminAuth, productController.editProductPage);
+
+// Update product
+router.post("/editProduct/:id", upload.any(), adminAuth, productController.updateProduct);
+
+
 
 router.get('/test',categoryController.test)
 

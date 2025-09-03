@@ -9,7 +9,7 @@ const userAuth = async (req, res, next) => {
       return res.redirect("/login");
     }
 
-    console.log(req.session.user);
+    // console.log(req.session.user);
 
     const userId = req.session.user._id || req.session.user;
     

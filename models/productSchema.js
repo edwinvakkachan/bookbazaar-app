@@ -6,7 +6,7 @@ const productSchema = new Schema({
   description: { type: String, required: true },
   longDescription: { type: String, default: "No detailed description available." },
 
-  brand: { type: String, required: true },
+  brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
   author: { type: String, default: "Unknown Author" }, 
 
   category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
