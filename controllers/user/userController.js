@@ -535,7 +535,7 @@ const resendForgotOtp = async (req, res) => {
 const loadshoppingPage = async (req,res)=>{
 try {
     let { category, brand, price, sort, page = 1 } = req.query;
-    console.log('default sorting',sort)
+    // console.log('default sorting',sort)
 
     const limit = 9; // book  per page
     const skip = (page - 1) * limit;
@@ -573,6 +573,8 @@ if (sort === "popularity") {
 } else if (sort === "priceDesc") {
   sortQuery = { salePrice: -1 };
 }
+// console.log('sort query', sortQuery)
+
 
 
     
@@ -583,7 +585,7 @@ if (sort === "popularity") {
 
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
-
+console.log('sorting log',sort)
    
     res.render("shop", {
       products,
@@ -593,7 +595,7 @@ if (sort === "popularity") {
       totalPages,
       active: "books",
       query: req.query, //check this 
-      sort, // pass current sort
+      sort:{name: 1}, // pass current sort
     });
   } catch (error) {
     console.error("Shop error:", error);
@@ -618,45 +620,35 @@ const getBookDetails = async (req,res)=>{
     })
     .limit(4); 
 
-    // Map DB product 
+ 
     const book = {
-      title: product.productName,
-      author: product.brand || "Unknown Author",
-      pages: product.pages || 0,
-      language: product.language || "English",
-      published: product.createdAt ? product.createdAt.toDateString() : "N/A",
-      isbn: product.isbn || "N/A",
-      price: product.salePrice || 0,
-      oldPrice: product.regularPrice || 0,
-      stock: product.quantity > 0,
-      rating: product.rating || 4.0,
-      reviews: product.reviews || 0,
-      description: product.description || "No description available.",
-      longDescription: product.longDescription || "No detailed description available.",
-      benefits: product.benefits && product.benefits.length > 0 
-                  ? product.benefits 
-                  : [
-                      "Sustainable Change: Small, incremental adjustments to daily routines lead to lasting habits without overwhelming effort.",
-                      "Compounding Growth: Tiny changes accumulate over time, resulting in significant improvements.",
-                      "Improved Discipline: A system-focused approach enhances self-discipline."
-                    ],
-      coverImg: product.productImage && product.productImage.length > 0 
-                  ? product.productImage[0] 
-                  : "/images/no-image.png",
-      thumbnails: product.productImage && product.productImage.length > 1 
-                    ? product.productImage.slice(1) 
-                    : [],
+  title: product.productName,
+  author: product.author,  
+  pages: product.pages,
+  language: product.language,
+  published: product.createdAt ? product.createdAt.toDateString() : "N/A",
+  isbn: product.isbn,
+  price: product.salePrice,
+  oldPrice: product.regularPrice,
+  stock: product.quantity > 0,
+  
+  // Ratings & reviews
+  rating: product.rating,
+  avgRating: product.avgRating,
+  reviews: product.reviews,
+  ratingBreakdown: product.ratingBreakdown,
+  reviewsList: product.reviewsList,
 
-      // New review-related fields
-      avgRating: product.avgRating || 4.8,
-      ratingBreakdown: product.ratingBreakdown || { 5: 70, 4: 15, 3: 10, 2: 3, 1: 2 },
-      reviewsList: product.reviewsList && product.reviewsList.length > 0
-                    ? product.reviewsList
-                    : [
-                        { user: "Nicolas Cage", date: "3 Days ago", rating: 5, title: "Great Product", content: "great product. very good quality" },
-                        { user: "Sr. Robert Downey", date: "3 Days ago", rating: 5, title: "The best product in Market", content: "great product. very good quality" }
-                      ]
-    };
+  // Descriptions
+  description: product.description,
+  longDescription: product.longDescription,
+  benefits: product.benefits,
+
+  // Images
+  coverImg: product.productImage?.[0] || "/images/no-image.png",
+  thumbnails: product.productImage?.slice(1) || []
+};
+
 
 
 
