@@ -77,6 +77,7 @@ console.log("req.files:", req.files);
             const newProduct = new Product({
                 productName:products.productName,
                 description:products.description,
+                longDescription: products.longDescription, 
                 brand:products.brand,
                 category:categoryId._id,
                 regularPrice:products.regularPrice,
@@ -84,7 +85,18 @@ console.log("req.files:", req.files);
                 createdOn:new Date(),
                 quantity:products.quantity,
                 size:products.size,
-                color:products.color,
+                author: products.author,
+
+
+                
+      pages: products.pages,
+      language: products.language,
+      isbn: products.isbn,
+
+      
+      benefits: products.benefits ? products.benefits.split(",").map(b => b.trim()) : [],
+
+
                 productImage:imagePaths,
                 status:'Available',
             });
@@ -115,7 +127,7 @@ const getAllProducts = async (req,res)=>{
         { brand: { $regex: new RegExp(".*" + search + ".*", "i") } }
     ]
 })
-.sort({ createdAt: -1 }) // newest first
+.sort({ createdAt: -1 }) 
 .limit(limit * 1)
 .skip((page - 1) * limit)
 .populate('category')

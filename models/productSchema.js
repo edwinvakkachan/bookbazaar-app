@@ -23,7 +23,7 @@ const productSchema = new Schema({
     required: true,
   },
 
-  color: { type: String, required: true },
+
   productImage: { type: [String], default: ["/images/no-image.png"] },
 
   
