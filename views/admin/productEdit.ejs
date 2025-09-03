@@ -15,44 +15,50 @@
       <div class="col-lg-8">
         <div class="card mb-4">
           <div class="card-body">
-            <form id="productForm" method="POST" action="/admin/editProduct/<%= product._id %>" enctype="multipart/form-data"> 
-              
+            <form id="productForm" method="POST" 
+                  action="/admin/editProduct/<%= product._id %>" 
+                  enctype="multipart/form-data" 
+                  onsubmit="return validateForm()">
+
               <!-- Product Name -->
               <div class="mb-3">
                 <label class="form-label">Product Name</label>
                 <input type="text" name="productName" class="form-control" value="<%= product.productName %>">
+                <div id="productName-error" class="invalid-feedback"></div>
               </div>
 
               <!-- Brand -->
-              <!-- Brand -->
-<div class="mb-3">
-  <label class="form-label">Brand</label>
-  <select class="form-select" name="brand" required>
-    <% brands.forEach(b => { %>
-      <option value="<%= b._id %>" <%= product.brand && product.brand._id.toString() === b._id.toString() ? "selected" : "" %>>
-        <%= b.brandName %>
-      </option>
-    <% }) %>
-  </select>
-</div>
-
+              <div class="mb-3">
+                <label class="form-label">Brand</label>
+                <select class="form-select" name="brand">
+                  <% brands.forEach(b => { %>
+                    <option value="<%= b._id %>" <%= product.brand && product.brand._id.toString() === b._id.toString() ? "selected" : "" %>>
+                      <%= b.brandName %>
+                    </option>
+                  <% }) %>
+                </select>
+                <div id="brand-error" class="invalid-feedback"></div>
+              </div>
 
               <!-- Author -->
               <div class="mb-3">
                 <label class="form-label">Author</label>
                 <input type="text" name="author" class="form-control" value="<%= product.author %>">
+                <div id="author-error" class="invalid-feedback"></div>
               </div>
 
               <!-- Short Description -->
               <div class="mb-3">
                 <label class="form-label">Short Description</label>
                 <textarea name="description" class="form-control" rows="3"><%= product.description %></textarea>
+                <div id="description-error" class="invalid-feedback"></div>
               </div>
 
               <!-- Long Description -->
               <div class="mb-3">
                 <label class="form-label">Long Description</label>
                 <textarea name="longDescription" class="form-control" rows="5"><%= product.longDescription %></textarea>
+                <div id="longDescription-error" class="invalid-feedback"></div>
               </div>
 
               <!-- Price / Quantity Row -->
@@ -60,14 +66,17 @@
                 <div class="col-md-4 mb-3">
                   <label class="form-label">Regular Price</label>
                   <input name="regularPrice" type="number" class="form-control" value="<%= product.regularPrice %>">
+                  <div id="regularPrice-error" class="invalid-feedback"></div>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label">Sale Price</label>
                   <input name="salePrice" type="number" class="form-control" value="<%= product.salePrice %>">
+                  <div id="salePrice-error" class="invalid-feedback"></div>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label">Quantity</label>
                   <input name="quantity" type="number" class="form-control" value="<%= product.quantity %>">
+                  <div id="quantity-error" class="invalid-feedback"></div>
                 </div>
               </div>
 
@@ -81,6 +90,7 @@
                     </option>
                   <% }) %>
                 </select>
+                <div id="category-error" class="invalid-feedback"></div>
               </div>
 
               <!-- Book Metadata -->
@@ -88,14 +98,17 @@
                 <div class="col-md-4 mb-3">
                   <label class="form-label">Pages</label>
                   <input name="pages" type="number" class="form-control" value="<%= product.pages %>">
+                  <div id="pages-error" class="invalid-feedback"></div>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label">Language</label>
                   <input name="language" type="text" class="form-control" value="<%= product.language %>">
+                  <div id="language-error" class="invalid-feedback"></div>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label">ISBN</label>
                   <input name="isbn" type="text" class="form-control" value="<%= product.isbn %>">
+                  <div id="isbn-error" class="invalid-feedback"></div>
                 </div>
               </div>
 
@@ -106,61 +119,50 @@
                        value="<%= product.benefits ? product.benefits.join(', ') : '' %>">
               </div>
 
-             
-<!-- Images -->
-<div id="addedImagesContainer" class="mb-2 d-flex flex-wrap gap-2"></div>
+              <!-- Images -->
+              <div id="addedImagesContainer" class="mb-2 d-flex flex-wrap gap-2"></div>
+              <div class="card mb-3">
+                <div class="card-header">
+                  <h5>Edit & Replace Images</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row g-3">
+                    <% for (let i = 0; i < 4; i++) { 
+                         let existingImg = product.productImage && product.productImage[i] ? product.productImage[i] : '';
+                    %>
+                      <div class="col-md-6">
+                        <div class="mb-2 position-relative">
+                          <img src="<%= existingImg %>" 
+                               alt="" 
+                               id="imgView<%= i+1 %>" 
+                               class="img-fluid mb-2 border rounded" 
+                               style="max-height:280px; object-fit:contain; <%= existingImg ? '' : 'display:none;' %>">
 
-<div class="card mb-3">
-  <div class="card-header">
-    <h5>Edit & Replace Images</h5>
-  </div>
-  <div class="card-body">
-    <div class="row g-3">
-      <% for (let i = 0; i < 4; i++) { 
-           let existingImg = product.productImage && product.productImage[i] ? product.productImage[i] : '';
-      %>
-        <div class="col-md-6">
-          <div class="mb-2 position-relative">
-            <!-- Preview -->
-            <img src="<%= existingImg %>" 
-                 alt="" 
-                 id="imgView<%= i+1 %>" 
-                 class="img-fluid mb-2 border rounded" 
-                 style="max-height:280px; object-fit:contain; <%= existingImg ? '' : 'display:none;' %>">
+                          <% if (existingImg) { %>
+                            <button type="button" 
+                                    class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                                    onclick="removeImage(<%= i+1 %>)">×</button>
+                          <% } %>
 
-            <!-- Remove Button -->
-            <% if (existingImg) { %>
-              <button type="button" 
-                      class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
-                      onclick="removeImage(<%= i+1 %>)">×</button>
-            <% } %>
+                          <input
+                            class="form-control"
+                            type="file"
+                            name="images[<%= i %>]"
+                            id="input<%= i+1 %>"
+                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                            onchange="viewImage(event, <%= i+1 %>)">
+                        </div>
 
-  
-
-
-  <input
-  class="form-control"
-  type="file"
-  name="images[<%= i %>]"
-  id="input<%= i+1 %>"
-  accept="image/png, image/jpeg, image/jpg, image/webp"
-  onchange="viewImage(event, <%= i+1 %>)">
-
-
-          </div>
-
-          <!-- Crop Actions -->
-          <div class="d-flex align-items-center mb-3" id="cropActions<%= i+1 %>" style="display:none;">
-            <button type="button" id="saveButton<%= i+1 %>" class="btn btn-sm btn-primary">Save Crop</button>
-            <button type="button" id="cancelButton<%= i+1 %>" class="btn btn-sm btn-outline-secondary ms-2">Cancel</button>
-          </div>
-        </div>
-      <% } %>
-    </div>
-    <div id="images-error" class="invalid-feedback"></div>
-  </div>
-</div>
-
+                        <div class="d-flex align-items-center mb-3" id="cropActions<%= i+1 %>" style="display:none;">
+                          <button type="button" id="saveButton<%= i+1 %>" class="btn btn-sm btn-primary">Save Crop</button>
+                          <button type="button" id="cancelButton<%= i+1 %>" class="btn btn-sm btn-outline-secondary ms-2">Cancel</button>
+                        </div>
+                      </div>
+                    <% } %>
+                  </div>
+                  <div id="images-error" class="invalid-feedback"></div>
+                </div>
+              </div>
 
               <!-- Submit -->
               <div>
@@ -171,7 +173,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </section>
@@ -275,8 +276,101 @@
     const hidden = document.createElement("input");
     hidden.type = "hidden";
     hidden.name = "removeImages";
-    hidden.value = index - 1; // slot index (0–3)
+    hidden.value = index - 1;
     document.getElementById("productForm").appendChild(hidden);
+  }
+
+  
+  function displayErrorMessage(id, msg) {
+    const el = document.getElementById(id);
+    const input = el?.previousElementSibling;
+    if (el) {
+      el.innerText = msg;
+      el.style.display = "block";
+    }
+    if (input && (input.classList.contains("form-control") || input.classList.contains("form-select"))) {
+      input.classList.add("is-invalid");
+    }
+  }
+
+  function clearErrorMessages() {
+    document.querySelectorAll('.invalid-feedback').forEach(el => {
+      el.innerText = '';
+      el.style.display = 'none';
+    });
+    document.querySelectorAll('.form-control, .form-select').forEach(inp => inp.classList.remove('is-invalid'));
+  }
+
+  function validateForm() {
+    clearErrorMessages();
+    let ok = true;
+
+    const name = document.getElementsByName('productName')[0].value.trim();
+    const description = document.getElementsByName('description')[0].value.trim();
+    const longDesc = document.getElementsByName('longDescription')[0].value.trim();
+    const author = document.getElementsByName('author')[0].value.trim();
+    const brand = document.getElementsByName('brand')[0].value;
+    const category = document.getElementsByName('category')[0].value;
+
+    const price = document.getElementsByName('regularPrice')[0].value.trim();
+    const saleprice = document.getElementsByName('salePrice')[0].value.trim();
+    const quantity = document.getElementsByName('quantity')[0].value.trim();
+
+    const pages = document.getElementsByName('pages')[0].value.trim();
+    const language = document.getElementsByName('language')[0].value.trim();
+    const isbn = document.getElementsByName('isbn')[0].value.trim();
+
+    if (!name) { displayErrorMessage('productName-error', 'Please enter a product name.'); ok = false; }
+    if (!description) { displayErrorMessage('description-error', 'Please enter a short description.'); ok = false; }
+    if (!longDesc) { displayErrorMessage('longDescription-error', 'Please enter a long description.'); ok = false; }
+    if (!author) { displayErrorMessage('author-error', 'Please enter an author name.'); ok = false; }
+    if (!brand) { displayErrorMessage('brand-error', 'Please select a brand.'); ok = false; }
+    if (!category) { displayErrorMessage('category-error', 'Please select a category.'); ok = false; }
+
+    if (!/^\d+$/.test(quantity) || parseInt(quantity, 10) < 0) {
+      displayErrorMessage('quantity-error', 'Enter a valid non-negative quantity.');
+      ok = false;
+    }
+
+    if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) < 0) {
+      displayErrorMessage('regularPrice-error', 'Enter a valid price.');
+      ok = false;
+    }
+    if (saleprice && (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) < 0)) {
+      displayErrorMessage('salePrice-error', 'Enter a valid sale price.');
+      ok = false;
+    }
+    if (saleprice && parseFloat(price) <= parseFloat(saleprice)) {
+      displayErrorMessage('regularPrice-error', 'Regular price must be greater than sale price.');
+      ok = false;
+    }
+
+    if (pages && (!/^\d+$/.test(pages) || parseInt(pages, 10) <= 0)) {
+      displayErrorMessage('pages-error', 'Enter a valid number of pages.');
+      ok = false;
+    }
+
+    if (!language) {
+      displayErrorMessage('language-error', 'Please enter a language.');
+      ok = false;
+    }
+
+    if (isbn && !/^(?:\d{9}[\dXx]|\d{13})$/.test(isbn.replace(/[-\s]/g, ''))) {
+      displayErrorMessage('isbn-error', 'Enter a valid ISBN (10 or 13 digits).');
+      ok = false;
+    }
+
+    const existingImgs = <%- JSON.stringify(product.productImage || []) %>;
+    const inputs = [1,2,3,4].map(i => document.getElementById('input' + i));
+    const hasNew = inputs.some(inp => inp && inp.files && inp.files.length > 0);
+    const hasExisting = existingImgs.some(img => img && img.length > 0);
+
+    if (!hasNew && !hasExisting) {
+      displayErrorMessage('images-error', 'Please keep or upload at least one image.');
+      ok = false;
+    }
+
+    return ok;
   }
 </script>
 

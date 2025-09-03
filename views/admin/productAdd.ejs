@@ -89,20 +89,22 @@
 
               <!-- NEW: Book Metadata -->
               <div class="row">
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Pages</label>
-                  <input name="pages" type="number" class="form-control" min="0" placeholder="No. of pages">
-                </div>
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Language</label>
-                  <input name="language" type="text" class="form-control" placeholder="e.g. English">
-                </div>
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">ISBN</label>
-                  <input name="isbn" type="text" class="form-control" placeholder="e.g. 978-3-16-148410-0">
-                </div>
-              </div>
-
+  <div class="col-md-4 mb-3">
+    <label class="form-label">Pages</label>
+    <input name="pages" type="number" class="form-control" min="0" placeholder="No. of pages">
+    <div id="pages-error" class="invalid-feedback"></div>
+  </div>
+  <div class="col-md-4 mb-3">
+    <label class="form-label">Language</label>
+    <input name="language" type="text" class="form-control" placeholder="e.g. English">
+    <div id="language-error" class="invalid-feedback"></div>
+  </div>
+  <div class="col-md-4 mb-3">
+    <label class="form-label">ISBN</label>
+    <input name="isbn" type="text" class="form-control" placeholder="e.g. 978-3-16-148410-0">
+    <div id="isbn-error" class="invalid-feedback"></div>
+  </div>
+</div>
               <!-- NEW: Benefits -->
               <div class="mb-3">
                 <label class="form-label">Benefits / Highlights (comma separated)</label>
@@ -354,36 +356,78 @@
     }
   }
 
-  function validateForm() {
-    clearErrorMessages();
-    let ok = true;
+function validateForm() {
+  clearErrorMessages();
+  let ok = true;
 
-    const name = document.getElementsByName('productName')[0].value.trim();
-    const description = document.getElementById('descriptionid').value.trim();
-    const price = document.getElementsByName('regularPrice')[0].value.trim();
-    const saleprice = document.getElementsByName('salePrice')[0].value.trim();
+  const name = document.getElementsByName('productName')[0].value.trim();
+  const description = document.getElementById('descriptionid').value.trim();
+  const price = document.getElementsByName('regularPrice')[0].value.trim();
+  const saleprice = document.getElementsByName('salePrice')[0].value.trim();
+  const author = document.getElementsByName('author')[0].value.trim();
+  const quantityEl = document.getElementsByName('quantity')[0];
+  const quantity = quantityEl ? quantityEl.value : '';
 
-    const author = document.getElementsByName('author')[0].value.trim();
+  const brand = document.getElementsByName('brand')[0].value;
+  const category = document.getElementsByName('category')[0].value;
+  const longDesc = document.getElementsByName('longDescription')[0].value.trim();
+  const pages = document.getElementsByName('pages')[0].value.trim();
+  const language = document.getElementsByName('language')[0].value.trim();
+  const isbn = document.getElementsByName('isbn')[0].value.trim();
 
-    const quantityEl = document.getElementsByName('quantity')[0];
-    const quantity = quantityEl ? quantityEl.value : '';
+  // --- Required Fields ---
+  if (!name) { displayErrorMessage('productName-error', 'Please enter a product name.'); ok = false; }
+  if (!description) { displayErrorMessage('description-error', 'Please enter a product description.'); ok = false; }
+  if (!brand) { displayErrorMessage('brand-error', 'Please select a brand.'); ok = false; }
+  if (!category) { displayErrorMessage('category-error', 'Please select a category.'); ok = false; }
+  if (!longDesc) { displayErrorMessage('description-error', 'Please enter a long description.'); ok = false; }
+  if (!author) { displayErrorMessage('author-error', 'Please enter an author name.'); ok = false; }
+  if (!language) { displayErrorMessage('language-error', 'Please enter a language.'); ok = false; }
 
-    if (!name) { displayErrorMessage('productName-error', 'Please enter a product name.'); ok = false; }
-    if (!description) { displayErrorMessage('description-error', 'Please enter a product description.'); ok = false; }
-    if (!/^\d+$/.test(quantity) || parseInt(quantity,10) < 0) { displayErrorMessage('quantity-error', 'Enter a valid non-negative quantity.'); ok = false; }
-    if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) < 0) { displayErrorMessage('regularPrice-error', 'Enter a valid price.'); ok = false; }
-    if (saleprice && (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) < 0)) { displayErrorMessage('salePrice-error', 'Enter a valid sale price.'); ok = false; }
-    if (saleprice && parseFloat(price) <= parseFloat(saleprice)) { displayErrorMessage('regularPrice-error', 'Regular price must be greater than sale price.'); ok = false; }
-    
-    if (!author) { displayErrorMessage('author-error', 'Please enter an author name.'); ok = false; }
-
-    
-    const inputs = [1,2,3,4].map(i => document.getElementById('input' + i));
-    const hasAny = inputs.some(inp => inp && inp.files && inp.files.length > 0);
-    if (!hasAny) { displayErrorMessage('images-error', 'Please add and save at least one cropped image.'); ok = false; }
-
-    return ok;
+  // --- Quantity ---
+  if (!/^\d+$/.test(quantity) || parseInt(quantity, 10) < 0) {
+    displayErrorMessage('quantity-error', 'Enter a valid non-negative quantity.');
+    ok = false;
   }
+
+  // --- Price ---
+  if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) < 0) {
+    displayErrorMessage('regularPrice-error', 'Enter a valid price.');
+    ok = false;
+  }
+  if (saleprice && (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) < 0)) {
+    displayErrorMessage('salePrice-error', 'Enter a valid sale price.');
+    ok = false;
+  }
+  if (saleprice && parseFloat(price) <= parseFloat(saleprice)) {
+    displayErrorMessage('regularPrice-error', 'Regular price must be greater than sale price.');
+    ok = false;
+  }
+
+  // --- Pages ---
+  if (pages && (!/^\d+$/.test(pages) || parseInt(pages, 10) <= 0)) {
+    displayErrorMessage('pages-error', 'Enter a valid number of pages.');
+    ok = false;
+  }
+
+  // --- ISBN ---
+  if (isbn && !/^(?:\d{9}[\dXx]|\d{13})$/.test(isbn.replace(/[-\s]/g, ''))) {
+    displayErrorMessage('isbn-error', 'Enter a valid ISBN (10 or 13 digits).');
+    ok = false;
+  }
+
+  // --- Images ---
+  const inputs = [1,2,3,4].map(i => document.getElementById('input' + i));
+  const hasAny = inputs.some(inp => inp && inp.files && inp.files.length > 0);
+  if (!hasAny) {
+    displayErrorMessage('images-error', 'Please add and save at least one cropped image.');
+    ok = false;
+  }
+
+  return ok;
+}
+
+
 
   function displayErrorMessage(id, msg) {  
   const el = document.getElementById(id);
