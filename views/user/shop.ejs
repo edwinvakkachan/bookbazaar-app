@@ -4,159 +4,132 @@
   <section class="shop-page container">
     <div class="row">
       <!-- Sidebar Filters -->
+      <aside class="col-md-3">
+        <div class="filter-box border p-3 rounded">
+          <h5 class="fw-bold">Filters</h5>
+          <hr>
 
-<aside class="col-md-3">
-  <div class="filter-box border p-3 rounded">
-    <h5 class="fw-bold">Filters</h5>
-    <hr>
+          <!-- Category Filter -->
+          <div class="mb-3">
+            <h6 class="d-flex justify-content-between align-items-center">
+              Categories
+            </h6>
+            <% for (let i = 0; i < category.length; i++) { %>
+              <div class="form-check">
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="cat-<%= category[i]._id %>"
+                       onclick="applyFilter('category','<%= category[i]._id %>')"
+                       <%= (query.category && query.category.split(',').includes(category[i]._id.toString()))
+                            ? 'checked' : '' %> >
+                <label class="form-check-label" for="cat-<%= category[i]._id %>">
+                  <%= category[i].name %>
+                </label>
+              </div>
+            <% } %>
+          </div>
 
-    <!-- Category Filter -->
-    <div class="mb-3">
-      <h6 class="d-flex justify-content-between align-items-center">
-        Categories
-      </h6>
-      <% for (let i = 0; i < category.length; i++) { %>
-        <div class="form-check">
+          <!-- Brand Filter -->
+          <div class="mb-3">
+            <h6>Brands</h6>
+            <% for (let i = 0; i < brand.length; i++) { %>
+              <div class="form-check">
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="brand-<%= brand[i]._id %>"
+                       onclick="applyFilter('brand','<%= brand[i]._id %>')"
+                       <%= (query.brand && query.brand.split(',').includes(brand[i]._id.toString()))
+                            ? 'checked' : '' %> >
+                <label class="form-check-label" for="brand-<%= brand[i]._id %>">
+                  <%= brand[i].brandName %>
+                </label>
+              </div>
+            <% } %>
+          </div>
 
+          <!-- Price Filter -->
+          <div class="mb-3">
+            <h6>Price</h6>
+            <div class="d-flex flex-column gap-2">
+              <button type="button" class="btn btn-outline-dark <%= query.price === 'under100' ? 'active' : '' %>"
+                      onclick="applyFilter('price','under100')">Under ₹100</button>
 
-         <input class="form-check-input"
-       type="checkbox"
-       id="cat-<%= category[i]._id %>"
-       onclick="applyFilter('category','<%= category[i]._id %>')"
-       <%= (query.category && query.category.split(',').includes(category[i]._id.toString())) 
-            ? 'checked' : '' %> >
+              <button type="button" class="btn btn-outline-dark <%= query.price === '100-250' ? 'active' : '' %>"
+                      onclick="applyFilter('price','100-250')">₹100 - ₹250</button>
 
+              <button type="button" class="btn btn-outline-dark <%= query.price === '250-500' ? 'active' : '' %>"
+                      onclick="applyFilter('price','250-500')">₹250 - ₹500</button>
 
-
-
-          <label class="form-check-label" for="cat-<%= category[i]._id %>">
-            <%= category[i].name %>
-          </label>
+              <button type="button" class="btn btn-outline-dark <%= query.price === 'above500' ? 'active' : '' %>"
+                      onclick="applyFilter('price','above500')">Above ₹500</button>
+            </div>
+          </div>
         </div>
-      <% } %>
-    </div>
-
-    <!-- Brand Filter -->
-    <div class="mb-3">
-      <h6>Brands</h6>
-      <% for (let i = 0; i < brand.length; i++) { %>
-        <div class="form-check">
-
-
-
-<input class="form-check-input"
-       type="checkbox"
-       id="brand-<%= brand[i]._id %>"
-       onclick="applyFilter('brand','<%= brand[i]._id %>')"
-       <%= (query.brand && query.brand.split(',').includes(brand[i]._id.toString())) 
-            ? 'checked' : '' %> >
-
-<label class="form-check-label" for="brand-<%= brand[i]._id %>">
-  <%= brand[i].brandName %>
-</label>
-
-
-
-
-        </div>
-      <% } %>
-    </div>
-
-    <!-- Price Filter -->
-    <div class="mb-3">
-      <h6>Price</h6>
-      <div class="d-flex flex-column gap-2">
-        
-        <button type="button" class="btn btn-outline-dark 
-                <%= query.price === 'under100' ? 'active' : '' %>"
-                onclick="applyFilter('price','under100')">Under ₹100</button>
-
-        <button type="button" class="btn btn-outline-dark 
-                <%= query.price === '100-250' ? 'active' : '' %>"
-                onclick="applyFilter('price','100-250')">₹100 - ₹250</button>
-
-        <button type="button" class="btn btn-outline-dark 
-                <%= query.price === '250-500' ? 'active' : '' %>"
-                onclick="applyFilter('price','250-500')">₹250 - ₹500</button>
-
-        <button type="button" class="btn btn-outline-dark 
-                <%= query.price === 'above500' ? 'active' : '' %>"
-                onclick="applyFilter('price','above500')">Above ₹500</button>
-      </div>
-    </div>
-  </div>
-</aside>
-
+      </aside>
 
       <!-- Products + Sorting -->
       <main class="col-md-9">
         <!-- Sort bar -->
-
-
         <div class="d-flex justify-content-end mb-3">
           <ul class="nav nav-pills">
             <li class="nav-item">
               <a class="nav-link <%= sort === 'popularity' ? 'active' : '' %>"
-                 href="/shop?sort=popularity">Popularity</a>
+                 href="javascript:void(0)" onclick="applySort('popularity')">Popularity</a>
             </li>
             <li class="nav-item">
               <a class="nav-link <%= sort === 'newest' ? 'active' : '' %>"
-                 href="/shop?sort=newest">Newest First</a>
+                 href="javascript:void(0)" onclick="applySort('newest')">Newest First</a>
             </li>
             <li class="nav-item">
               <a class="nav-link <%= sort === 'priceAsc' ? 'active' : '' %>"
-                 href="/shop?sort=priceAsc">Price Low - High</a>
+                 href="javascript:void(0)" onclick="applySort('priceAsc')">Price Low - High</a>
             </li>
             <li class="nav-item">
               <a class="nav-link <%= sort === 'priceDesc' ? 'active' : '' %>"
-                 href="/shop?sort=priceDesc">Price High - Low</a>
+                 href="javascript:void(0)" onclick="applySort('priceDesc')">Price High - Low</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= !sort ? 'active' : '' %>"
+                 href="javascript:void(0)" onclick="applySort('')">Default</a>
             </li>
           </ul>
         </div>
 
         <!-- Product Grid -->
-
-
         <div class="row">
-  <% for (let i = 0; i < products.length; i++) { %>
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <img src="<%= products[i].productImage[0] %>" class="card-img-top" alt="<%= products[i].productName %>">
-        <div class="card-body">
-          <h6 class="card-title"><%= products[i].productName %></h6>
-          <!-- <p class="mb-1">Brand: <%= products[i].brand %></p> -->
-           <p class="mb-1">Brand: <%= products[i].brand?.brandName || "N/A" %></p>
-
-          <p>
-            ₹<%= products[i].salePrice %>
-            <span class="text-muted"><strike>₹<%= products[i].regularPrice %></strike></span>
-          </p>
-          
-          <div class="d-flex justify-content-between">
-            <a href="/book/<%= products[i]._id %>" class="btn btn-sm btn-outline-dark">
-              View Details
-            </a>
-            <button class="btn btn-sm btn-dark">Add to Cart</button>
-          </div>
+          <% for (let i = 0; i < products.length; i++) { %>
+            <div class="col-md-4 mb-4">
+              <div class="card h-100">
+                <img src="<%= products[i].productImage[0] %>" class="card-img-top" alt="<%= products[i].productName %>">
+                <div class="card-body">
+                  <h6 class="card-title"><%= products[i].productName %></h6>
+                  <p class="mb-1">Brand: <%= products[i].brand?.brandName || "N/A" %></p>
+                  <p>₹<%= products[i].salePrice %>
+                    <span class="text-muted"><strike>₹<%= products[i].regularPrice %></strike></span>
+                  </p>
+                  <div class="d-flex justify-content-between">
+                    <a href="/book/<%= products[i]._id %>" class="btn btn-sm btn-outline-dark">View Details</a>
+                    <button class="btn btn-sm btn-dark">Add to Cart</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% } %>
         </div>
-      </div>
-    </div>
-  <% } %>
-</div>
-
-
 
         <!-- Pagination -->
         <div class="pagination mt-4">
           <% if (currentPage > 1) { %>
-            <a class="btn btn-outline-dark" href="/shop?page=<%= currentPage - 1 %>">Prev</a>
+            <a class="btn btn-outline-dark" href="javascript:void(0)" onclick="goToPage(<%= currentPage - 1 %>)">Prev</a>
           <% } %>
+
           <% for (let i = 1; i <= totalPages; i++) { %>
             <a class="btn <%= currentPage === i ? 'btn-dark' : 'btn-outline-dark' %>"
-               href="/shop?page=<%= i %>"><%= i %></a>
+               href="javascript:void(0)" onclick="goToPage(<%= i %>)"><%= i %></a>
           <% } %>
+
           <% if (currentPage < totalPages) { %>
-            <a class="btn btn-outline-dark" href="/shop?page=<%= currentPage + 1 %>">Next</a>
+            <a class="btn btn-outline-dark" href="javascript:void(0)" onclick="goToPage(<%= currentPage + 1 %>)">Next</a>
           <% } %>
         </div>
       </main>
@@ -164,21 +137,21 @@
   </section>
 </div>
 
-
 <script>
+  
   function applyFilter(type, value) {
     const params = new URLSearchParams(window.location.search);
     let current = params.get(type) ? params.get(type).split(",") : [];
 
     if (type === "price") {
-      // price is single-select → replace value
+      
       params.set(type, value);
     } else {
-      // categories / brands → allow multiple selections
+      
       if (current.includes(value)) {
-        current = current.filter(v => v !== value); // remove
+        current = current.filter(v => v !== value); 
       } else {
-        current.push(value); // add
+        current.push(value); 
       }
 
       if (current.length > 0) {
@@ -188,11 +161,29 @@
       }
     }
 
-    params.set("page", 1); // reset pagination when filtering
+    
+    params.set("page", 1);
     window.location.href = "/shop?" + params.toString();
   }
+
+  
+  function applySort(value) {
+    const params = new URLSearchParams(window.location.search);
+    if (value) {
+      params.set('sort', value);
+    } else {
+      params.delete('sort');
+    }
+    params.set('page', 1); 
+    window.location.href = '/shop?' + params.toString();
+  }
+
+  
+  function goToPage(pageNumber) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('page', pageNumber);
+    window.location.href = '/shop?' + params.toString();
+  }
 </script>
-
-
 
 <%- include("../partials/user/footer.ejs") %>

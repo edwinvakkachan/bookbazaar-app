@@ -596,20 +596,23 @@ const allowedbrands = await Brand.find({ isBlocked: false }).select("_id");
   .skip(skip)
   .limit(limit);
 
-    const totalProducts = await Product.countDocuments(query);
-    const totalPages = Math.ceil(totalProducts / limit);
-    console.log('products',products);
+    
+const totalProducts = await Product.countDocuments(query);
+const totalPages = Math.ceil(totalProducts / limit);
+console.log('products', products);
 
-    res.render("shop", {
-      products,
-      category: await Category.find({ isListed: true }),   
-      brand: await Brand.find({isBlocked:false}), //changed
-      currentPage: Number(page),
-      totalPages,
-      active: "books",
-      query: req.query,
-      sort:{name: 1}, 
-    });
+
+res.render("shop", {
+  products,
+  category: await Category.find({ isListed: true }),
+  brand: await Brand.find({ isBlocked: false }), 
+  currentPage: Number(page),
+  totalPages,
+  active: "books",
+  query: req.query,
+  sort: sort || ""    
+});
+
   } catch (error) {
     console.error("Shop error:", error);
     res.status(500).send("Server Error");
