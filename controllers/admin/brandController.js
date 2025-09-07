@@ -28,7 +28,7 @@ const getBrandPage = async (req,res)=>{
         })
         
     } catch (error) {
-        console.error('error in getBrandPage',error)
+        console.error('error in getBrandPage',error) //error handling meddileware important 
     }
 }
 
@@ -116,3 +116,4 @@ module.exports = {
     deleteBrand,
 
 }
+

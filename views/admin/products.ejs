@@ -1,5 +1,5 @@
 <%- include('../partials/admin/header') %>
-<!-- <link rel="stylesheet" href="/css/product.css"> -->
+
 
 <div class="content-header mb-3">
   <h2 class="page-title">Products</h2>
@@ -33,34 +33,35 @@
         <%for(let i=0;i<data.length;i++) {%>
       <!-- Example row  -->
       <tr>
-        <td><%=data[i].productName%></td>
-        <<td><%= data[i].brand?.brandName || "N/A" %></td>
-        <td><%=data[i].category.name%></td>
-        <td><%=data[i].salePrice%></td>
-        <td></td>
+  <td><%= data[i].productName %></td>
+  <td><%= data[i].brand?.brandName || "N/A" %></td>
+  <td><%= data[i].category?.name || "N/A" %></td>
+  <td><%= data[i].salePrice %></td>
+  <td><%= data[i].offerPrice || "-" %></td>
 
-        <td class="d-flex gap-2">
-          <a href="#" class="btn btn-dark btn-sm text-white" style="width: 100px;">Add Offer</a>
-          <a href="#" class="btn btn-dark btn-sm text-white" style="width: 100px;">Remove</a>
-        </td>
-
-        <td><%=data[i].quantity%></td>
-
-        <td class="d-flex gap-2">
-          <%if(data[i].isBlocked===false){%>
-          <a href="/admin/blockProduct?id=<%=data[i]._id%>" class="btn btn-danger btn-sm text-white" style="width: 80px;">Block</a>
-          <%}else{%>
-          <a href="/admin/unblockProduct?id=<%=data[i]._id%>" class="btn btn-success btn-sm text-white" style="width: 80px;">Unblock</a>
-          <%}%>
-        </td>
-
-        <td>
-  <a href="/admin/editProduct/<%= data[i]._id %>" class="btn btn-dark btn-sm text-white" style="width: 80px;">Edit</a>
+  <td>
+  <div class="d-flex justify-content-center gap-2">
+    <a href="#" class="btn btn-dark btn-sm text-white">Add Offer</a>
+    <a href="#" class="btn btn-dark btn-sm text-white">Remove</a>
+  </div>
 </td>
 
 
+  <td><%= data[i].quantity %></td>
 
-      </tr>
+  <td>
+    <% if (!data[i].isBlocked) { %>
+      <a href="/admin/blockProduct?id=<%= data[i]._id %>" class="btn btn-danger btn-sm text-white" style="width: 80px;">Block</a>
+    <% } else { %>
+      <a href="/admin/unblockProduct?id=<%= data[i]._id %>" class="btn btn-success btn-sm text-white" style="width: 80px;">Unblock</a>
+    <% } %>
+  </td>
+
+  <td>
+    <a href="/admin/editProduct/<%= data[i]._id %>" class="btn btn-dark btn-sm text-white" style="width: 80px;">Edit</a>
+  </td>
+</tr>
+
       <%}%>
     </tbody>
   </table>

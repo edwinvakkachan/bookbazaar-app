@@ -67,19 +67,19 @@
       <h6>Price</h6>
       <div class="d-flex flex-column gap-2">
         
-        <button type="button" class="btn btn-outline-primary 
+        <button type="button" class="btn btn-outline-dark 
                 <%= query.price === 'under100' ? 'active' : '' %>"
                 onclick="applyFilter('price','under100')">Under ₹100</button>
 
-        <button type="button" class="btn btn-outline-primary 
+        <button type="button" class="btn btn-outline-dark 
                 <%= query.price === '100-250' ? 'active' : '' %>"
                 onclick="applyFilter('price','100-250')">₹100 - ₹250</button>
 
-        <button type="button" class="btn btn-outline-primary 
+        <button type="button" class="btn btn-outline-dark 
                 <%= query.price === '250-500' ? 'active' : '' %>"
                 onclick="applyFilter('price','250-500')">₹250 - ₹500</button>
 
-        <button type="button" class="btn btn-outline-primary 
+        <button type="button" class="btn btn-outline-dark 
                 <%= query.price === 'above500' ? 'active' : '' %>"
                 onclick="applyFilter('price','above500')">Above ₹500</button>
       </div>
@@ -91,6 +91,8 @@
       <!-- Products + Sorting -->
       <main class="col-md-9">
         <!-- Sort bar -->
+
+
         <div class="d-flex justify-content-end mb-3">
           <ul class="nav nav-pills">
             <li class="nav-item">
@@ -131,10 +133,10 @@
           </p>
           
           <div class="d-flex justify-content-between">
-            <a href="/book/<%= products[i]._id %>" class="btn btn-sm btn-outline-info">
+            <a href="/book/<%= products[i]._id %>" class="btn btn-sm btn-outline-dark">
               View Details
             </a>
-            <button class="btn btn-sm btn-primary">Add to Cart</button>
+            <button class="btn btn-sm btn-dark">Add to Cart</button>
           </div>
         </div>
       </div>
