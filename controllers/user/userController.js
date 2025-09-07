@@ -694,6 +694,55 @@ console.log('book details',book)
 }
 
 
+const getUserProfile = async (req, res) => {
+  try {
+    
+    const sessionUser = req.session && req.session.user;
+    let userId = null;
+
+    if (sessionUser) {
+      
+      userId = sessionUser._id || sessionUser.id || sessionUser;
+    }
+
+    
+    if (!userId && req.user && req.user._id) {
+      userId = req.user._id;
+    }
+
+    if (!userId) {
+   
+      return res.redirect('/login');
+    }
+
+   
+    const user = await User.findById(userId).lean();
+    // console.log(user)
+    if (!user) return res.status(404).send('User not found');
+
+    
+    const vmUser = {
+      ...user,
+      displayName: user.name || '', 
+      dobFormatted: user.dob ? new Date(user.dob).toISOString().slice(0, 10) : ''
+    };
+
+    
+    if (vmUser.password) delete vmUser.password;
+
+    
+    return res.render('userProfile', {
+      user: vmUser,
+      active: 'profile',
+      success: null,
+      errors: null
+    });
+  } catch (err) {
+    console.error('getUserProfile error:', err);
+    return res.status(500).send('Server error');
+  }
+};
+
 
 
 
@@ -763,6 +812,8 @@ module.exports = {
     about,
     contact,
     sendContact,
+    getUserProfile,
     filterProduct,
     test,
+
 };

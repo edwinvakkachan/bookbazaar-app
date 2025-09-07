@@ -33,10 +33,11 @@ router.post('/forgotPassword/resend', userController.resendForgotOtp);
 //product page
 router.get('/shop',userAuth, userController.loadshoppingPage);
 router.get('/filter',userController.filterProduct);
-
-
-
 router.get('/book/:id',userAuth,userController.getBookDetails);
+
+//userProfile
+
+router.get('/userProfile',userAuth,userController.getUserProfile)
 
 
 //testing

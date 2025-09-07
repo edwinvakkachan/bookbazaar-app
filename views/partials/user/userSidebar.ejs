@@ -1,0 +1,26 @@
+<!-- views/partials/userSidebar.ejs -->
+<div class="user-account-sidebar">
+  <div class="breadcrumb small text-muted mb-3">Home / <span class="text-dark">My Account</span></div>
+
+  <div class="text-center mb-3">
+    <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style="width:110px;height:110px;">
+      <i class="bi bi-person" style="font-size:44px;color:#9a9a9a"></i>
+    </div>
+    <div class="mt-2">
+      <button class="btn btn-light btn-sm rounded-pill shadow-sm px-3">
+        <%= user ? (user.firstName + ' ' + user.lastName) : 'Customer Name' %>
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-2 fw-semibold">Manage My Account</div>
+  <ul class="list-unstyled">
+    <li class="mb-2"><a href="/userProfile" class="text-decoration-none <%= active==='profile' ? 'fw-bold text-dark' : 'text-dark' %>">My Profile</a></li>
+    <li class="mb-2"><a href="/address-book" class="text-decoration-none text-muted">Address Book</a></li>
+    <li class="mb-2"><a href="/orders" class="text-decoration-none text-dark">My Orders</a></li>
+    <li class="mb-2"><a href="/wishlist" class="text-decoration-none text-dark">My WishList</a></li>
+    <li class="mb-2"><a href="/wallet" class="text-decoration-none text-dark">Wallet</a></li>
+    <li class="mb-2"><a href="/coupons" class="text-decoration-none text-dark">Coupons</a></li>
+    <li class="mb-2"><a href="/change-password" class="text-decoration-none text-dark">Change password</a></li>
+  </ul>
+</div>
