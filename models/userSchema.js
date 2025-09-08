@@ -27,6 +27,15 @@ const userSchema = new Schema({
         type:String,
         required:false,
     },
+    dob: {
+        type: Date,
+        default: null
+        },
+
+    avatarUrl: {
+        type: String,
+        default: ''
+    },
     isBlocked:{
         type:Boolean,
         default:false,

@@ -38,6 +38,8 @@ router.get('/book/:id',userAuth,userController.getBookDetails);
 //userProfile
 
 router.get('/userProfile',userAuth,userController.getUserProfile)
+router.get('/userProfile/edit', userAuth, userController.getEditProfile);
+router.post('/userProfile/edit', userAuth, userController.postEditProfile);
 
 
 //testing

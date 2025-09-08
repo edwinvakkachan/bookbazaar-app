@@ -2,6 +2,10 @@ const User = require("../../models/userSchema")
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const upload = require('../../helpers/multer'); // multer fuction 
 
 const Product  = require('../../models/productSchema');
 const Category = require('../../models/categorySchema')
@@ -743,6 +747,250 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+//-----------------------------------------------------------------------
+
+function getUserIdFromRequest(req) {
+  if (req.session && req.session.user) {
+    return req.session.user._id || req.session.user.id || req.session.user;
+  }
+  if (req.user && req.user._id) return req.user._id;
+  return null;
+}
+
+
+async function getEditProfile(req, res) {
+  try {
+    const userId = getUserIdFromRequest(req);
+    if (!userId) return res.redirect('/login');
+
+    const userDoc = await User.findById(userId);
+    if (!userDoc) return res.status(404).send('User not found');
+
+    const vm = userDoc.toObject();
+    vm.displayName = vm.name || '';
+    vm.dobFormatted = vm.dob ? new Date(vm.dob).toISOString().slice(0, 10) : '';
+
+    res.render('userEditProfile', {
+      user: vm,
+      active: 'profile',
+      errors: null,
+      success: null
+    });
+  } catch (err) {
+    console.error('getEditProfile error:', err);
+    res.status(500).send('Server error');
+  }
+}
+
+
+const postEditProfile = async (req, res) => {
+  
+  try {
+    await new Promise((resolve, reject) => {
+      upload.single('avatar')(req, res, (err) => (err ? reject(err) : resolve()));
+    });
+  } catch (uploadErr) {
+    console.error('Avatar upload error:', uploadErr);
+    return res.render('userEditProfile', {
+      user: {
+        displayName: req.body.name || '',
+        name: req.body.name || '',
+        email: req.body.email || '',
+        phone: req.body.phone || '',
+        dobFormatted: req.body.dob || ''
+      },
+      active: 'profile',
+      errors: [{ msg: uploadErr.message || 'File upload failed' }],
+      success: null,
+      csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+    });
+  }
+
+  try {
+    
+    let userId = null;
+    if (req.session && req.session.user) {
+      const s = req.session.user;
+      userId = s._id || s.id || s;
+    }
+    if (!userId && req.session && req.session.userId) {
+      userId = req.session.userId;
+    }
+    if (!userId && req.user && req.user._id) {
+      userId = req.user._id;
+    }
+    if (!userId) return res.redirect('/login');
+
+    
+    const { name, email, phone, dob, currentPassword, newPassword, confirmPassword } = req.body || {};
+    const errors = [];
+
+   
+    if (!name || !String(name).trim()) errors.push({ msg: 'Name is required' });
+    if (!email || !/^\S+@\S+\.\S+$/.test(String(email))) errors.push({ msg: 'A valid email is required' });
+
+    if (newPassword && newPassword.length > 0) {
+      if (!currentPassword || currentPassword.length === 0) {
+        errors.push({ msg: 'Current password is required to change your password' });
+      }
+      if (newPassword.length < 6) {
+        errors.push({ msg: 'New password must be at least 6 characters' });
+      }
+      if (newPassword !== confirmPassword) {
+        errors.push({ msg: 'New password and confirm password do not match' });
+      }
+    }
+
+    if (errors.length) {
+      return res.render('userEditProfile', {
+        user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+        active: 'profile',
+        errors,
+        success: null,
+        csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+      });
+    }
+
+   
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).send('User not found');
+
+    
+    const normalizedNewEmail = String(email).trim().toLowerCase();
+    if (normalizedNewEmail !== String(user.email || '').toLowerCase()) {
+      const conflict = await User.findOne({ email: normalizedNewEmail });
+      if (conflict && conflict._id.toString() !== user._id.toString()) {
+        return res.render('userEditProfile', {
+          user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+          active: 'profile',
+          errors: [{ msg: 'Email already in use by another account' }],
+          success: null,
+          csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+        });
+      }
+      user.email = normalizedNewEmail;
+      user.emailVerified = false;
+    }
+
+    
+    user.name = String(name || '').trim();
+    user.phone = phone && String(phone).trim().length ? String(phone).trim() : null;
+    if (dob && String(dob).trim().length) {
+      const d = new Date(dob);
+      if (!isNaN(d)) user.dob = d;
+    } else {
+      user.dob = null;
+    }
+
+   
+
+    // avatar s
+if (req.file) {
+  console.log('DEBUG: received file:', {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+    bufferExists: !!req.file.buffer
+  });
+
+  if (!req.file.buffer) {
+    return res.render('userEditProfile', {
+      user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+      active: 'profile',
+      errors: [{ msg: 'Uploaded file empty. Please try again.' }],
+      success: null,
+      csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+    });
+  }
+
+  const avatarDir = path.join(__dirname, '..','..', 'public', 'uploads', 'avatars');
+  try {
+    await fs.promises.mkdir(avatarDir, { recursive: true });
+  } catch (mkdirErr) {
+    console.error('Could not create avatar dir', avatarDir, mkdirErr);
+    return res.status(500).send('Server error');
+  }
+
+  const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+  const fname = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`;
+  const fullPath = path.join(avatarDir, fname);
+
+  try {
+    await fs.promises.writeFile(fullPath, req.file.buffer);
+    console.log('Avatar written to', fullPath);
+  } catch (writeErr) {
+    console.error('Failed to write avatar to disk:', writeErr);
+    return res.render('userEditProfile', {
+      user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+      active: 'profile',
+      errors: [{ msg: 'Failed to save uploaded image. Try again later.' }],
+      success: null,
+      csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+    });
+  }
+
+  // delete old avatar 
+  try {
+    if (user.avatarUrl && user.avatarUrl.startsWith('/uploads/avatars/')) {
+      const oldRelative = user.avatarUrl.replace(/^\//, '');
+      const oldFull = path.join(__dirname, '..', 'public', oldRelative);
+      if (fs.existsSync(oldFull)) await fs.promises.unlink(oldFull);
+    }
+  } catch (unlinkErr) {
+    console.warn('Could not delete old avatar:', unlinkErr.message);
+  }
+
+  user.avatarUrl = `/uploads/avatars/${fname}`;
+}
+
+
+
+
+
+
+
+    //  Password change
+    if (newPassword && newPassword.length > 0) {
+      const ok = await bcrypt.compare(String(currentPassword || ''), String(user.password || ''));
+      if (!ok) {
+        return res.render('userEditProfile', {
+          user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+          active: 'profile',
+          errors: [{ msg: 'Current password is incorrect' }],
+          success: null,
+          csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+        });
+      }
+      user.password = await bcrypt.hash(String(newPassword), 10);
+    }
+
+    // Save  refresh session
+    await user.save();
+    const fresh = await User.findById(user._id).lean();
+    if (fresh && fresh.password) delete fresh.password;
+    if (req.session) req.session.user = fresh;
+
+    return res.redirect('/userProfile');
+  } catch (err) {
+    console.error('postEditProfile error:', err);
+    return res.render('userEditProfile', {
+      user: {
+        displayName: req.body.name || '',
+        name: req.body.name || '',
+        email: req.body.email || '',
+        phone: req.body.phone || '',
+        dobFormatted: req.body.dob || ''
+      },
+      active: 'profile',
+      errors: [{ msg: 'Server error. Please try again.' }],
+      success: null,
+      csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+    });
+  }
+};
+
+
+
 
 
 
@@ -813,6 +1061,8 @@ module.exports = {
     contact,
     sendContact,
     getUserProfile,
+    postEditProfile,
+    getEditProfile,
     filterProduct,
     test,
 
