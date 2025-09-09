@@ -1,4 +1,6 @@
 const User = require("../../models/userSchema")
+const Wishlist = require("../../models/whishlistSchema")
+
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
@@ -884,7 +886,7 @@ const postEditProfile = async (req, res) => {
 
    
 
-    // avatar s
+    // avatar 
 if (req.file) {
   console.log('DEBUG: received file:', {
     originalname: req.file.originalname,
@@ -929,7 +931,7 @@ if (req.file) {
     });
   }
 
-  // delete old avatar 
+  //  old avatar deletion
   try {
     if (user.avatarUrl && user.avatarUrl.startsWith('/uploads/avatars/')) {
       const oldRelative = user.avatarUrl.replace(/^\//, '');
@@ -964,7 +966,7 @@ if (req.file) {
       user.password = await bcrypt.hash(String(newPassword), 10);
     }
 
-    // Save  refresh session
+   
     await user.save();
     const fresh = await User.findById(user._id).lean();
     if (fresh && fresh.password) delete fresh.password;
@@ -986,6 +988,277 @@ if (req.file) {
       success: null,
       csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
     });
+  }
+};
+
+
+
+
+const sessionUserId = (req) => {
+  if (!req.session || !req.session.user) return null;
+  const s = req.session.user;
+  if (typeof s === 'string' || typeof s === 'number') return s.toString();
+  if (typeof s === 'object' && (s._id || s.id)) return (s._id || s.id).toString();
+  return null;
+};
+
+
+const getAddress = async (req, res) => {
+  try {
+    const userId = sessionUserId(req);
+    if (!userId) return res.status(401).send('Unauthorized: no user in session');
+
+    const user = await User.findById(userId).lean();
+    if (!user) return res.status(404).send('User not found');
+
+    user.addresses = Array.isArray(user.addresses) ? user.addresses : [];
+    return res.render('addresses', { user });
+  } catch (error) {
+    console.error('getAddresses error:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const getAddAddress = async(req,res)=>{
+  try {
+    res.render('addressAdd', { user: req.session.user || null });
+  } catch (error) {
+    
+  }
+}
+
+
+const addAddress = async (req, res) => {
+  try {
+    const userId = sessionUserId(req);
+    if (!userId) return res.status(401).json({ message: 'Unauthorized: no user in session' });
+
+    if (!req.body) return res.status(400).json({ message: 'No form data received' });
+
+    
+    const addressData = { ...req.body };
+
+    
+    addressData.isPrimary = (addressData.isPrimary === 'true' || addressData.isPrimary === 'on' || addressData.isPrimary === true);
+
+    
+    if (!addressData.name || !addressData.line1) {
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: { name: addressData.name ? undefined : 'required', line1: addressData.line1 ? undefined : 'required' }
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!Array.isArray(user.addresses)) user.addresses = [];
+
+    
+    if (user.addresses.length === 0) {
+      addressData.isPrimary = true;
+    } else if (addressData.isPrimary) {
+      user.addresses.forEach(a => (a.isPrimary = false));
+    }
+
+    user.addresses.push(addressData);
+    await user.save();
+
+    
+  return res.redirect('/addresses')
+  } catch (error) {
+    console.error('addAddress error:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const getEditAddress = async (req,res)=>{
+  try {
+    const sessionUser = req.session.user;
+    const addressId = req.params.addressId;
+    // console.log('address id', addressId);
+
+    
+    const foundUser = await User.findById(sessionUser._id);
+    if (!foundUser) return res.status(404).send('User not found');
+
+    const addr = foundUser.addresses.id(addressId);
+    if (!addr) return res.status(404).send('Address not found');
+
+    return res.render('editAddress', { address: addr });
+  } catch (error) {
+    console.error('get editPage error', error);
+    return res.redirect('/pageNotFound');
+  }
+}
+
+
+
+const editAddress = async (req, res) => {
+  try {
+    const userId = sessionUserId(req);
+    if (!userId) return res.status(401).json({ message: 'Unauthorized: no user in session' });
+
+    const { addressId } = req.params;
+    if (!addressId) return res.status(400).json({ message: 'addressId param required' });
+    if (!req.body) return res.status(400).json({ message: 'No form data received' });
+
+    const updates = { ...req.body };
+    updates.isPrimary = (updates.isPrimary === 'true' || updates.isPrimary === 'on' || updates.isPrimary === true);
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!Array.isArray(user.addresses)) user.addresses = [];
+
+    const addr = user.addresses.id(addressId);
+    if (!addr) return res.status(404).json({ message: 'Address not found' });
+
+    if (updates.isPrimary) {
+      user.addresses.forEach(a => (a.isPrimary = false));
+    }
+
+    addr.set(updates);
+    await user.save();
+
+    res.redirect('/addresses')
+  } catch (error) {
+    console.error('editAddress error:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
+const deleteAddress = async (req, res) => {
+  try {
+    const userId = req.session.user._id || req.session.user;
+    const { addressId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!Array.isArray(user.addresses)) user.addresses = [];
+
+    
+    user.addresses = user.addresses.filter(a => String(a._id) !== String(addressId));
+
+    
+    if (!user.addresses.some(a => a.isPrimary) && user.addresses.length) {
+      user.addresses[0].isPrimary = true;
+    }
+
+    await user.save();
+   res.redirect('/addresses')
+  } catch (error) {
+    console.error('deleteAddress error:', error);
+    return res.redirect('/pageNotFound')
+  }
+};
+
+
+
+const setPrimary = async (req, res) => {
+  try {
+    const userId = sessionUserId(req);
+    if (!userId) return res.status(401).json({ message: 'Unauthorized: no user in session' });
+
+    const { addressId } = req.params;
+    if (!addressId) return res.status(400).json({ message: 'addressId param required' });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!Array.isArray(user.addresses)) user.addresses = [];
+
+    const addr = user.addresses.id(addressId);
+    if (!addr) return res.status(404).json({ message: 'Address not found' });
+
+    user.addresses.forEach(a => (a.isPrimary = a._id.toString() === addressId));
+    await user.save();
+
+    res.redirect('/addresses')
+  } catch (error) {
+    console.error('setPrimary error:', error);
+    return res.redirect('/pageNotFound')
+  }
+};
+
+
+
+
+const addToWishlist = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const userId = req.session.user._id; 
+
+    
+    const exists = await Wishlist.findOne({ userId, productId });
+    if (exists) {
+      return res.render("wishlist", { error: "Already in wishlist" });
+    }
+
+    await Wishlist.create({ userId, productId });
+    res.redirect("/wishlist");
+  } catch (err) {
+    console.error(err);
+    res.render("wishlist", { error: "Something went wrong" });
+  }
+};
+
+
+const getWishlist = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+   
+    const items = await Wishlist.find({ userId }).populate('productId');
+
+    
+    const wishlistProductIds = items
+      .map(it => it.productId && it.productId._id)
+      .filter(Boolean); 
+
+   
+    let recommendations;
+    if (wishlistProductIds.length === 0) {
+      recommendations = await Product.aggregate([{ $sample: { size: 4 } }]);
+    } else {
+      recommendations = await Product.aggregate([
+        { $match: { _id: { $nin: wishlistProductIds } } }, 
+        { $sample: { size: 4 } }
+      ]);
+    }
+
+    
+    res.render('wishlist', {
+      items,
+      recommendations,
+      user: req.session.user,
+      cartCount: req.session.cart ? req.session.cart.length : 0
+    });
+  } catch (err) {
+    console.error('getWishlist error:', err);
+    res.render('wishlist', {
+      items: [],
+      recommendations: [],
+      error: 'Unable to load wishlist',
+      user: req.session.user,
+      cartCount: req.session.cart ? req.session.cart.length : 0
+    });
+  }
+};
+
+
+const removeFromWishlist = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const userId = req.session.user._id;
+
+    await Wishlist.deleteOne({ userId, productId });
+    res.redirect("/wishlist");
+  } catch (err) {
+    console.error(err);
+    res.render("wishlist", { error: "Could not remove item" });
   }
 };
 
@@ -1063,6 +1336,16 @@ module.exports = {
     getUserProfile,
     postEditProfile,
     getEditProfile,
+    getAddress,
+    addAddress,
+    getAddAddress,
+    getEditAddress,
+    editAddress,
+    deleteAddress,
+    setPrimary,
+    addToWishlist,
+    getWishlist,
+    removeFromWishlist,
     filterProduct,
     test,
 

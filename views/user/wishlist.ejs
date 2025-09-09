@@ -1,0 +1,97 @@
+<%- include('../partials/user/header.ejs', { active: 'wishlist', user: user, cartCount: cartCount }) %>
+
+<div class="container my-5">
+  <h4 class="fw-bold mb-4">Wishlist (<%= Array.isArray(items) ? items.length : 0 %>)</h4>
+
+  <% if (!items || items.length === 0) { %>
+    <div class="text-center py-5">
+      <i class="bi bi-heart fs-1 text-muted"></i>
+      <p class="mt-3 text-muted">Your wishlist is empty.</p>
+      <a href="/shop" class="btn btn-dark mt-2">Shop Now</a>
+    </div>
+  <% } else { %>
+    <div class="text-end mb-3">
+      <form action="/wishlist/moveAllToCart" method="post">
+        <button type="submit" class="btn btn-outline-dark">Move All To Bag</button>
+      </form>
+    </div>
+
+    <% items.forEach(item => { 
+         const p = item.productId || {};
+         const img = (p.productImage && p.productImage.length) ? p.productImage[0] : '/images/placeholder.png';
+         const title = p.productName || 'Untitled';
+         const author = p.author || '';
+         const price = typeof p.salePrice !== 'undefined' ? p.salePrice : (p.regularPrice || 0);
+    %>
+      <div class="row align-items-center border-bottom py-3">
+        <!-- Product Image -->
+        <div class="col-3 col-md-2">
+          <img src="<%= img %>" alt="<%= title %>" class="img-fluid rounded" style="max-height:90px; object-fit:cover;">
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-6 col-md-7">
+          <h6 class="mb-1"><%= title %></h6>
+          <% if (author) { %><small class="text-muted"><%= author %></small><% } %>
+          <div class="mt-1">
+            <span class="text-warning">
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star"></i>
+            </span>
+          </div>
+          <p class="fw-bold mt-1">₹<%= price %></p>
+        </div>
+
+        <!-- Actions -->
+        <div class="col-3 text-end">
+          <a href="/wishlist/remove/<%= p._id %>" class="btn btn-dark btn-sm w-100 mb-2">
+            <i class="bi bi-trash"></i> Remove
+          </a>
+          <form action="/cart/add" method="post">
+            <input type="hidden" name="productId" value="<%= p._id %>">
+            <button type="submit" class="btn btn-secondary btn-sm w-100">
+              <i class="bi bi-cart"></i> Add To Cart
+            </button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+  <% } %>
+</div>
+
+<!-- Recommendation Section -->
+<% if (typeof recommendations !== 'undefined' && Array.isArray(recommendations) && recommendations.length) { %>
+  <div class="container my-5">
+    <h5 class="fw-bold mb-3">Just For You</h5>
+    <div class="row g-3">
+      <% recommendations.forEach(product => { 
+           const rImg = (product.productImage && product.productImage.length) ? product.productImage[0] : '/images/placeholder.png';
+           const rTitle = product.productName || 'Untitled';
+           const rAuthor = product.author || '';
+           const rPrice = typeof product.salePrice !== 'undefined' ? product.salePrice : (product.regularPrice || 0);
+      %>
+        <div class="col-6 col-md-3">
+          <div class="card h-100">
+            <img src="<%= rImg %>" class="card-img-top" alt="<%= rTitle %>" style="height:180px; object-fit:cover;">
+            <div class="card-body text-center">
+              <h6 class="card-title"><%= rTitle %></h6>
+              <% if (rAuthor) { %><small class="text-muted"><%= rAuthor %></small><% } %>
+              <p class="fw-bold mt-2">₹<%= rPrice %></p>
+              <form action="/wishlist/add" method="post">
+                <input type="hidden" name="productId" value="<%= product._id %>">
+                <button type="submit" class="btn btn-outline-dark btn-sm">
+                  <i class="bi bi-heart"></i> Add to Wishlist
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
+
+<%- include("../partials/user/footer.ejs") %>

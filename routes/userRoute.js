@@ -42,6 +42,25 @@ router.get('/userProfile/edit', userAuth, userController.getEditProfile);
 router.post('/userProfile/edit', userAuth, userController.postEditProfile);
 
 
+
+router.get('/addresses',userAuth,userController.getAddress);
+// add address
+router.get('/address/add', userAuth,userController.getAddAddress );
+router.post('/address/add', userAuth, userController.addAddress);
+// Edit address
+router.get('/address/edit/:addressId', userAuth, userController.getEditAddress);
+router.post('/address/edit/:addressId', userAuth, userController.editAddress);
+router.post('/address/delete/:addressId', userAuth, userController.deleteAddress);
+router.post('/address/setPrimary/:addressId', userAuth, userController.setPrimary);
+
+
+
+
+router.get('/wishlist',userAuth,userController.getWishlist)
+router.post('/wishlist/add',userAuth,userController.addToWishlist)
+router.get('/wishlist/remove/:productId',userAuth,userController.removeFromWishlist)
+
+
 //testing
 
 router.get('/test',userController.test)
