@@ -1,0 +1,65 @@
+<%- include("../partials/user/header.ejs") %>
+
+<div class="container my-5">
+  <div class="row">
+    <!-- Sidebar -->
+    <aside class="col-12 col-md-4 col-lg-3 mb-4">
+      <%- include("../partials/user/userSidebar.ejs") %>
+    </aside>
+
+    <!-- Main -->
+    <main class="col-12 col-md-8 col-lg-9">
+      <div class="card p-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Profile</h5>
+        </div>
+        <hr>
+
+        <div class="row g-3">
+          <!-- Name -->
+          <div class="col-12">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" value="<%= user.displayName || 'Not provided' %>" readonly>
+          </div>
+
+          <!-- Email -->
+          <div class="col-12">
+            <label class="form-label">Email</label>
+            <input type="text" class="form-control" value="<%= user.email || 'Not provided' %>" readonly>
+          </div>
+
+          <!-- Phone -->
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input type="text" class="form-control"
+              value="<%= (user.phone && String(user.phone).trim().length) ? user.phone : 'Not provided' %>"
+              readonly>
+          </div>
+
+          <!-- DOB -->
+          <div class="col-md-6">
+            <label class="form-label">Date of Birth</label>
+            <input type="text" class="form-control"
+              value="<%= (user.dobFormatted && String(user.dobFormatted).trim().length) ? user.dobFormatted : 'Not provided' %>"
+              readonly>
+          </div>
+
+          <!-- Member since -->
+          <!-- <div class="col-12">
+            <label class="form-label">Member since</label>
+            <input type="text" class="form-control"
+              value="<%= user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-' %>"
+              readonly>
+          </div> -->
+
+          <!-- Update button (navigates to edit page) -->
+          <div class="col-12 d-flex justify-content-end mt-3">
+            <a href="/userProfile/edit" class="btn btn-dark">Update</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<%- include("../partials/user/footer.ejs") %>

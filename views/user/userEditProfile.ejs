@@ -1,0 +1,335 @@
+<%- include("../partials/user/header.ejs") %>
+
+<!-- Cropper CSS (CDN) - keep in head area -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"/>
+
+<div class="container my-5">
+  <div class="row">
+    <!-- Sidebar -->
+    <aside class="col-12 col-md-4 col-lg-3 mb-4">
+      <%- include("../partials/user/userSidebar.ejs") %>
+    </aside>
+
+    <!-- Main -->
+    <main class="col-12 col-md-8 col-lg-9">
+      <div class="card p-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Edit Profile</h5>
+          <a href="/userProfile" class="btn btn-outline-secondary btn-sm">Back</a>
+        </div>
+        <hr>
+
+        <% if (errors && errors.length) { %>
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              <% errors.forEach(e => { %><li><%= e.msg %></li><% }) %>
+            </ul>
+          </div>
+        <% } %>
+
+        <% if (success) { %>
+          <div class="alert alert-success"><%= success %></div>
+        <% } %>
+
+        <form id="profileForm" action="/userProfile/edit" method="post" enctype="multipart/form-data" class="row g-3">
+          <% if (typeof csrfToken !== 'undefined') { %>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <% } %>
+
+          <!-- Avatar preview + upload -->
+          <div class="col-12 d-flex align-items-center gap-3">
+            <div>
+              <% if (user.avatarUrl) { %>
+                <img id="avatarPreview" src="<%= user.avatarUrl %>" alt="avatar" class="rounded-circle" style="width:86px;height:86px;object-fit:cover;">
+              <% } else { %>
+                <div id="avatarPreview" class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width:86px;height:86px;">
+                  <i class="bi bi-person" style="font-size:32px;color:#8b8b8b"></i>
+                </div>
+              <% } %>
+            </div>
+
+            <div class="flex-grow-1">
+              <label class="form-label mb-1">Profile photo</label>
+              <input id="avatarInput" type="file" name="avatar" class="form-control form-control-sm" accept="image/png, image/jpeg, image/webp">
+              <div class="form-text">JPEG/PNG/WebP. Max 5MB recommended. Crop before upload.</div>
+            </div>
+          </div>
+
+          <!-- Name -->
+          <div class="col-12">
+            <label class="form-label">Name</label>
+            <input name="name" type="text" class="form-control" value="<%= user.displayName || '' %>" required>
+          </div>
+
+          <!-- Email -->
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input name="email" type="email" class="form-control" value="<%= user.email || '' %>" required>
+            <div class="form-text">Changing email will mark it unverified.</div>
+          </div>
+
+          <!-- Phone -->
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input name="phone" type="tel" class="form-control" value="<%= user.phone || '' %>">
+          </div>
+
+          <!-- DOB -->
+          <div class="col-md-6">
+            <label class="form-label">Date of birth</label>
+            <input name="dob" type="date" class="form-control" value="<%= user.dobFormatted || '' %>">
+          </div>
+
+          <!-- Change Password -->
+          <div class="col-12"><hr><h6>Change password</h6></div>
+          <div class="col-md-6">
+            <label class="form-label">Current password</label>
+            <input name="currentPassword" type="password" class="form-control" placeholder="Enter current password">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">New password</label>
+            <input name="newPassword" type="password" class="form-control" placeholder="Enter new password">
+            <div class="form-text">Leave blank to keep your current password.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Confirm new password</label>
+            <input name="confirmPassword" type="password" class="form-control" placeholder="Confirm new password">
+          </div>
+
+          <!-- Cropper modal -->
+          <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Crop profile photo</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <div style="max-height:70vh; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                    <img id="cropImage" src="" style="max-width:100%; max-height:70vh; display:block;" alt="Crop preview">
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <div class="me-auto"><small class="text-muted">Tip: drag to move, scroll to zoom.</small></div>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button id="useCroppedBtn" type="button" class="btn btn-primary">Use cropped</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save -->
+          <div class="col-12 d-flex justify-content-end mt-3">
+            <button id="saveBtn" type="button" class="btn btn-dark">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>
+
+<%- include("../partials/user/footer.ejs") %>
+
+<!-- Cropper JS (ensure this loads BEFORE our initialization script below) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Profile edit DOM loaded. Cropper available?', typeof Cropper === 'function');
+
+  const avatarInput = document.getElementById('avatarInput');
+  const cropModalEl = document.getElementById('cropModal');
+  const cropImage = document.getElementById('cropImage');
+  const useCroppedBtn = document.getElementById('useCroppedBtn');
+  const avatarPreview = document.getElementById('avatarPreview');
+  const saveBtn = document.getElementById('saveBtn');
+  const formEl = document.getElementById('profileForm');
+
+  let cropper = null;
+  let lastCroppedBlob = null;
+  let selectedFile = null;
+  let currentObjectUrl = null;
+  const bsModal = new bootstrap.Modal(cropModalEl);
+
+  // When a file is selected: set src and show modal. Cropper will init on modal shown.
+  avatarInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.match(/^image\/(jpe?g|png|webp)$/i)) {
+      alert('Only JPG/PNG/WebP images allowed');
+      avatarInput.value = '';
+      return;
+    }
+
+    selectedFile = file;
+    // revoke previous object URL if any
+    if (currentObjectUrl) {
+      try { URL.revokeObjectURL(currentObjectUrl); } catch (e) {}
+      currentObjectUrl = null;
+    }
+
+    currentObjectUrl = URL.createObjectURL(file);
+    cropImage.src = currentObjectUrl;
+
+    // Show modal. We'll initialize Cropper in shown.bs.modal handler.
+    bsModal.show();
+  });
+
+  // Initialize cropper when modal is visible (ensures correct sizing)
+  cropModalEl.addEventListener('shown.bs.modal', () => {
+    console.log('cropModal shown - initializing cropper, Cropper defined?', typeof Cropper === 'function');
+
+    // destroy existing cropper
+    if (cropper) {
+      try { cropper.destroy(); } catch (e) { console.warn('cropper destroy error', e); }
+      cropper = null;
+    }
+
+    // If image not loaded yet, wait for load, otherwise init immediately
+    if (!cropImage.complete || cropImage.naturalWidth === 0) {
+      cropImage.onload = () => {
+        try {
+          cropper = new Cropper(cropImage, {
+            aspectRatio: 1,
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 1,
+            responsive: true,
+            background: false,
+            movable: true,
+            zoomable: true
+          });
+          console.log('Cropper initialized after image load');
+        } catch (err) {
+          console.error('Failed to init cropper on load:', err);
+        }
+      };
+    } else {
+      try {
+        cropper = new Cropper(cropImage, {
+          aspectRatio: 1,
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 1,
+          responsive: true,
+          background: false,
+          movable: true,
+          zoomable: true
+        });
+        console.log('Cropper initialized immediately (image already loaded)');
+      } catch (err) {
+        console.error('Failed to init cropper immediately:', err);
+      }
+    }
+  });
+
+  // Destroy cropper and cleanup when modal hides
+  cropModalEl.addEventListener('hidden.bs.modal', () => {
+    if (cropper) {
+      try { cropper.destroy(); } catch (e) { console.warn('destroy error', e); }
+      cropper = null;
+    }
+    // revoke object url
+    if (currentObjectUrl) {
+      try { URL.revokeObjectURL(currentObjectUrl); } catch (e) {}
+      currentObjectUrl = null;
+    }
+    cropImage.src = '';
+  });
+
+  // User confirms cropped image
+  useCroppedBtn.addEventListener('click', () => {
+    if (!cropper) {
+      alert('Cropper not initialized. Try selecting the image again.');
+      return;
+    }
+    const canvas = cropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' });
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        alert('Failed to crop image. Try a different file.');
+        return;
+      }
+      lastCroppedBlob = blob;
+      const blobUrl = URL.createObjectURL(blob);
+      if (avatarPreview.tagName === 'IMG') {
+        avatarPreview.src = blobUrl;
+      } else {
+        avatarPreview.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = blobUrl;
+        img.className = 'rounded-circle';
+        img.style.width = '86px';
+        img.style.height = '86px';
+        img.style.objectFit = 'cover';
+        avatarPreview.appendChild(img);
+      }
+      bsModal.hide();
+    }, 'image/jpeg', 0.92);
+  });
+
+  // Submit: build FormData including cropped blob if present
+  saveBtn.addEventListener('click', async (ev) => {
+    ev.preventDefault();
+
+    let avatarToSend = null;
+    if (lastCroppedBlob) {
+      const filename = selectedFile && selectedFile.name ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'avatar';
+      const fileExt = '.jpg';
+      avatarToSend = new File([lastCroppedBlob], filename + fileExt, { type: 'image/jpeg' });
+    } else if (avatarInput.files && avatarInput.files[0]) {
+      avatarToSend = avatarInput.files[0];
+    }
+
+    const fd = new FormData();
+    const inputs = formEl.querySelectorAll('input, textarea, select');
+    inputs.forEach(i => {
+      if (i.type === 'file') return;
+      if (i.name) fd.append(i.name, i.value);
+    });
+
+    const csrfEl = formEl.querySelector('input[name="_csrf"]');
+    if (csrfEl) fd.append('_csrf', csrfEl.value);
+    if (avatarToSend) fd.append('avatar', avatarToSend);
+
+    saveBtn.disabled = true;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving...';
+
+    try {
+      const resp = await fetch(formEl.action, {
+        method: 'POST',
+        body: fd,
+        credentials: 'same-origin'
+      });
+
+      if (resp.redirected) {
+        window.location.href = resp.url;
+        return;
+      }
+
+      const text = await resp.text();
+      if (resp.status === 200 && (text.includes('<!DOCTYPE') || text.includes('<html'))) {
+        document.open();
+        document.write(text);
+        document.close();
+      } else if (resp.ok) {
+        const json = await resp.json().catch(()=>null);
+        if (json && json.success) {
+          location.href = '/userProfile';
+        } else {
+          location.reload();
+        }
+      } else {
+        alert('Upload failed. Please try again.');
+        console.error('Upload response', resp.status, text);
+      }
+    } catch (err) {
+      console.error('Upload error', err);
+      alert('Upload failed. See console for details.');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalText;
+    }
+  });
+});
+</script>

@@ -1,0 +1,118 @@
+<%- include("../partials/user/header.ejs") %>
+
+<div class="container my-5">
+  <div class="row gx-4">
+    <!-- LEFT: sidebar -->
+    <div class="col-12 col-md-3">
+      <%- include("../partials/user/userSidebar.ejs") %>
+    </div>
+
+    <!-- RIGHT: main content -->
+    <div class="col-12 col-md-9">
+      <div class="card shadow-sm p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="mb-0">Add New Address</h4>
+          <h6 class="mb-0 text-muted">Personal Information</h6>
+        </div>
+
+        <form id="addAddressForm" action="/address/add" method="POST" novalidate>
+          <div class="row g-3">
+            <!-- Recipient Name -->
+            <div class="col-12">
+              <label class="form-label">Name</label>
+              <input name="name" type="text" class="form-control form-control-lg" placeholder="Recipient Name" required>
+            </div>
+
+            <!-- Email & Phone -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">Email</label>
+              <input name="email" type="email" class="form-control form-control-lg" placeholder="example@gmail.com">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Phone</label>
+              <input name="phone" type="tel" class="form-control form-control-lg" placeholder="+91 12345 67890" required>
+            </div>
+
+            <!-- Address line1 -->
+            <div class="col-12">
+              <label class="form-label">Address</label>
+              <textarea name="line1" rows="3" class="form-control form-control-lg" placeholder="House Name, House Number, Locality" required></textarea>
+            </div>
+
+            <!-- District/Town & State -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">District / Town</label>
+              <input name="city" type="text" class="form-control" placeholder="eg : Ernakulam" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">State</label>
+              <input name="state" type="text" class="form-control" placeholder="eg : Kerala" required>
+            </div>
+
+            <!-- Landmark (line2) & Pin -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">Landmark (optional)</label>
+              <input name="line2" type="text" class="form-control" placeholder="eg : Hospital">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Pin Code</label>
+              <input name="postalCode" type="text" pattern="\d{6}" class="form-control" placeholder="eg : 689230" required>
+            </div>
+
+            <!-- Address Type -->
+            <div class="col-12">
+              <label class="form-label d-block">Address Type</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="label" id="addrHome" value="Home" checked>
+                <label class="form-check-label" for="addrHome">Home</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="label" id="addrWork" value="Work">
+                <label class="form-check-label" for="addrWork">Work</label>
+              </div>
+            </div>
+
+            <!-- Primary checkbox -->
+            <div class="col-12">
+              <input type="hidden" name="isPrimary" value="false">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="isPrimary" id="isPrimary" value="true">
+                <label class="form-check-label" for="isPrimary">Set as primary address</label>
+              </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="col-12 d-flex justify-content-end mt-2">
+              <button type="submit" class="btn btn-dark btn-lg">Add Address</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("../partials/user/footer.ejs") %>
+
+<style>
+  .card { border-radius: 10px; }
+  .form-control-lg { background: #f7f7f7; border: none; }
+  .form-label { font-weight: 600; color: #333; }
+  @media (max-width: 767.98px) {
+    .card { padding: 1rem; }
+  }
+</style>
+
+<script>
+  (function(){
+    const form = document.getElementById('addAddressForm');
+    form.addEventListener('submit', function(e){
+      if(!form.checkValidity()){
+        e.preventDefault();
+        form.classList.add('was-validated');
+        const firstInvalid = form.querySelector(':invalid');
+        if(firstInvalid) firstInvalid.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    });
+  })();
+</script>
