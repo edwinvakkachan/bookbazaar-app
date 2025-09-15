@@ -1,6 +1,7 @@
 const User = require("../../models/userSchema")
 const Wishlist = require("../../models/whishlistSchema")
 
+
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
@@ -192,6 +193,7 @@ const pageNotFound = async (req,res)=>{
 const loadHomepage = async (req,res)=>{
 try {
     const user = req.session.user;
+    // console.log('homepage user',user) // console
 
     //prodcut to front page
     const categories = await Category.find({isListed:true})
@@ -340,6 +342,8 @@ const resendOTP = async (req,res)=>{
 
 const loadLogin = async (req, res) => {
   try {
+    
+
     if (!req.session.user) {
       const blocked = req.query.blocked || false; 
       return res.render("login", { message: null, blocked });
@@ -382,31 +386,29 @@ const login = async (req,res)=>{
 
 
 
-const logout = async (req, res) => {
+
+const logout = (req, res) => {
   try {
-    req.logout(err => {
-      if (err) {
-        console.error("passport logout error:", err);
-      }
+      //  console.log('session before logout is',req.session)
+    // If using passport, remove req.user / passport only if it corresponds to the session user
+    const sessionUserId = req.session?.user?._id || req.session?.user;
+    // Remove passport entry only if it matches the session user id
+    if (req.session?.passport && String(req.session.passport.user) === String(sessionUserId)) {
+      delete req.session.passport;
+    }
 
-      
-      delete req.session.user;
+    // Remove only the user property you added
+    delete req.session.user;
 
-      
-      req.session.destroy(error => {
-        if (error) {
-          console.log("session destruction error", error.message);
-          return res.redirect("/pageNotFound");
-        }
-        
-        res.redirect("/login");
-      });
-    });
-  } catch (error) {
-    console.error("user logout error", error);
-    res.redirect("/pageNotFound");
+    // Avoid destroying the whole session so admin or other flags remain
+    // console.log('session is',req.session)
+    return res.redirect('/login');
+  } catch (err) {
+    console.error('user logout error', err);
+    return res.redirect('/pageNotFound');
   }
 };
+
 
 
 const loadForgotPassword = async (req,res)=>{
@@ -919,7 +921,7 @@ if (req.file) {
 
   try {
     await fs.promises.writeFile(fullPath, req.file.buffer);
-    console.log('Avatar written to', fullPath);
+    // console.log('Avatar written to', fullPath);
   } catch (writeErr) {
     console.error('Failed to write avatar to disk:', writeErr);
     return res.render('userEditProfile', {
@@ -1273,7 +1275,7 @@ const filterProduct = async (req,res)=>{
     try {
         const user = req.session.user;
         const category = req.query.category
-        console.log('the category id : ',category)
+        //console.log('the category id : ',category)
         const brand = req.query.brand
         const findCategory = await Category.findOne({_id:category})
         const findBrand = await Brand.findOne({_id:brand})
@@ -1350,3 +1352,5 @@ module.exports = {
     test,
 
 };
+
+

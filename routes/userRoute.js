@@ -1,8 +1,10 @@
 const express = require('express')
 const router = express.Router();
 const userController = require('../controllers/user/userController');
+const cartController = require('../controllers/user/cartController')
 const passport = require('passport');
 const {userAuth,adminAuth} = require('../middlewares/auth')
+
 
 
 router.get('/pageNotFound',userController.pageNotFound)
@@ -55,10 +57,19 @@ router.post('/address/setPrimary/:addressId', userAuth, userController.setPrimar
 
 
 
-
+//whishlist
 router.get('/wishlist',userAuth,userController.getWishlist)
 router.post('/wishlist/add',userAuth,userController.addToWishlist)
 router.get('/wishlist/remove/:productId',userAuth,userController.removeFromWishlist)
+
+
+
+//cartManagement
+router.post('/cart/:add', userAuth, cartController.addToCart);               
+router.get('/cart', userAuth, cartController.listCart);                    
+router.post('/api/cart/delete/:productId', userAuth, cartController.removeFromCart);
+router.post('/api/cart/:productId/quantity', userAuth, cartController.changeQuantity); 
+
 
 
 //testing

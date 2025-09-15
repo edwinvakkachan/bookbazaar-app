@@ -1,0 +1,292 @@
+<%- include("../partials/user/header.ejs") %>
+
+<div class="container my-5">
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Cart</li>
+    </ol>
+  </nav>
+
+  <!-- global alert container (one copy only) -->
+  <div id="alert-container" class="mb-3"></div>
+
+  <div class="row">
+    <div class="col-12 col-lg-8">
+
+      <% if (!items || items.length === 0) { %>
+        <div class="alert alert-light border">Your cart is empty.</div>
+      <% } else { %>
+        <% items.forEach(function(it) { %>
+          <% 
+            const p = it.product || {};
+            const title =  p.productName || 'Unknown Product';
+            let image = (p.productImage && p.productImage[0])  || '/images/placeholder.png';
+            const stock = Number(it.stock || 0);
+            const qty = Number(it.qty || 0);
+            const productMax = Number(it.productMax || 0);
+            const outOfStock = !!it.outOfStock;
+          %>
+
+          <!-- add data-stock and data-product-max so client JS can read authoritative limits -->
+          <div class="card mb-4" data-cart-item data-product-id="<%= p._id %>" data-stock="<%= stock %>" data-product-max="<%= productMax %>">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-3 col-md-2">
+                  <img src="<%= image %>" alt="<%= title %>" class="img-fluid" style="max-height:110px; object-fit:cover;">
+                </div>
+
+                <div class="col-7 col-md-8">
+                  <h5 class="mb-2"><%= title %></h5>
+
+                  <% if (outOfStock) { %>
+                    <div class="text-danger small mb-2">Out of stock</div>
+                  <% } else { %>
+                    <div class="text-success small mb-2">In Stock <% if (stock) { %> — <small><%= stock %> left</small><% } %></div>
+                  <% } %>
+
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center">
+                      <!-- decrement button -->
+                      <button 
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm me-2"
+                        data-cart-action
+                        data-product-id="<%= p._id %>"
+                        data-action="dec"
+                        <%= (qty <= 1) ? 'disabled' : '' %>
+                      >-</button>
+
+                      <!-- set qty -->
+                      <form data-cart-qty data-product-id="<%= p._id %>" method="post" action="/api/cart/<%= p._id %>/quantity" class="d-inline-block">
+                        <div class="input-group input-group-sm" style="width:120px;">
+                          <input type="number" name="qty" value="<%= qty %>" min="1" max="<%= (stock && productMax) ? Math.min(stock, productMax) : (stock || productMax || qty) %>" class="form-control text-center" />
+                          <button class="btn btn-outline-secondary" type="submit">Set</button>
+                        </div>
+                      </form>
+
+                      <!-- increment button -->
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm ms-2"
+                        data-cart-action
+                        data-product-id="<%= p._id %>"
+                        data-action="inc"
+                        <%= (outOfStock || (productMax && qty >= productMax) || (stock && qty >= stock)) ? 'disabled' : '' %>
+                      >+</button>
+                    </div>
+
+                    <div class="small text-muted ms-3">Quantity</div>
+                  </div>
+
+                  <% if (productMax) { %>
+                    <div class="small text-muted mt-2">Max <strong><%= productMax %></strong> per order</div>
+                  <% } %>
+
+                </div>
+
+                <div class="col-12 col-md-2 text-end mt-3 mt-md-0">
+                  <div class="mb-3 price-display">Price <strong>₹<%= Number(it.priceAtAdd || p.price || 0).toFixed(2) %></strong></div>
+
+                  <!-- remove -->
+                  <form data-cart-remove data-product-id="<%= p && p._id ? p._id : '' %>">
+                    <button type="submit" class="btn btn-dark btn-sm">Remove</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+
+        <hr class="my-4" />
+        <div class="d-flex justify-content-end">
+          <h5>Total : <strong id="cart-page-total">₹<%= (typeof total !== 'undefined' ? parseFloat(total).toFixed(2) : '0.00') %></strong></h5>
+        </div>
+      <% } %>
+    
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="card border-1 p-3">
+        <h5 class="mb-3">Cart Total</h5>
+        <div class="d-flex justify-content-between small mb-2">
+          <div>Subtotal:</div>
+          <div id="cart-subtotal">₹<%= (typeof total !== 'undefined' ? parseFloat(total).toFixed(2) : '0.00') %></div>
+        </div>
+        <hr class="my-2">
+        <div class="d-flex justify-content-between small mb-2">
+          <div>Shipping:</div>
+          <div>Free</div>
+        </div>
+        <hr class="my-2">
+        <div class="d-flex justify-content-between fw-semibold mb-3">
+          <div>Total:</div>
+          <div id="cart-total">₹<%= (typeof total !== 'undefined' ? parseFloat(total).toFixed(2) : '0.00') %></div>
+        </div>
+
+        <div class="d-grid">
+          <form action="/checkout" method="post">
+            <button class="btn btn-dark" type="submit">Proceed to checkout</button>
+          </form>
+        </div>
+      </div>
+      
+    </div>
+
+    
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // show alerts box
+  function showAlert(message, type = 'danger') {
+    const container = document.getElementById('alert-container');
+    
+    container.innerHTML = `
+      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `;
+  }
+
+  const fmt = n => '₹' + (Number(n) || 0).toFixed(2);
+  async function safeJson(res){ try{return await res.json()}catch(e){return null;} }
+
+  function updateTotals(subtotal){
+    const subEl = document.getElementById('cart-subtotal');
+    const totEl = document.getElementById('cart-total');
+    const pageTotEl = document.getElementById('cart-page-total');
+    if(subEl) subEl.textContent = fmt(subtotal);
+    if(totEl) totEl.textContent = fmt(subtotal);
+    if(pageTotEl) pageTotEl.textContent = fmt(subtotal);
+  }
+
+  // rebuild DOM for the cart items based on server-cart
+  function rebuildFromCartData(cart){
+    if(!cart || !Array.isArray(cart.items)) return;
+    let subtotal = 0;
+
+    cart.items.forEach(it=>{
+      const pid = it.product? (it.product._id||String(it.product)) : (it.productId||'');
+      const card = document.querySelector('[data-cart-item][data-product-id="'+pid+'"]');
+      if(!card) return;
+
+      // read authoritative limits from DOM attributes or from server-returned product
+      const domStock = parseInt(card.getAttribute('data-stock') || '0', 10) || 0;
+      const domMax = parseInt(card.getAttribute('data-product-max') || '0', 10) || 0;
+      const serverProduct = it.product || {};
+      const serverStock = (typeof serverProduct.quantity === 'number') ? serverProduct.quantity : (serverProduct.stock || null);
+      const stock = (serverStock !== null && serverStock !== undefined) ? Number(serverStock) : domStock;
+      const productMax = domMax || 0;
+
+      const qty = Number(it.qty || 0);
+
+      // update qty input and its max attribute
+      const qtyInput = card.querySelector('input[name="qty"]');
+      if(qtyInput){
+        qtyInput.value = qty;
+        let maxVal = 0;
+        if (stock > 0 && productMax > 0) maxVal = Math.min(stock, productMax);
+        else if (stock > 0) maxVal = stock;
+        else if (productMax > 0) maxVal = productMax;
+        else maxVal = Math.max(qty, 1);
+        qtyInput.setAttribute('max', String(maxVal));
+      }
+
+      // update price display
+      const priceEl = card.querySelector('.price-display');
+      const price = Number(it.priceAtAdd || (it.product && (it.product.price||0)) || 0);
+      if(priceEl) priceEl.textContent = 'Price ' + fmt(price);
+
+      // enable / disable buttons
+      const decBtn = card.querySelector('button[data-cart-action][data-action="dec"]');
+      const incBtn = card.querySelector('button[data-cart-action][data-action="inc"]');
+      if (decBtn) decBtn.disabled = qty <= 1;
+      if (incBtn) {
+        const reachedMax = (productMax > 0 && qty >= productMax) || (stock > 0 && qty >= stock);
+        incBtn.disabled = !!reachedMax;
+      }
+
+      subtotal += price * (qty||0);
+    });
+
+    updateTotals(subtotal);
+  }
+
+  // handle set qty forms
+  document.querySelectorAll('form[data-cart-qty]').forEach(form=>{
+    form.addEventListener('submit', async ev=>{
+      ev.preventDefault();
+      const productId = form.getAttribute('data-product-id');
+      const qtyInput = form.querySelector('input[name="qty"]');
+      let qty = parseInt(qtyInput.value,10);
+      if(isNaN(qty)||qty<1){ showAlert('Invalid quantity', 'danger'); return; }
+
+      const res = await fetch(form.action,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({qty})
+      });
+      const data = await safeJson(res);
+      if(res.ok && data && data.success && data.cart) {
+        rebuildFromCartData(data.cart);
+      } else {
+        showAlert((data && data.error) || 'Failed to set quantity', 'danger');
+      }
+    });
+  });
+
+  // handle inc/dec buttons
+  document.querySelectorAll('button[data-cart-action]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const productId = btn.getAttribute('data-product-id');
+      const action = btn.getAttribute('data-action');
+      const url = '/api/cart/'+productId+'/quantity';
+      const res = await fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({action})
+      });
+      const data = await safeJson(res);
+
+      if(res.ok && data && data.success && data.cart){
+        rebuildFromCartData(data.cart);
+      } else {
+        // show error but don't blindly change DOM — server is authoritative
+        showAlert((data && data.error) || 'Failed to update', 'danger');
+      }
+    });
+  });
+
+  // handle remove
+  document.querySelectorAll('form[data-cart-remove]').forEach(form=>{
+    form.addEventListener('submit', async ev=>{
+      ev.preventDefault();
+      const productId = form.getAttribute('data-product-id');
+      const url = '/api/cart/delete/'+productId;
+      const res = await fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({remove:true})
+      });
+      const data = await safeJson(res);
+      if(res.ok && data && data.success && data.cart){
+        rebuildFromCartData(data.cart);
+        const card = document.querySelector('[data-cart-item][data-product-id="'+productId+'"]');
+        if(card) card.remove();
+      } else {
+        showAlert((data && data.error) || 'Failed to remove', 'danger');
+      }
+    });
+  });
+
+ 
+  window.rebuildFromCartData = rebuildFromCartData;
+})();
+</script>
+
+<%- include("../partials/user/footer.ejs") %>
