@@ -6,14 +6,9 @@ const customerController = require('../controllers/admin/customerController');
 const categoryController = require('../controllers/admin/categoryController');
 const productController = require('../controllers/admin/productController')
 const brandController = require('../controllers/admin/brandController')
-
-
-// const multer = require('multer');
-// const storage = require('../helpers/multer')
-// const uploads = multer({storage:storage});
-
+const  orderController = require('../controllers/admin/orderController')
 const upload = require('../helpers/multer');
-//console.log('multer export keys:', Object.keys(upload));
+
 
 
 router.get('/login',adminController.loadLogin);
@@ -47,12 +42,14 @@ router.post('/addProducts',adminAuth,upload.array("images",4),productController.
 router.get('/products',adminAuth,productController.getAllProducts)
 router.get('/blockProduct',adminAuth,productController.blockProdcut)
 router.get('/unblockProduct',adminAuth,productController.unblockProdcut)
-
-// Show edit product page
 router.get("/editProduct/:id", adminAuth, productController.editProductPage);
-
-// Update product
 router.post("/editProduct/:id", upload.any(), adminAuth, productController.updateProduct);
+
+
+//orderMangement
+router.get('/orders',adminAuth, orderController.listOrders);
+router.get('/orders/:id',adminAuth, orderController.viewOrder);
+router.put('/orders/:id/status',adminAuth, orderController.updateStatus);
 
 
 

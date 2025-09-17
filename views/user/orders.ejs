@@ -1,0 +1,128 @@
+<%- include('../partials/user/header.ejs') %>
+
+<div class="container-fluid">
+  <div class="row">
+    
+    <div class="col-lg-2 d-none d-lg-block">
+      <%- include('../partials/user/userSidebar.ejs') %>
+    </div>
+
+    
+    <div class="col-12 col-lg-10">
+      <div class="px-4 pt-4">
+
+        <h2 class="mb-3">Order list</h2>
+
+        <!-- Filter bar card -->
+        <div class="card mb-4" style="border-radius:12px;">
+          <div class="card-body p-2">
+            <div class="d-flex align-items-center g-2 flex-wrap">
+              <!--  icon + Filter By -->
+              <div class="d-flex align-items-center px-3 py-2 me-2" style="min-width:120px;border-right:1px solid #eee;">
+                <div class="me-2" style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#f7f7f7;">
+                  <!-- simple funnel icon -->
+                  <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#333" d="M3 5h18v2L13 13v6l-2 1v-7L3 7z"/></svg>
+                </div>
+                <div class="fw-semibold">Filter By</div>
+              </div>
+
+              <!--  Order Time (dropdown) -->
+              <div class="d-flex align-items-center px-3 py-2 me-2" style="min-width:160px;border-right:1px solid #eee;">
+                <div class="me-2 fw-medium">Order Time</div>
+                <form id="filterFormTop" method="get" action="/orders" class="d-flex align-items-center gap-2 m-0 p-0">
+                  <select name="timeframe" class="form-select form-select-sm" style="width:110px;">
+                    <option value="" <%= !query || !query.timeframe ? 'selected' : '' %>>14 Feb 2019</option>
+                    <option value="30" <%= query && query.timeframe==='30' ? 'selected' : '' %>>Last 30 days</option>
+                    <option value="2025" <%= query && query.timeframe==='2025' ? 'selected' : '' %>>2025</option>
+                    <option value="2024" <%= query && query.timeframe==='2024' ? 'selected' : '' %>>2024</option>
+                  </select>
+                </form>
+              </div>
+
+              <!--  Order Status -->
+              <div class="d-flex align-items-center px-3 py-2 me-2" style="min-width:200px;">
+                <div class="me-2 fw-medium">Order Status</div>
+                <select name="status" form="filterFormTop" class="form-select form-select-sm" style="width:140px;">
+                  <option value="" <%= !query || !query.status ? 'selected' : '' %>>All</option>
+                  <option value="processing" <%= query && query.status==='processing' ? 'selected' : '' %>>Processing</option>
+                  <option value="delivered" <%= query && query.status==='delivered' ? 'selected' : '' %>>Delivered</option>
+                  <option value="cancelled" <%= query && query.status==='cancelled' ? 'selected' : '' %>>Cancelled</option>
+                </select>
+              </div>
+
+              <!-- Spacer -->
+              <div class="flex-grow-1"></div>
+
+              <!-- Search  Apply -->
+              <div class="d-flex align-items-center gap-2">
+                <input type="text" name="q" form="filterFormTop" class="form-control form-control-sm" placeholder="Search by order ID or product" style="min-width:300px;"
+                       value="<%= query && query.q ? query.q : '' %>">
+                <button type="submit" form="filterFormTop" class="btn btn-primary btn-sm">Apply</button>
+                <a href="/orders" class="btn btn-link btn-sm">Clear</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+
+        <!-- Orders list -->
+        <div>
+          <% if (!orders || orders.length===0) { %>
+            <div class="alert alert-light">No orders found</div>
+          <% } %>
+
+          <% orders.forEach(order => { %>
+            <div class="card mb-3" style="border-radius:8px;">
+              <div class="card-body">
+                <div class="d-flex align-items-start">
+                  <div style="width:90px;height:110px;margin-right:16px;">
+                    <% if (order.items[0] && order.items[0].image) { %>
+                      <img src="<%= order.items[0].image %>" style="width:90px;height:110px;object-fit:cover;border-radius:4px;">
+                    <% } else { %>
+                      <div style="width:90px;height:110px;background:#f5f5f5;border-radius:4px;"></div>
+                    <% } %>
+                  </div>
+
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-start">
+                      <div>
+                        <div class="text-muted small">Order Placed</div>
+                        <div class="fw-bold"><%= new Date(order.createdAt).toLocaleDateString('en-GB',{ day:'numeric', month:'short', year:'numeric'}) %></div>
+                      </div>
+
+                      <div class="ms-4">
+                        <div class="text-muted small">Total</div>
+                        <div class="fw-bold"> <%= order.total %></div>
+                      </div>
+
+                      <div class="ms-4">
+                        <div class="text-muted small">Ship To</div>
+                        <div class="fw-bold"><%= order.addressSnapshot && order.addressSnapshot.name ? order.addressSnapshot.name : 'Customer' %></div>
+                      </div>
+
+                      <div class="ms-auto text-end">
+                        <a href="/orders/<%= order.orderId %>" class="small">View Order Details</a>
+                        <span class="ms-2"> | </span>
+                        <a href="/orders/<%= order.orderId %>/invoice" class="small ms-2">Invoice</a>
+                      </div>
+                    </div>
+
+                    <div class="mt-3">
+                      <h5 style="margin:0;"><%= order.items[0] ? order.items[0].title : 'Order items' %></h5>
+                      <div class="text-muted">Price : <%= order.items[0] ? order.items[0].priceAtAdd : '' %></div>
+                      <div class="text-muted">Return eligible through <%= new Date(new Date(order.createdAt).getTime() + 14*24*3600*1000).toLocaleDateString() %></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+        
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/user/footer.ejs') %>

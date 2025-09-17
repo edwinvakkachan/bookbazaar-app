@@ -125,7 +125,7 @@
         </div>
 
         <div class="d-grid">
-          <form action="/checkout" method="post">
+          <form action="/checkout" method="GET">
             <button class="btn btn-dark" type="submit">Proceed to checkout</button>
           </form>
         </div>
@@ -141,7 +141,7 @@
 (function(){
   'use strict';
 
-  // show alerts box
+  
   function showAlert(message, type = 'danger') {
     const container = document.getElementById('alert-container');
     
@@ -165,7 +165,7 @@
     if(pageTotEl) pageTotEl.textContent = fmt(subtotal);
   }
 
-  // rebuild DOM for the cart items based on server-cart
+  
   function rebuildFromCartData(cart){
     if(!cart || !Array.isArray(cart.items)) return;
     let subtotal = 0;
@@ -175,7 +175,7 @@
       const card = document.querySelector('[data-cart-item][data-product-id="'+pid+'"]');
       if(!card) return;
 
-      // read authoritative limits from DOM attributes or from server-returned product
+      
       const domStock = parseInt(card.getAttribute('data-stock') || '0', 10) || 0;
       const domMax = parseInt(card.getAttribute('data-product-max') || '0', 10) || 0;
       const serverProduct = it.product || {};
@@ -185,7 +185,7 @@
 
       const qty = Number(it.qty || 0);
 
-      // update qty input and its max attribute
+      
       const qtyInput = card.querySelector('input[name="qty"]');
       if(qtyInput){
         qtyInput.value = qty;
@@ -197,12 +197,12 @@
         qtyInput.setAttribute('max', String(maxVal));
       }
 
-      // update price display
+      
       const priceEl = card.querySelector('.price-display');
       const price = Number(it.priceAtAdd || (it.product && (it.product.price||0)) || 0);
       if(priceEl) priceEl.textContent = 'Price ' + fmt(price);
 
-      // enable / disable buttons
+      
       const decBtn = card.querySelector('button[data-cart-action][data-action="dec"]');
       const incBtn = card.querySelector('button[data-cart-action][data-action="inc"]');
       if (decBtn) decBtn.disabled = qty <= 1;
@@ -217,7 +217,7 @@
     updateTotals(subtotal);
   }
 
-  // handle set qty forms
+  
   document.querySelectorAll('form[data-cart-qty]').forEach(form=>{
     form.addEventListener('submit', async ev=>{
       ev.preventDefault();
@@ -240,7 +240,7 @@
     });
   });
 
-  // handle inc/dec buttons
+  
   document.querySelectorAll('button[data-cart-action]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const productId = btn.getAttribute('data-product-id');
@@ -256,13 +256,13 @@
       if(res.ok && data && data.success && data.cart){
         rebuildFromCartData(data.cart);
       } else {
-        // show error but don't blindly change DOM — server is authoritative
+        
         showAlert((data && data.error) || 'Failed to update', 'danger');
       }
     });
   });
 
-  // handle remove
+  
   document.querySelectorAll('form[data-cart-remove]').forEach(form=>{
     form.addEventListener('submit', async ev=>{
       ev.preventDefault();

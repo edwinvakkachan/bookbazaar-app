@@ -1,0 +1,194 @@
+<%- include("../partials/user/header.ejs", { active: 'cart', user: user, cartCount: cartCount }) %>
+
+<div class="container my-5">
+  <div class="row">
+    <!-- Left column: addresses & payment -->
+    <div class="col-lg-7">
+      <h4 class="mb-4">Billing Details</h4>
+
+      <!-- Delivery Address -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h6 class="card-title">Delivery Address</h6>
+          <hr>
+          <form id="checkoutForm" action="/checkout" method="POST">
+            <input type="hidden" name="addressId" id="addressId" value="">
+            <div class="mb-3">
+              <% if (user && Array.isArray(user.addresses) && user.addresses.length) { %>
+                <% user.addresses.forEach(function(addr, idx) { %>
+                  <div class="border rounded p-3 mb-3 d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong><%= addr.name %></strong>
+                      <div class="small text-muted"><%= addr.line1 %> <%= addr.line2 ? ', ' + addr.line2 : '' %></div>
+                      <div class="small text-muted"><%= addr.city %> <%= addr.postalCode ? '- ' + addr.postalCode : '' %></div>
+                      <div class="small text-muted"><%= addr.state %> <%= addr.country ? ', ' + addr.country : '' %></div>
+                      <div class="small text-muted">Contact : <%= addr.phone %></div>
+                    </div>
+                    <div class="text-end">
+                      <div class="form-check">
+                        <input class="form-check-input address-radio" type="radio" name="addressRadio" id="addr_<%= idx %>"
+                               value="<%= addr._id %>" <%= addr.isPrimary ? 'checked' : '' %> >
+                        <label class="form-check-label small" for="addr_<%= idx %>">
+                          Select
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <div class="alert alert-warning">You don't have any saved addresses. <a href="/addresses/new">Add one</a></div>
+              <% } %>
+            </div>
+
+            <div class="mb-4">
+              <a href="/addresses/new" class="btn btn-dark">Add New Address</a>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="mb-4">
+              <h6>Payment Methods</h6>
+              <hr>
+              <p class="text-muted small">Select any payment methods</p>
+
+              <div class="mb-2">
+                <div class="form-check">
+                  <input class="form-check-input payment-radio" type="radio" name="paymentMethod" id="pm_card" value="card" checked>
+                  <label class="form-check-label" for="pm_card">Debit Card / Credit Card</label>
+                </div>
+              </div>
+
+              <div class="mb-2">
+                <div class="form-check">
+                  <input class="form-check-input payment-radio" type="radio" name="paymentMethod" id="pm_bank" value="bank">
+                  <label class="form-check-label" for="pm_bank">Bank</label>
+                </div>
+              </div>
+
+              <div class="mb-2">
+                <div class="form-check">
+                  <input class="form-check-input payment-radio" type="radio" name="paymentMethod" id="pm_upi" value="upi">
+                  <label class="form-check-label" for="pm_upi">UPI Method</label>
+                </div>
+              </div>
+
+              <div class="mb-2">
+                <div class="form-check">
+                  <input class="form-check-input payment-radio" type="radio" name="paymentMethod" id="pm_cod" value="cod">
+                  <label class="form-check-label" for="pm_cod">Cash on delivery</label>
+                </div>
+              </div>
+            </div>
+
+          <!-- Hidden submit lives outside address block for layout -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right column: order summary -->
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Your Order</h6>
+          <hr>
+
+          <% 
+            let subtotal = 0;
+            if (cart && Array.isArray(cart.items)) {
+              cart.items.forEach(function(it) {
+                subtotal += (Number(it.priceAtAdd || 0) * Number(it.qty || 0));
+              });
+            }
+          %>
+
+          <div class="list-group mb-3">
+            <% if (cart && cart.items && cart.items.length) { %>
+              <% cart.items.forEach(function(it) { %>
+                <div class="list-group-item border-0 px-0">
+                  <div class="d-flex gap-3">
+                    <div style="width:64px; height:64px; flex:0 0 64px;">
+                      <% if (it.image) { %>
+                        <img src="<%= it.image %>" alt="<%= it.title %>" class="img-fluid rounded" style="width:64px;height:64px;object-fit:cover;">
+                      <% } else { %>
+                        <div class="bg-light rounded w-100 h-100 d-flex align-items-center justify-content-center small text-muted">No Image</div>
+                      <% } %>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="fw-semibold"><%= it.title || 'Untitled' %></div>
+                      <div class="small text-muted">Qty: <%= it.qty %></div>
+                    </div>
+                    <div class="text-end">
+                      <div>₹<%= (Number(it.priceAtAdd || 0)).toFixed(2) %></div>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <div class="list-group-item border-0 px-0">Your cart is empty.</div>
+            <% } %>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <div class="small text-muted">Subtotal:</div>
+            <div>₹<%= subtotal.toFixed(2) %></div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div class="small text-muted">Shipping:</div>
+            <div class="small text-muted">Free</div>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between fw-bold">
+            <div>Total:</div>
+            <div>₹<%= subtotal.toFixed(2) %></div>
+          </div>
+
+          <div class="mt-3">
+            <div class="input-group mb-3">
+              <input type="text" name="coupon" class="form-control" placeholder="Coupon Code">
+              <button class="btn btn-outline-secondary" type="button">Apply Coupon</button>
+            </div>
+            <!-- place order button triggers form submit -->
+            <button type="submit" form="checkoutForm" class="btn btn-dark w-100">Place Order</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div> <!-- row -->
+</div>
+
+</form>
+
+<script>
+ 
+  function setInitialAddressField() {
+    const checked = document.querySelector('.address-radio:checked');
+    if (checked) {
+      document.getElementById('addressId').value = checked.value;
+    }
+  }
+
+
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.classList.contains('address-radio')) {
+      document.getElementById('addressId').value = e.target.value;
+    }
+  });
+
+  
+  document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    const addr = document.getElementById('addressId').value;
+    if (!addr) {
+      e.preventDefault();
+      alert('Please select or add a delivery address before placing order.');
+      return false;
+    }
+    
+    return true;
+  });
+
+  
+  setInitialAddressField();
+</script>
+
+<%- include("../partials/user/footer.ejs") %>

@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router();
 const userController = require('../controllers/user/userController');
 const cartController = require('../controllers/user/cartController')
+const checkOutController = require('../controllers/user/checkOutController');
+const orderController = require('../controllers/user/orderController')
 const passport = require('passport');
 const {userAuth,adminAuth} = require('../middlewares/auth')
 
@@ -43,13 +45,19 @@ router.get('/userProfile',userAuth,userController.getUserProfile)
 router.get('/userProfile/edit', userAuth, userController.getEditProfile);
 router.post('/userProfile/edit', userAuth, userController.postEditProfile);
 
+//orders
+router.get('/orders',userAuth,orderController.listOrders)
+router.get('/orders/:orderId',userAuth,orderController.viewOrder)
+router.post('/orders/:orderId/cancel',userAuth,orderController.cancelOrder)
+router.post('/orders/:orderId/return',userAuth,orderController.returnItem)
+router.get('/orders/:orderId/invoice',userAuth,orderController.downloadInvoice)
 
 
+
+//address management
 router.get('/addresses',userAuth,userController.getAddress);
-// add address
 router.get('/address/add', userAuth,userController.getAddAddress );
 router.post('/address/add', userAuth, userController.addAddress);
-// Edit address
 router.get('/address/edit/:addressId', userAuth, userController.getEditAddress);
 router.post('/address/edit/:addressId', userAuth, userController.editAddress);
 router.post('/address/delete/:addressId', userAuth, userController.deleteAddress);
@@ -72,8 +80,16 @@ router.post('/api/cart/:productId/quantity', userAuth, cartController.changeQuan
 
 
 
-//testing
 
+//checkOut page
+router.get('/checkout',userAuth,checkOutController.getCheckoutPage);
+router.post('/checkout',userAuth,orderController.createShowConforamtion)
+
+
+
+
+
+//testing
 router.get('/test',userController.test)
 
 

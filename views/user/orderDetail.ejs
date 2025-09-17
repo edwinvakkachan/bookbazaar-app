@@ -1,0 +1,203 @@
+<%- include('../partials/user/header.ejs') %> 
+
+<div class="container my-5">
+  <div class="row g-4">
+    <!-- Sidebar -->
+    <div class="col-lg-3">
+      <%- include('../partials/user/userSidebar.ejs') %>
+    </div>
+
+    <!-- Order detail -->
+    <div class="col-lg-9">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5>Order # <%= order.orderId %></h5>
+              <p class="text-muted mb-0">Placed on 
+                <%= new Date(order.createdAt).toLocaleDateString('en-GB',{ day:'numeric', month:'short', year:'numeric'}) %>
+              </p>
+            </div>
+            <div class="text-end">
+              <span class="fw-bold">Status: <%= order.status %></span><br>
+              <a href="/orders/<%= order.orderId %>/invoice" class="btn btn-sm btn-outline-primary mt-2">Download Invoice</a>
+            </div>
+          </div>
+
+          <hr>
+
+          <!-- Address -->
+          <% if (order.addressSnapshot) { %>
+            <h6>Shipping Address</h6>
+            <p>
+              <strong><%= order.addressSnapshot.name %></strong><br>
+              <%= order.addressSnapshot.line1 %><br>
+              <%= order.addressSnapshot.city %>, <%= order.addressSnapshot.state %> - <%= order.addressSnapshot.pincode %><br>
+              Phone: <%= order.addressSnapshot.phone %>
+            </p>
+          <% } %>
+
+          <hr>
+
+          <!-- Items -->
+          <h6>Items</h6>
+          <% order.items.forEach((it, idx) => { %>
+            <div class="d-flex align-items-start mb-3 p-2 border rounded">
+              <div style="width:80px">
+                <% if (it.image) { %>
+                  <img src="<%= it.image %>" class="img-fluid rounded" />
+                <% } else { %>
+                  <div style="width:80px;height:100px;background:#f5f5f5;border-radius:4px"></div>
+                <% } %>
+              </div>
+              <div class="flex-grow-1 ps-3">
+                <h6 class="mb-1"><%= it.title %></h6>
+                <p class="mb-0">Qty: <%= it.qty %> | Price: ₹<%= it.priceAtAdd %></p>
+                <p class="mb-0 small text-muted">Status: <%= it.status %></p>
+              </div>
+              <div class="text-end">
+                <% if (it.status !== 'cancelled' && it.status !== 'returned') { %>
+                  <button class="btn btn-sm btn-outline-danger mb-2 btn-cancel-item" 
+                          data-order="<%= order.orderId %>" data-index="<%= idx %>">
+                    Cancel Item
+                  </button><br>
+                <% } %>
+                <% if (it.status === 'delivered') { %>
+                  <button class="btn btn-sm btn-outline-secondary btn-return-item" 
+                          data-order="<%= order.orderId %>" data-index="<%= idx %>">
+                    Return Item
+                  </button>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+
+          <hr>
+
+          <div class="d-flex justify-content-between">
+            <div>
+              <p class="mb-0">Subtotal: ₹<%= order.subtotal %></p>
+              <p class="mb-0">Shipping: ₹<%= order.shipping %></p>
+              <p class="fw-bold">Total: ₹<%= order.total %></p>
+            </div>
+            <% if (!order.isCancelled) { %>
+              <button class="btn btn-danger btn-sm btn-cancel-order" data-order="<%= order.orderId %>">
+                Cancel Entire Order
+              </button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Item Modal -->
+<div class="modal fade" id="cancelItemModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="cancelItemForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cancel Item</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cancelItemOrderId" name="orderId">
+        <input type="hidden" id="cancelItemIndex" name="itemIndex">
+        <div class="mb-3">
+          <label class="form-label">Reason (optional)</label>
+          <textarea name="reason" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-danger btn-sm">Confirm Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Return Item Modal -->
+<div class="modal fade" id="returnItemModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="returnItemForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Return Item</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="returnItemOrderId" name="orderId">
+        <input type="hidden" id="returnItemIndex" name="itemIndex">
+        <div class="mb-3">
+          <label class="form-label">Reason for Return (required)</label>
+          <textarea name="reason" class="form-control" rows="3" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary btn-sm">Submit Return</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cancelItemModal = new bootstrap.Modal(document.getElementById('cancelItemModal'));
+  const returnItemModal = new bootstrap.Modal(document.getElementById('returnItemModal'));
+
+  document.querySelectorAll('.btn-cancel-item').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.getElementById('cancelItemOrderId').value = btn.dataset.order;
+      document.getElementById('cancelItemIndex').value = btn.dataset.index;
+      cancelItemModal.show();
+    });
+  });
+
+  document.querySelectorAll('.btn-return-item').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.getElementById('returnItemOrderId').value = btn.dataset.order;
+      document.getElementById('returnItemIndex').value = btn.dataset.index;
+      returnItemModal.show();
+    });
+  });
+
+  document.getElementById('cancelItemForm').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const orderId = ev.target.orderId.value;
+    const itemIndex = ev.target.itemIndex.value;
+    const reason = ev.target.reason.value;
+    const res = await fetch(`/orders/${orderId}/cancel`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ itemIndex, reason })
+    });
+    const data = await res.json();
+    if(data.success) location.reload(); else alert(data.message);
+  });
+
+  document.getElementById('returnItemForm').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const orderId = ev.target.orderId.value;
+    const itemIndex = ev.target.itemIndex.value;
+    const reason = ev.target.reason.value;
+    if(!reason) { alert('Reason required'); return; }
+    const res = await fetch(`/orders/${orderId}/return`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ itemIndex, reason })
+    });
+    const data = await res.json();
+    if(data.success) location.reload(); else alert(data.message);
+  });
+
+  document.querySelector('.btn-cancel-order')?.addEventListener('click', async (ev) => {
+    if(!confirm('Cancel the entire order?')) return;
+    const orderId = ev.target.dataset.order;
+    const res = await fetch(`/orders/${orderId}/cancel`, { method:'POST' });
+    const data = await res.json();
+    if(data.success) location.reload(); else alert(data.message);
+  });
+});
+</script>
+
+<%- include('../partials/user/footer.ejs') %>  
