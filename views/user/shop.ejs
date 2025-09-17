@@ -100,6 +100,18 @@
           <% for (let i = 0; i < products.length; i++) { %>
             <div class="col-md-4 mb-4">
               <div class="card h-100">
+  <!-- Wishlist button top-right -->
+  <div class="position-absolute top-0 end-0 p-2">
+    <form action="/wishlist/add" method="POST">
+      <input type="hidden" name="productId" value="<%= products[i]._id %>">
+      <!-- <button type="submit" class="btn btn-sm btn-outline-dark" title="Add to Wishlist">🖤</button> -->
+    <button type="submit" class="btn btn-sm btn-dark" title="Add to Wishlist">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
+    <path d="M8 2.748-.717 5.932C.281 3.493 3.005.399 8 5.748 12.995.399 15.719 3.493 14.717 5.932L8 15l-6.717-9.068z"/>
+  </svg>
+</button>
+    </form>
+  </div>
                 <img src="<%= products[i].productImage[0] %>" class="card-img-top" alt="<%= products[i].productName %>">
                 <div class="card-body">
                   <h6 class="card-title"><%= products[i].productName %></h6>
@@ -109,7 +121,15 @@
                   </p>
                   <div class="d-flex justify-content-between">
                     <a href="/book/<%= products[i]._id %>" class="btn btn-sm btn-outline-dark">View Details</a>
-                    <button class="btn btn-sm btn-dark">Add to Cart</button>
+                    
+                    
+                    
+                    <form onsubmit="event.preventDefault(); addToCart('<%= products[i]._id %>');">
+  <button type="submit" class="btn btn-sm btn-dark">Add to Cart</button>
+</form>
+
+
+
                   </div>
                 </div>
               </div>
@@ -137,17 +157,16 @@
   </section>
 </div>
 
+
+
 <script>
-  
   function applyFilter(type, value) {
     const params = new URLSearchParams(window.location.search);
-    let current = params.get(type) ? params.get(type).split(",") : [];
 
-    if (type === "price") {
-      
-      params.set(type, value);
-    } else {
-      
+    
+    if (type !== 'price') {
+      let current = params.get(type) ? params.get(type).split(",") : [];
+
       if (current.includes(value)) {
         current = current.filter(v => v !== value); 
       } else {
@@ -159,11 +178,23 @@
       } else {
         params.delete(type);
       }
+    } else {
+     
+      const currentPrice = params.get('price');
+      if (currentPrice === value) {
+        
+        params.delete('price');
+      } else {
+       
+        params.set('price', value);
+      }
     }
 
     
-    params.set("page", 1);
-    window.location.href = "/shop?" + params.toString();
+    params.set('page', 1);
+
+   
+    window.location.href = '/shop?' + params.toString();
   }
 
   
@@ -174,16 +205,31 @@
     } else {
       params.delete('sort');
     }
-    params.set('page', 1); 
+    params.set('page', 1);
     window.location.href = '/shop?' + params.toString();
   }
 
-  
   function goToPage(pageNumber) {
     const params = new URLSearchParams(window.location.search);
     params.set('page', pageNumber);
     window.location.href = '/shop?' + params.toString();
   }
+
+  
+  function addToCart(productId) {
+    fetch(`/cart/${productId}`, {
+      method: 'POST',
+      credentials: 'same-origin'
+    }).then(res => {
+      if (res.ok) {
+        alert('Added to cart!');
+      } else {
+        alert('Failed to add to cart');
+      }
+    });
+  }
 </script>
+
+
 
 <%- include("../partials/user/footer.ejs") %>

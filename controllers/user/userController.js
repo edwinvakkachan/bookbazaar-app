@@ -8,7 +8,7 @@ const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const upload = require('../../helpers/multer'); // multer fuction 
+const upload = require('../../helpers/multer'); 
 
 const Product  = require('../../models/productSchema');
 const Category = require('../../models/categorySchema')
@@ -193,9 +193,9 @@ const pageNotFound = async (req,res)=>{
 const loadHomepage = async (req,res)=>{
 try {
     const user = req.session.user;
-    // console.log('homepage user',user) // console
+    // console.log('homepage user',user) 
 
-    //prodcut to front page
+    
     const categories = await Category.find({isListed:true})
     const allowedBrands = await Brand.find({ isBlocked: false }).select("_id"); // added
 
@@ -252,7 +252,7 @@ for (const p of bestCategoryData) {
             products:productData,
             bestSelling:bestSellingData,
             active: "home", 
-            popularCategory:unique}) //prodcut data passed
+            popularCategory:unique}) 
     }else{
         return res.render('home',{
             products:productData,
@@ -389,18 +389,17 @@ const login = async (req,res)=>{
 
 const logout = (req, res) => {
   try {
-      //  console.log('session before logout is',req.session)
-    // If using passport, remove req.user / passport only if it corresponds to the session user
+      
     const sessionUserId = req.session?.user?._id || req.session?.user;
-    // Remove passport entry only if it matches the session user id
+    
     if (req.session?.passport && String(req.session.passport.user) === String(sessionUserId)) {
       delete req.session.passport;
     }
 
-    // Remove only the user property you added
+    
     delete req.session.user;
 
-    // Avoid destroying the whole session so admin or other flags remain
+    
     // console.log('session is',req.session)
     return res.redirect('/login');
   } catch (err) {
@@ -751,7 +750,7 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-//-----------------------------------------------------------------------
+
 
 function getUserIdFromRequest(req) {
   if (req.session && req.session.user) {
@@ -888,7 +887,7 @@ const postEditProfile = async (req, res) => {
 
    
 
-    // avatar 
+     
 if (req.file) {
   console.log('DEBUG: received file:', {
     originalname: req.file.originalname,
@@ -921,7 +920,7 @@ if (req.file) {
 
   try {
     await fs.promises.writeFile(fullPath, req.file.buffer);
-    // console.log('Avatar written to', fullPath);
+   
   } catch (writeErr) {
     console.error('Failed to write avatar to disk:', writeErr);
     return res.render('userEditProfile', {
@@ -933,7 +932,7 @@ if (req.file) {
     });
   }
 
-  //  old avatar deletion
+ 
   try {
     if (user.avatarUrl && user.avatarUrl.startsWith('/uploads/avatars/')) {
       const oldRelative = user.avatarUrl.replace(/^\//, '');
@@ -953,7 +952,7 @@ if (req.file) {
 
 
 
-    //  Password change
+    
     if (newPassword && newPassword.length > 0) {
       const ok = await bcrypt.compare(String(currentPassword || ''), String(user.password || ''));
       if (!ok) {
@@ -1196,7 +1195,7 @@ const addToWishlist = async (req, res) => {
     
     const exists = await Wishlist.findOne({ userId, productId });
     if (exists) {
-      return res.render("wishlist", { error: "Already in wishlist" });
+       return res.redirect('/wishlist');
     }
 
     await Wishlist.create({ userId, productId });
