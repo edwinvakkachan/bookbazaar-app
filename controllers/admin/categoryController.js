@@ -15,7 +15,6 @@ const categoryInfo = async (req,res)=>{
         const totalCategories = await Category.countDocuments();
         const totalPages = Math.ceil(totalCategories/limit);
 
-        //rendering 
 
         const adminData = req.session.admin;
         const adminEmail = await User.findById(adminData,{email:1})
@@ -42,8 +41,11 @@ const categoryInfo = async (req,res)=>{
 const addCategory =  async (req,res)=>{
     try {
         const {name,description} = req.body;
-        console.log("Incoming data:", req.body);
-    const existingCategory = await Category.findOne({name});
+        //console.log("Incoming data:", req.body);
+        const normalizedName = name.trim().toLowerCase();
+    const existingCategory = await Category.findOne({
+        name: { $regex: new RegExp(`^${normalizedName}$`, "i") }
+    });
         if(existingCategory){
             return res.status(400).json({error:'Category alredy exists'})
         }

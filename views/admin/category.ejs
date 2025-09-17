@@ -146,7 +146,7 @@
           throw new Error(data.error || 'Something went wrong');
         }
 
-        console.log('Success:', data);
+        // console.log('Success:', data);
         location.reload();
       } catch (error) {
         Swal.fire({ icon: 'error', title: 'Oops', text: error.message || 'An error occurred' });

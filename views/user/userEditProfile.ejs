@@ -58,13 +58,13 @@
           <!-- Name -->
           <div class="col-12">
             <label class="form-label">Name</label>
-            <input name="name" type="text" class="form-control" value="<%= user.displayName || '' %>" required>
+            <input name="name" type="text" class="form-control" value="<%= user.displayName || '' %>" >
           </div>
 
           <!-- Email -->
           <div class="col-md-6">
             <label class="form-label">Email</label>
-            <input name="email" type="email" class="form-control" value="<%= user.email || '' %>" required>
+            <input name="email" type="email" class="form-control" value="<%= user.email || '' %>" >
             <div class="form-text">Changing email will mark it unverified.</div>
           </div>
 
