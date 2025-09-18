@@ -5,6 +5,7 @@ const Wishlist = require('../../models/whishlistSchema');
 const validateProductForCart = require('../../utils/validateProductForCart');
 const { DEFAULT_MAX_PER_ORDER } = require('../../config/cartSettings');
 const mongoose = require('mongoose');
+const whishlistSchema = require('../../models/whishlistSchema');
 
 
 
