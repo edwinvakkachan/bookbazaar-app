@@ -313,6 +313,7 @@
 
 
 
+
 <script>
 (function () {
   const PRODUCT_ID = '<%= book._id %>'; 
@@ -327,12 +328,16 @@
 
   async function addToCart(productId, qty = 1) {
     try {
+      console.log('Client productId:', productId, 'qty:', qty);
       const url = `/cart/${productId}`;
+      console.log('Request URL:', url);
+
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         
+        body: JSON.stringify({ qty, productId })
       });
 
       if (res.ok) {
@@ -351,7 +356,7 @@
     }
   }
 
-
+ 
   document.addEventListener('DOMContentLoaded', function () {
     const qtyInput = document.getElementById('quantityInput');
     const qtyHidden = document.getElementById('cartQuantityInput');
@@ -359,7 +364,7 @@
     const btnInc = document.getElementById('increaseQty');
     const addBtn = document.getElementById('addToCartBtn');
 
-    
+   
     if (btnDec) btnDec.addEventListener('click', () => {
       if (!qtyInput) return;
       let v = parseInt(qtyInput.value || '1', 10);
@@ -380,9 +385,9 @@
     if (addBtn) {
       addBtn.addEventListener('click', (e) => {
         e.preventDefault();
-       
+        
         const productId = addBtn.getAttribute('data-product-id') || PRODUCT_ID;
-       
+        
         if (!productId) {
           console.error('No product id found on button or in page.');
           showPopupAlert('Unable to identify product. Refresh and try again.', 'Error');
@@ -400,6 +405,7 @@
   });
 })();
 </script>
+
 
 
 <%- include("../partials/user/footer.ejs") %>
