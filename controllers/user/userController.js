@@ -193,7 +193,7 @@ const pageNotFound = async (req,res)=>{
 const loadHomepage = async (req,res)=>{
 try {
     const user = req.session.user;
-    // console.log('homepage user',user) 
+   
 
     
     const categories = await Category.find({isListed:true})
@@ -705,28 +705,10 @@ console.log('book details',book)
 const getUserProfile = async (req, res) => {
   try {
     
-    const sessionUser = req.session && req.session.user;
-    let userId = null;
 
-    if (sessionUser) {
-      
-      userId = sessionUser._id || sessionUser.id || sessionUser;
-    }
-
-    
-    if (!userId && req.user && req.user._id) {
-      userId = req.user._id;
-    }
-
-    if (!userId) {
-   
-      return res.redirect('/login');
-    }
-
-   
+   const userId = req.session.user._id
     const user = await User.findById(userId).lean();
-    // console.log(user)
-    if (!user) return res.status(404).send('User not found');
+  
 
     
     const vmUser = {
@@ -753,22 +735,16 @@ const getUserProfile = async (req, res) => {
 
 
 
-function getUserIdFromRequest(req) {
-  if (req.session && req.session.user) {
-    return req.session.user._id || req.session.user.id || req.session.user;
-  }
-  if (req.user && req.user._id) return req.user._id;
-  return null;
-}
+
 
 
 async function getEditProfile(req, res) {
   try {
-    const userId = getUserIdFromRequest(req);
-    if (!userId) return res.redirect('/login');
+  
+    const userId = req.session.user._id;
 
     const userDoc = await User.findById(userId);
-    if (!userDoc) return res.status(404).send('User not found');
+    
 
     const vm = userDoc.toObject();
     vm.displayName = vm.name || '';
@@ -812,18 +788,8 @@ const postEditProfile = async (req, res) => {
 
   try {
     
-    let userId = null;
-    if (req.session && req.session.user) {
-      const s = req.session.user;
-      userId = s._id || s.id || s;
-    }
-    if (!userId && req.session && req.session.userId) {
-      userId = req.session.userId;
-    }
-    if (!userId && req.user && req.user._id) {
-      userId = req.user._id;
-    }
-    if (!userId) return res.redirect('/login');
+
+    const userId = req.session.user._id
 
     
     const { name, email, phone, dob, currentPassword, newPassword, confirmPassword } = req.body || {};
@@ -857,7 +823,7 @@ const postEditProfile = async (req, res) => {
 
    
     const user = await User.findById(userId);
-    if (!user) return res.status(404).send('User not found');
+    
 
     
     const normalizedNewEmail = String(email).trim().toLowerCase();
@@ -996,19 +962,14 @@ if (req.file) {
 
 
 
-const sessionUserId = (req) => {
-  if (!req.session || !req.session.user) return null;
-  const s = req.session.user;
-  if (typeof s === 'string' || typeof s === 'number') return s.toString();
-  if (typeof s === 'object' && (s._id || s.id)) return (s._id || s.id).toString();
-  return null;
-};
+
 
 
 const getAddress = async (req, res) => {
   try {
-    const userId = sessionUserId(req);
-    if (!userId) return res.status(401).send('Unauthorized: no user in session');
+    
+    const userId = req.session.user._id
+   
 
     const user = await User.findById(userId).lean();
     if (!user) return res.status(404).send('User not found');
@@ -1032,8 +993,9 @@ const getAddAddress = async(req,res)=>{
 
 const addAddress = async (req, res) => {
   try {
-    const userId = sessionUserId(req);
-    if (!userId) return res.status(401).json({ message: 'Unauthorized: no user in session' });
+    
+    const userId = req.session.user._id
+    
 
     if (!req.body) return res.status(400).json({ message: 'No form data received' });
 
@@ -1078,7 +1040,7 @@ const getEditAddress = async (req,res)=>{
   try {
     const sessionUser = req.session.user;
     const addressId = req.params.addressId;
-    // console.log('address id', addressId);
+    
 
     
     const foundUser = await User.findById(sessionUser._id);
@@ -1098,8 +1060,9 @@ const getEditAddress = async (req,res)=>{
 
 const editAddress = async (req, res) => {
   try {
-    const userId = sessionUserId(req);
-    if (!userId) return res.status(401).json({ message: 'Unauthorized: no user in session' });
+   
+    const userId = req.session.user._id
+    
 
     const { addressId } = req.params;
     if (!addressId) return res.status(400).json({ message: 'addressId param required' });
@@ -1161,8 +1124,9 @@ const deleteAddress = async (req, res) => {
 
 const setPrimary = async (req, res) => {
   try {
-    const userId = sessionUserId(req);
-    if (!userId) return res.status(401).json({ message: 'Unauthorized: no user in session' });
+    
+    const userId = req.session.user._id
+    
 
     const { addressId } = req.params;
     if (!addressId) return res.status(400).json({ message: 'addressId param required' });
@@ -1275,7 +1239,7 @@ const filterProduct = async (req,res)=>{
     try {
         const user = req.session.user;
         const category = req.query.category
-        //console.log('the category id : ',category)
+        
         const brand = req.query.brand
         const findCategory = await Category.findOne({_id:category})
         const findBrand = await Brand.findOne({_id:brand})
