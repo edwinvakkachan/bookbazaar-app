@@ -114,7 +114,11 @@
 
             <!-- Buy Now -->
             <div class="mt-3">
-              <button class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
+              <form action="/cart/<%= book._id %>" method="POST">
+  <input type="hidden" name="productId" value="<%= book._id %>">
+  <input type="hidden" name="qty" value="1">
+  <button type="submit" class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
+</form>
             </div>
 
             <!-- Delivery Info -->
