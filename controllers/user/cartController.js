@@ -158,11 +158,6 @@ const changeQuantity = async (req, res) => {
     const userId = req.session.user._id;
     const { productId } = req.params;
     const { action, qty } = req.body;
-//  console.log('.........................')
-//     console.log('the qty',qty,' action',action)
-//      console.log('.........................')
-
-   
 
     const product = await Product.findById(productId);
     

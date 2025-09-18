@@ -79,7 +79,7 @@ const listOrders = async (req, res, next) => {
 const viewOrder = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id).populate('user', 'name email').lean();
-    console.log('my orders',order)
+    
     if (!order) return res.status(404).send('Order not found');
 
      const adminData = req.session.admin;

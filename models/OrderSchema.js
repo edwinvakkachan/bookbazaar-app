@@ -68,7 +68,7 @@ const OrderSchema = new Schema({
   
   status: { 
     type: String, 
-    enum: ['created','processing','paid','shipped','delivered','cancelled','partially_cancelled','refunded'], 
+    enum: ['created','processing','paid','shipped','delivered','cancelled','partially_cancelled','refunded','returned', 'partially_returned'], 
     default: 'created' 
   },
   isCancelled: { type: Boolean, default: false },

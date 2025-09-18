@@ -606,7 +606,7 @@ const allowedbrands = await Brand.find({ isBlocked: false }).select("_id");
     
 const totalProducts = await Product.countDocuments(query);
 const totalPages = Math.ceil(totalProducts / limit);
-console.log('products', products);
+
 
 
 res.render("shop", {
@@ -686,7 +686,7 @@ const getBookDetails = async (req,res)=>{
       coverImg: item.productImage?.[0] || "/images/no-image.png"
     }));
 
-console.log('book details',book)
+
 
     res.render("bookDetails", {
       book,

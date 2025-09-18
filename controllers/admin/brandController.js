@@ -56,8 +56,7 @@ const addBrand = async (req,res)=>{
         );
         fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
 
-        console.log("req.file =>", req.file);
-        console.log("req.body =>", req.body);
+
         fs.writeFileSync(uploadPath, req.file.buffer);
       }
 

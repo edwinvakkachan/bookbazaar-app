@@ -185,7 +185,7 @@ const listOrders = async (req, res) => {
 
 const viewOrder = async (req, res) => {
   try {
-    const order = await Order.findOne({ orderId: req.params.orderId, user: req.user._id }).lean();
+    const order = await Order.findOne({ orderId: req.params.orderId, user: req.session.user._id }).lean();
     if (!order) return res.status(404).send('Order not found');
     res.render('orderDetail', { order, active: 'orders' });
   } catch (err) {
@@ -203,9 +203,9 @@ const cancelOrder = async (req, res) => {
 
     
     const { itemIndex, reason } = req.body || {};
-    const userId = req.session && req.session.user && req.session.user._id;
+    const userId = req.session.user._id;
 
-    if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
+    
 
     const order = await Order.findOne({ orderId, user: userId });
     // console.log('user order details is', order);
@@ -247,7 +247,7 @@ const cancelOrder = async (req, res) => {
     }
 
     await order.save();
-    // return res.json({ success: true, message: 'Cancellation processed' });
+    
     return res.redirect('/orders')
   } catch (err) {
     console.error('cancelOrder error:', err);
@@ -269,8 +269,8 @@ const returnItem = async (req, res) => {
     const { itemIndex, reason } = req.body || {};
 
     
-    const userId = (req.user && req.user._id) || (req.session && req.session.user && req.session.user._id);
-    if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
+    
+    const userId = req.session.user._id
 
     if (!reason || String(reason).trim().length === 0) {
       return res.status(400).json({ success: false, message: 'Return reason required' });
@@ -360,7 +360,8 @@ const returnItem = async (req, res) => {
 const downloadInvoice =  async (req, res)=> {
   try {
     const { orderId } = req.params;
-    const userId = req.user && req.user._id;
+    
+    const userId = req.session.user._id
 
     
     const order = await Order.findOne({ orderId, user: userId }).lean();
