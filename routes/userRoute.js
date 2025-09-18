@@ -84,6 +84,7 @@ router.post('/api/cart/:productId/quantity', userAuth, cartController.changeQuan
 //checkOut page
 router.get('/checkout',userAuth,checkOutController.getCheckoutPage);
 router.post('/checkout',userAuth,orderController.createShowConforamtion)
+router.post('/checkout/address/add', userAuth, checkOutController.checkoutAddress);
 
 
 

@@ -40,9 +40,16 @@
               <% } %>
             </div>
 
+
+
             <div class="mb-4">
-              <a href="/addresses/new" class="btn btn-dark">Add New Address</a>
-            </div>
+  <!-- address modal  -->
+  <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+    Add New Address
+  </button>
+</div>
+
+
 
             <!-- Payment Methods -->
             <div class="mb-4">
@@ -158,6 +165,202 @@
 </div>
 
 </form>
+
+
+<!-- Address Modal -->
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form id="modalAddAddressForm" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Name</label>
+              <input name="name" id="m_name" type="text" class="form-control form-control-lg" placeholder="Recipient Name" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Email</label>
+              <input name="email" id="m_email" type="email" class="form-control form-control-lg" placeholder="example@gmail.com">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Phone</label>
+              <input name="phone" id="m_phone" type="tel" class="form-control form-control-lg" placeholder="+91 12345 67890">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Address</label>
+              <textarea name="line1" id="m_line1" rows="3" class="form-control form-control-lg" placeholder="House Name, House Number, Locality" required></textarea>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">District / Town</label>
+              <input name="city" id="m_city" type="text" class="form-control" placeholder="eg : Ernakulam" >
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">State</label>
+              <input name="state" id="m_state" type="text" class="form-control" placeholder="eg : Kerala" >
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Landmark (optional)</label>
+              <input name="line2" id="m_line2" type="text" class="form-control" placeholder="eg : Hospital">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Pin Code</label>
+              <input name="postalCode" id="m_postalCode" type="text" pattern="\d{6}" class="form-control" placeholder="eg : 689230" >
+            </div>
+
+            <div class="col-12">
+              <label class="form-label d-block">Address Type</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="label" id="m_addrHome" value="Home" checked>
+                <label class="form-check-label" for="m_addrHome">Home</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="label" id="m_addrWork" value="Work">
+                <label class="form-check-label" for="m_addrWork">Work</label>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <input type="hidden" name="isPrimary" value="false">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="m_isPrimary" name="isPrimary" value="true">
+                <label class="form-check-label" for="m_isPrimary">Set as primary address</label>
+              </div>
+            </div>
+
+          </div> <!-- row -->
+        </div> <!-- modal-body -->
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" id="modalSaveAddressBtn" class="btn btn-dark">Save Address</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  (function () {
+    
+    const addressIdField = document.getElementById('addressId');
+
+    
+    const modalForm = document.getElementById('modalAddAddressForm');
+    modalForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      
+      if (!modalForm.checkValidity()) {
+        modalForm.classList.add('was-validated');
+        return;
+      }
+
+      const formData = new FormData(modalForm);
+      
+      const payload = {
+        label: formData.get('label') || 'Home',
+        name: (formData.get('name') || '').trim(),
+        email: (formData.get('email') || '').trim(),
+        phone: (formData.get('phone') || '').trim(),
+        line1: (formData.get('line1') || '').trim(),
+        line2: (formData.get('line2') || '').trim(),
+        city: (formData.get('city') || '').trim(),
+        state: (formData.get('state') || '').trim(),
+        postalCode: (formData.get('postalCode') || '').trim(),
+        country: 'India',
+        isPrimary: formData.get('isPrimary') === 'true'
+      };
+
+     
+      const saveBtn = document.getElementById('modalSaveAddressBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+
+      try {
+        const res = await fetch('/checkout/address/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(()=>({message:'Server error'}));
+          throw new Error(err.message || 'Failed to save address');
+        }
+
+        const newAddr = await res.json();
+
+        
+        const container = document.querySelector('#checkoutForm .mb-3'); 
+        if (container) {
+          const idx = container.querySelectorAll('.border.rounded.p-3').length;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'border rounded p-3 mb-3 d-flex justify-content-between align-items-center';
+          wrapper.innerHTML = `
+            <div>
+              <strong>${escapeHtml(newAddr.name)}</strong>
+              <div class="small text-muted">${escapeHtml(newAddr.line1)}${newAddr.line2 ? ', ' + escapeHtml(newAddr.line2) : ''}</div>
+              <div class="small text-muted">${escapeHtml(newAddr.city)} ${newAddr.postalCode ? '- ' + escapeHtml(newAddr.postalCode) : ''}</div>
+              <div class="small text-muted">${escapeHtml(newAddr.state)}${newAddr.country ? ', ' + escapeHtml(newAddr.country) : ''}</div>
+              <div class="small text-muted">Contact : ${escapeHtml(newAddr.phone)}</div>
+            </div>
+            <div class="text-end">
+              <div class="form-check">
+                <input class="form-check-input address-radio" type="radio" name="addressRadio" id="addr_${idx}"
+                      value="${newAddr._id}" ${newAddr.isPrimary ? 'checked' : ''}>
+                <label class="form-check-label small" for="addr_${idx}">Select</label>
+              </div>
+            </div>
+          `;
+          container.insertBefore(wrapper, container.firstChild);
+        }
+
+        
+        if (addressIdField) addressIdField.value = newAddr._id;
+
+        
+        const modalEl = document.getElementById('addAddressModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+
+        
+        modalForm.reset();
+        modalForm.classList.remove('was-validated');
+
+      } catch (err) {
+        alert('Could not save address: ' + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Address';
+      }
+    });
+
+   
+    document.addEventListener('change', function (e) {
+      if (e.target && e.target.classList.contains('address-radio')) {
+        document.getElementById('addressId').value = e.target.value;
+      }
+    });
+
+    
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, function (m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+      });
+    }
+  })();
+</script>
 
 <script>
  
