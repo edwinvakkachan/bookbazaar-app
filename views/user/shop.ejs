@@ -157,6 +157,24 @@
   </section>
 </div>
 
+<!-- Popup Modal -->
+<div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="popupAlertMessage">
+        <!-- Message will be injected here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 
 <script>
@@ -216,18 +234,37 @@
   }
 
   
+
+
+function showPopupAlert(message, title = "Notification") {
+   
+    document.getElementById("popupAlertTitle").innerText = title;
+    document.getElementById("popupAlertMessage").innerText = message;
+
+    
+    const myModal = new bootstrap.Modal(document.getElementById("popupAlert"));
+    myModal.show();
+  }
+
   function addToCart(productId) {
     fetch(`/cart/${productId}`, {
       method: 'POST',
-      credentials: 'same-origin'
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ productId })
     }).then(res => {
       if (res.ok) {
-        alert('Added to cart!');
+        showPopupAlert('✅ Added to cart successfully.', 'Success');
       } else {
-        alert('Failed to add to cart');
+        showPopupAlert('❌ Failed to add to cart.', 'Error');
       }
+    }).catch(() => {
+      showPopupAlert(' Something went wrong.', 'Warning');
     });
   }
+
+
+
 </script>
 
 

@@ -197,7 +197,7 @@ try {
 
     
     const categories = await Category.find({isListed:true})
-    const allowedBrands = await Brand.find({ isBlocked: false }).select("_id"); // added
+    const allowedBrands = await Brand.find({ isBlocked: false }).select("_id"); 
 
     let productData = await Product.find({isBlocked:false,
                             category:{$in:categories.map(category=>category._id)},
@@ -645,6 +645,7 @@ const getBookDetails = async (req,res)=>{
 
  
     const book = {
+      _id: product._id,  
   title: product.productName,
   author: product.author,  
   pages: product.pages,

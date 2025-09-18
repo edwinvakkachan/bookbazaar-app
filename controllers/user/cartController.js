@@ -87,13 +87,9 @@ const listCart = async (req, res) => {
 const addToCart = async (req, res) => {
   try {
     const userId = req.session.user._id;
-    // const { productId, qty = 1 } = req.body;
+    const { productId, qty = 1 } = req.body;
 
-    const productId = (req.body && req.body.productId) || req.params.add || req.body?.product || null;
-    const qty = (req.body && (req.body.qty || req.body.quantity)) || 1;
-
-    
-    console.log('the product id is',productId)
+ 
     const quantityRequested = Math.max(1, parseInt(qty, 10) || 1);
 
    

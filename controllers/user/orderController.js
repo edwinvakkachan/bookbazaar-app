@@ -208,7 +208,7 @@ const cancelOrder = async (req, res) => {
     if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
 
     const order = await Order.findOne({ orderId, user: userId });
-    console.log('user order details is', order);
+    // console.log('user order details is', order);
     if (!order) throw new Error('Order not found');
 
     
@@ -247,7 +247,8 @@ const cancelOrder = async (req, res) => {
     }
 
     await order.save();
-    return res.json({ success: true, message: 'Cancellation processed' });
+    // return res.json({ success: true, message: 'Cancellation processed' });
+    return res.redirect('/orders')
   } catch (err) {
     console.error('cancelOrder error:', err);
     return res.status(400).json({ success: false, message: err.message });
