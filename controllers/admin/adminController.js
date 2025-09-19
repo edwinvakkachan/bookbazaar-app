@@ -55,7 +55,7 @@ const loadDashboard = async (req,res)=>{
 
 const logout = async (req,res)=>{
     try {
-        console.log('logout');
+
         delete req.session.admin;
         res.redirect('/admin/login');
     } catch (error) {

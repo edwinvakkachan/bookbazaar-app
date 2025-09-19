@@ -1,0 +1,126 @@
+<%- include('../partials/admin/header', { title: title, activePage: 'orders' }) %>
+
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3">Order list</h1>
+
+    <form class="d-flex gap-2" method="get" action="/admin/orders">
+      <input type="search" name="q" class="form-control form-control-sm" placeholder="Search orderId / name / address / item" value="<%= q %>">
+      <select name="status" class="form-select form-select-sm">
+        <option value="">All status</option>
+        <% STATUS_ENUM.forEach(function(s){ %>
+          <option value="<%= s %>" <%= s===status ? 'selected' : '' %>><%= s %></option>
+        <% }) %>
+      </select>
+      <select name="sort" class="form-select form-select-sm">
+        <option value="desc" <%= sort==='desc' ? 'selected' : '' %>>Newest first</option>
+        <option value="asc" <%= sort==='asc' ? 'selected' : '' %>>Oldest first</option>
+      </select>
+      <input type="hidden" name="page" value="1">
+      <button class="btn btn-dark btn-sm" type="submit">Apply</button>
+      <a href="/admin/orders" class="btn btn-outline-secondary btn-sm">Clear</a>
+    </form>
+  </div>
+
+  <div class="table-responsive bg-white border rounded">
+    <table class="table mb-0">
+      <thead class="table-light">
+        <tr>
+          <!-- <th>ID</th> -->
+          <th>Order ID</th>
+          <th>User</th>
+          <th>Date</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!orders || orders.length === 0) { %>
+          <tr><td colspan="8" class="text-center py-4">No orders found</td></tr>
+        <% } %>
+        <% orders.forEach(function(o){ %>
+          <tr>
+            <!-- <td><small><%= o._id %></small></td> -->
+            <td><strong><%= o.orderId %></strong></td>
+            <td>
+              <% if (o.user) { %>
+                <div><%= o.user.name || '—' %></div>
+                <div class="text-muted small"><%= o.user.email || '' %></div>
+              <% } else { %>
+                <div><%= o.addressSnapshot && o.addressSnapshot.name ? o.addressSnapshot.name : 'Guest' %></div>
+                <div class="text-muted small"><%= o.addressSnapshot && o.addressSnapshot.line1 ? o.addressSnapshot.line1 : '' %></div>
+              <% } %>
+            </td>
+            <td><%= new Date(o.createdAt).toLocaleDateString() %></td>
+            <td><%= (o.items && o.items.length) ? o.items.length : 0 %></td>
+            <td><%= (o.currency || 'INR') + ' ' + (o.total != null ? o.total.toFixed(2) : '0.00') %></td>
+            <td>
+              <span class="badge bg-secondary text-white status-badge"><%= o.status %></span>
+            </td>
+            <td>
+              <a href="/admin/orders/<%= o._id %>" class="btn btn-sm btn-outline-primary me-1" title="View"><i class="bi bi-eye"></i></a>
+
+              <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                  Change status
+                </button>
+                <ul class="dropdown-menu">
+                  <% ['created','processing','paid','shipped','out_for_delivery','delivered','cancelled'].forEach(function(s){ %>
+                    <li>
+                      <button class="dropdown-item change-status-btn" data-id="<%= o._id %>" data-status="<%= s %>">
+                        <%= s %>
+                      </button>
+                    </li>
+                  <% }) %>
+                </ul>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <nav class="mt-3" aria-label="orders pagination">
+    <ul class="pagination">
+      <% for(let p=1; p<=totalPages; p++) { %>
+        <li class="page-item <%= page===p ? 'active' : '' %>">
+          <a class="page-link" href="?<%= ['q=' + encodeURIComponent(q||''), 'status=' + encodeURIComponent(status||''), 'sort=' + encodeURIComponent(sort||'desc'), 'page=' + p, 'limit=' + limit].join('&') %>"><%= p %></a>
+        </li>
+      <% } %>
+    </ul>
+  </nav>
+</div>
+
+<script>
+  
+  document.addEventListener('click', async (e) => {
+    if (e.target.matches('.change-status-btn')) {
+      const btn = e.target;
+      const id = btn.dataset.id;
+      const status = btn.dataset.status;
+
+      if (!confirm('Change order status to "' + status + '"?')) return;
+
+      try {
+        const res = await fetch('/admin/orders/' + id + '/status', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed');
+
+        
+        location.reload();
+      } catch (err) {
+        alert('Failed to update status: ' + err.message);
+      }
+    }
+  });
+</script>
+
+<%- include('../partials/admin/footer') %>

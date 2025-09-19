@@ -1,7 +1,14 @@
 const User = require("../../models/userSchema")
+const Wishlist = require("../../models/whishlistSchema")
+
+
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const upload = require('../../helpers/multer'); 
 
 const Product  = require('../../models/productSchema');
 const Category = require('../../models/categorySchema')
@@ -186,10 +193,11 @@ const pageNotFound = async (req,res)=>{
 const loadHomepage = async (req,res)=>{
 try {
     const user = req.session.user;
+   
 
-    //prodcut to front page
+    
     const categories = await Category.find({isListed:true})
-    const allowedBrands = await Brand.find({ isBlocked: false }).select("_id"); // added
+    const allowedBrands = await Brand.find({ isBlocked: false }).select("_id"); 
 
     let productData = await Product.find({isBlocked:false,
                             category:{$in:categories.map(category=>category._id)},
@@ -244,7 +252,7 @@ for (const p of bestCategoryData) {
             products:productData,
             bestSelling:bestSellingData,
             active: "home", 
-            popularCategory:unique}) //prodcut data passed
+            popularCategory:unique}) 
     }else{
         return res.render('home',{
             products:productData,
@@ -334,6 +342,8 @@ const resendOTP = async (req,res)=>{
 
 const loadLogin = async (req, res) => {
   try {
+    
+
     if (!req.session.user) {
       const blocked = req.query.blocked || false; 
       return res.render("login", { message: null, blocked });
@@ -376,31 +386,28 @@ const login = async (req,res)=>{
 
 
 
-const logout = async (req, res) => {
+
+const logout = (req, res) => {
   try {
-    req.logout(err => {
-      if (err) {
-        console.error("passport logout error:", err);
-      }
-
       
-      delete req.session.user;
+    const sessionUserId = req.session?.user?._id || req.session?.user;
+    
+    if (req.session?.passport && String(req.session.passport.user) === String(sessionUserId)) {
+      delete req.session.passport;
+    }
 
-      
-      req.session.destroy(error => {
-        if (error) {
-          console.log("session destruction error", error.message);
-          return res.redirect("/pageNotFound");
-        }
-        
-        res.redirect("/login");
-      });
-    });
-  } catch (error) {
-    console.error("user logout error", error);
-    res.redirect("/pageNotFound");
+    
+    delete req.session.user;
+
+    
+    // console.log('session is',req.session)
+    return res.redirect('/login');
+  } catch (err) {
+    console.error('user logout error', err);
+    return res.redirect('/pageNotFound');
   }
 };
+
 
 
 const loadForgotPassword = async (req,res)=>{
@@ -599,7 +606,7 @@ const allowedbrands = await Brand.find({ isBlocked: false }).select("_id");
     
 const totalProducts = await Product.countDocuments(query);
 const totalPages = Math.ceil(totalProducts / limit);
-console.log('products', products);
+
 
 
 res.render("shop", {
@@ -638,6 +645,7 @@ const getBookDetails = async (req,res)=>{
 
  
     const book = {
+      _id: product._id,  
   title: product.productName,
   author: product.author,  
   pages: product.pages,
@@ -678,7 +686,7 @@ const getBookDetails = async (req,res)=>{
       coverImg: item.productImage?.[0] || "/images/no-image.png"
     }));
 
-console.log('book details',book)
+
 
     res.render("bookDetails", {
       book,
@@ -694,6 +702,534 @@ console.log('book details',book)
 }
 
 
+const getUserProfile = async (req, res) => {
+  try {
+    
+
+   const userId = req.session.user._id
+    const user = await User.findById(userId).lean();
+  
+
+    
+    const vmUser = {
+      ...user,
+      displayName: user.name || '', 
+      dobFormatted: user.dob ? new Date(user.dob).toISOString().slice(0, 10) : ''
+    };
+
+    
+    if (vmUser.password) delete vmUser.password;
+
+    
+    return res.render('userProfile', {
+      user: vmUser,
+      active: 'profile',
+      success: null,
+      errors: null
+    });
+  } catch (err) {
+    console.error('getUserProfile error:', err);
+    return res.status(500).send('Server error');
+  }
+};
+
+
+
+
+
+
+async function getEditProfile(req, res) {
+  try {
+  
+    const userId = req.session.user._id;
+
+    const userDoc = await User.findById(userId);
+    
+
+    const vm = userDoc.toObject();
+    vm.displayName = vm.name || '';
+    vm.dobFormatted = vm.dob ? new Date(vm.dob).toISOString().slice(0, 10) : '';
+
+    res.render('userEditProfile', {
+      user: vm,
+      active: 'profile',
+      errors: null,
+      success: null
+    });
+  } catch (err) {
+    console.error('getEditProfile error:', err);
+    res.status(500).send('Server error');
+  }
+}
+
+
+const postEditProfile = async (req, res) => {
+  
+  try {
+    await new Promise((resolve, reject) => {
+      upload.single('avatar')(req, res, (err) => (err ? reject(err) : resolve()));
+    });
+  } catch (uploadErr) {
+    console.error('Avatar upload error:', uploadErr);
+    return res.render('userEditProfile', {
+      user: {
+        displayName: req.body.name || '',
+        name: req.body.name || '',
+        email: req.body.email || '',
+        phone: req.body.phone || '',
+        dobFormatted: req.body.dob || ''
+      },
+      active: 'profile',
+      errors: [{ msg: uploadErr.message || 'File upload failed' }],
+      success: null,
+      csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+    });
+  }
+
+  try {
+    
+
+    const userId = req.session.user._id
+
+    
+    const { name, email, phone, dob, currentPassword, newPassword, confirmPassword } = req.body || {};
+    const errors = [];
+
+   
+    if (!name || !String(name).trim()) errors.push({ msg: 'Name is required' });
+    if (!email || !/^\S+@\S+\.\S+$/.test(String(email))) errors.push({ msg: 'A valid email is required' });
+
+    if (newPassword && newPassword.length > 0) {
+      if (!currentPassword || currentPassword.length === 0) {
+        errors.push({ msg: 'Current password is required to change your password' });
+      }
+      if (newPassword.length < 6) {
+        errors.push({ msg: 'New password must be at least 6 characters' });
+      }
+      if (newPassword !== confirmPassword) {
+        errors.push({ msg: 'New password and confirm password do not match' });
+      }
+    }
+
+    if (errors.length) {
+      return res.render('userEditProfile', {
+        user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+        active: 'profile',
+        errors,
+        success: null,
+        csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+      });
+    }
+
+   
+    const user = await User.findById(userId);
+    
+
+    
+    const normalizedNewEmail = String(email).trim().toLowerCase();
+    if (normalizedNewEmail !== String(user.email || '').toLowerCase()) {
+      const conflict = await User.findOne({ email: normalizedNewEmail });
+      if (conflict && conflict._id.toString() !== user._id.toString()) {
+        return res.render('userEditProfile', {
+          user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+          active: 'profile',
+          errors: [{ msg: 'Email already in use by another account' }],
+          success: null,
+          csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+        });
+      }
+      user.email = normalizedNewEmail;
+      user.emailVerified = false;
+    }
+
+    
+    user.name = String(name || '').trim();
+    user.phone = phone && String(phone).trim().length ? String(phone).trim() : null;
+    if (dob && String(dob).trim().length) {
+      const d = new Date(dob);
+      if (!isNaN(d)) user.dob = d;
+    } else {
+      user.dob = null;
+    }
+
+   
+
+     
+if (req.file) {
+  console.log('DEBUG: received file:', {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+    bufferExists: !!req.file.buffer
+  });
+
+  if (!req.file.buffer) {
+    return res.render('userEditProfile', {
+      user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+      active: 'profile',
+      errors: [{ msg: 'Uploaded file empty. Please try again.' }],
+      success: null,
+      csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+    });
+  }
+
+  const avatarDir = path.join(__dirname, '..','..', 'public', 'uploads', 'avatars');
+  try {
+    await fs.promises.mkdir(avatarDir, { recursive: true });
+  } catch (mkdirErr) {
+    console.error('Could not create avatar dir', avatarDir, mkdirErr);
+    return res.status(500).send('Server error');
+  }
+
+  const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+  const fname = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`;
+  const fullPath = path.join(avatarDir, fname);
+
+  try {
+    await fs.promises.writeFile(fullPath, req.file.buffer);
+   
+  } catch (writeErr) {
+    console.error('Failed to write avatar to disk:', writeErr);
+    return res.render('userEditProfile', {
+      user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+      active: 'profile',
+      errors: [{ msg: 'Failed to save uploaded image. Try again later.' }],
+      success: null,
+      csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+    });
+  }
+
+ 
+  try {
+    if (user.avatarUrl && user.avatarUrl.startsWith('/uploads/avatars/')) {
+      const oldRelative = user.avatarUrl.replace(/^\//, '');
+      const oldFull = path.join(__dirname, '..', 'public', oldRelative);
+      if (fs.existsSync(oldFull)) await fs.promises.unlink(oldFull);
+    }
+  } catch (unlinkErr) {
+    console.warn('Could not delete old avatar:', unlinkErr.message);
+  }
+
+  user.avatarUrl = `/uploads/avatars/${fname}`;
+}
+
+
+
+
+
+
+
+    
+    if (newPassword && newPassword.length > 0) {
+      const ok = await bcrypt.compare(String(currentPassword || ''), String(user.password || ''));
+      if (!ok) {
+        return res.render('userEditProfile', {
+          user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
+          active: 'profile',
+          errors: [{ msg: 'Current password is incorrect' }],
+          success: null,
+          csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+        });
+      }
+      user.password = await bcrypt.hash(String(newPassword), 10);
+    }
+
+   
+    await user.save();
+    const fresh = await User.findById(user._id).lean();
+    if (fresh && fresh.password) delete fresh.password;
+    if (req.session) req.session.user = fresh;
+
+    return res.redirect('/userProfile');
+  } catch (err) {
+    console.error('postEditProfile error:', err);
+    return res.render('userEditProfile', {
+      user: {
+        displayName: req.body.name || '',
+        name: req.body.name || '',
+        email: req.body.email || '',
+        phone: req.body.phone || '',
+        dobFormatted: req.body.dob || ''
+      },
+      active: 'profile',
+      errors: [{ msg: 'Server error. Please try again.' }],
+      success: null,
+      csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
+    });
+  }
+};
+
+
+
+
+
+
+
+const getAddress = async (req, res) => {
+  try {
+    
+    const userId = req.session.user._id
+   
+
+    const user = await User.findById(userId).lean();
+    if (!user) return res.status(404).send('User not found');
+
+    user.addresses = Array.isArray(user.addresses) ? user.addresses : [];
+    return res.render('addresses', { user });
+  } catch (error) {
+    console.error('getAddresses error:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const getAddAddress = async(req,res)=>{
+  try {
+    res.render('addressAdd', { user: req.session.user || null });
+  } catch (error) {
+    
+  }
+}
+
+
+const addAddress = async (req, res) => {
+  try {
+    
+    const userId = req.session.user._id
+    
+
+    if (!req.body) return res.status(400).json({ message: 'No form data received' });
+
+    
+    const addressData = { ...req.body };
+
+    
+    addressData.isPrimary = (addressData.isPrimary === 'true' || addressData.isPrimary === 'on' || addressData.isPrimary === true);
+
+    
+    if (!addressData.name || !addressData.line1) {
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: { name: addressData.name ? undefined : 'required', line1: addressData.line1 ? undefined : 'required' }
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!Array.isArray(user.addresses)) user.addresses = [];
+
+    
+    if (user.addresses.length === 0) {
+      addressData.isPrimary = true;
+    } else if (addressData.isPrimary) {
+      user.addresses.forEach(a => (a.isPrimary = false));
+    }
+
+    user.addresses.push(addressData);
+    await user.save();
+
+    
+  return res.redirect('/addresses')
+  } catch (error) {
+    console.error('addAddress error:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const getEditAddress = async (req,res)=>{
+  try {
+    const sessionUser = req.session.user;
+    const addressId = req.params.addressId;
+    
+
+    
+    const foundUser = await User.findById(sessionUser._id);
+    if (!foundUser) return res.status(404).send('User not found');
+
+    const addr = foundUser.addresses.id(addressId);
+    if (!addr) return res.status(404).send('Address not found');
+
+    return res.render('editAddress', { address: addr });
+  } catch (error) {
+    console.error('get editPage error', error);
+    return res.redirect('/pageNotFound');
+  }
+}
+
+
+
+const editAddress = async (req, res) => {
+  try {
+   
+    const userId = req.session.user._id
+    
+
+    const { addressId } = req.params;
+    if (!addressId) return res.status(400).json({ message: 'addressId param required' });
+    if (!req.body) return res.status(400).json({ message: 'No form data received' });
+
+    const updates = { ...req.body };
+    updates.isPrimary = (updates.isPrimary === 'true' || updates.isPrimary === 'on' || updates.isPrimary === true);
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!Array.isArray(user.addresses)) user.addresses = [];
+
+    const addr = user.addresses.id(addressId);
+    if (!addr) return res.status(404).json({ message: 'Address not found' });
+
+    if (updates.isPrimary) {
+      user.addresses.forEach(a => (a.isPrimary = false));
+    }
+
+    addr.set(updates);
+    await user.save();
+
+    res.redirect('/addresses')
+  } catch (error) {
+    console.error('editAddress error:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
+const deleteAddress = async (req, res) => {
+  try {
+    const userId = req.session.user._id || req.session.user;
+    const { addressId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!Array.isArray(user.addresses)) user.addresses = [];
+
+    
+    user.addresses = user.addresses.filter(a => String(a._id) !== String(addressId));
+
+    
+    if (!user.addresses.some(a => a.isPrimary) && user.addresses.length) {
+      user.addresses[0].isPrimary = true;
+    }
+
+    await user.save();
+   res.redirect('/addresses')
+  } catch (error) {
+    console.error('deleteAddress error:', error);
+    return res.redirect('/pageNotFound')
+  }
+};
+
+
+
+const setPrimary = async (req, res) => {
+  try {
+    
+    const userId = req.session.user._id
+    
+
+    const { addressId } = req.params;
+    if (!addressId) return res.status(400).json({ message: 'addressId param required' });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!Array.isArray(user.addresses)) user.addresses = [];
+
+    const addr = user.addresses.id(addressId);
+    if (!addr) return res.status(404).json({ message: 'Address not found' });
+
+    user.addresses.forEach(a => (a.isPrimary = a._id.toString() === addressId));
+    await user.save();
+
+    res.redirect('/addresses')
+  } catch (error) {
+    console.error('setPrimary error:', error);
+    return res.redirect('/pageNotFound')
+  }
+};
+
+
+
+
+const addToWishlist = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const userId = req.session.user._id; 
+
+    
+    const exists = await Wishlist.findOne({ userId, productId });
+    if (exists) {
+       return res.redirect('/wishlist');
+    }
+
+    await Wishlist.create({ userId, productId });
+    res.redirect("/wishlist");
+  } catch (err) {
+    console.error(err);
+    res.render("wishlist", { error: "Something went wrong" });
+  }
+};
+
+
+const getWishlist = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+   
+    const items = await Wishlist.find({ userId }).populate('productId');
+
+    
+    const wishlistProductIds = items
+      .map(it => it.productId && it.productId._id)
+      .filter(Boolean); 
+
+   
+    let recommendations;
+    if (wishlistProductIds.length === 0) {
+      recommendations = await Product.aggregate([{ $sample: { size: 4 } }]);
+    } else {
+      recommendations = await Product.aggregate([
+        { $match: { _id: { $nin: wishlistProductIds } } }, 
+        { $sample: { size: 4 } }
+      ]);
+    }
+
+    
+    res.render('wishlist', {
+      items,
+      recommendations,
+      user: req.session.user,
+      cartCount: req.session.cart ? req.session.cart.length : 0
+    });
+  } catch (err) {
+    console.error('getWishlist error:', err);
+    res.render('wishlist', {
+      items: [],
+      recommendations: [],
+      error: 'Unable to load wishlist',
+      user: req.session.user,
+      cartCount: req.session.cart ? req.session.cart.length : 0
+    });
+  }
+};
+
+
+const removeFromWishlist = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const userId = req.session.user._id;
+
+    await Wishlist.deleteOne({ userId, productId });
+    res.redirect("/wishlist");
+  } catch (err) {
+    console.error(err);
+    res.render("wishlist", { error: "Could not remove item" });
+  }
+};
+
+
+
 
 
 
@@ -703,7 +1239,7 @@ const filterProduct = async (req,res)=>{
     try {
         const user = req.session.user;
         const category = req.query.category
-        console.log('the category id : ',category)
+        
         const brand = req.query.brand
         const findCategory = await Category.findOne({_id:category})
         const findBrand = await Brand.findOne({_id:brand})
@@ -763,6 +1299,22 @@ module.exports = {
     about,
     contact,
     sendContact,
+    getUserProfile,
+    postEditProfile,
+    getEditProfile,
+    getAddress,
+    addAddress,
+    getAddAddress,
+    getEditAddress,
+    editAddress,
+    deleteAddress,
+    setPrimary,
+    addToWishlist,
+    getWishlist,
+    removeFromWishlist,
     filterProduct,
     test,
+
 };
+
+

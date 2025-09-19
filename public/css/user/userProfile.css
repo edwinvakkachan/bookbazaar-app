@@ -1,0 +1,6 @@
+
+.user-account-sidebar { width: 100%; box-sizing: border-box; padding-right: 1rem; }
+@media (min-width: 992px) {
+  .user-account-sidebar { position: sticky; top: 100px; } 
+}
+.user-account-sidebar .btn { white-space: normal; text-align: center; }

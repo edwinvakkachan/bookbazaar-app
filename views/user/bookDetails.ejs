@@ -93,26 +93,32 @@
             <p class="mt-3"><%= book.description %></p>
 
             <!-- Action Buttons -->
-            <div class="d-flex align-items-center gap-2 mt-4">
+            <div id="book-actions" class="d-flex align-items-center gap-2 mt-4">
               <!-- Quantity Selector -->
               <div class="input-group w-auto" style="max-width: 120px;">
                 <button class="btn btn-outline-secondary" type="button" id="decreaseQty" aria-label="Decrease quantity">-</button>
-                <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1">
+                <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1" style="max-width:64px;">
                 <button class="btn btn-outline-secondary" type="button" id="increaseQty" aria-label="Increase quantity">+</button>
               </div>
 
-              <!-- Add to Cart -->
-              <button class="btn btn-dark">Add to Cart</button>
+              <!-- Add to Cart (JS-driven) -->
+              <input type="hidden" name="quantity" value="1" id="cartQuantityInput">
+              <button type="button" class="btn btn-dark" id="addToCartBtn" data-product-id="<%= book._id %>">Add to Cart</button>
 
               <!-- Wishlist -->
-              <button class="btn btn-outline-secondary">
-                <i class="bi bi-heart"></i>
-              </button>
+              <form action="/wishlist/add" method="POST" class="d-inline">
+                <input type="hidden" name="productId" value="<%= book._id %>">
+                <button type="submit" class="btn btn-dark" title="Add to Wishlist">🖤</button>
+              </form>
             </div>
 
             <!-- Buy Now -->
             <div class="mt-3">
-              <button class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
+              <form action="/cart/<%= book._id %>" method="POST">
+  <input type="hidden" name="productId" value="<%= book._id %>">
+  <input type="hidden" name="qty" value="1">
+  <button type="submit" class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
+</form>
             </div>
 
             <!-- Delivery Info -->
@@ -250,98 +256,160 @@
           </div>
         </div>
 
-
-
         <!-- Related Items -->
-<div class="mt-5">
-  <h5 class="mb-4">
-    <i class="bi bi-columns-gap me-2"></i> Related Items
-  </h5>
-  <div class="row">
-    <% if (related && related.length > 0) { %>
-      <% related.forEach(item => { %>
-        <div class="col-md-3 col-6 mb-4">
-          <div class="card h-100 border-0 shadow-sm">
-            <a href="/book/<%= item.id %>">
-              <img src="<%= item.coverImg %>" class="card-img-top" alt="<%= item.title %>" style="height:250px; object-fit:contain;">
-            </a>
-            <div class="card-body text-center">
-              <h6 class="card-title"><%= item.title %></h6>
-              <p class="mb-1">
-                ₹<%= item.price %>
-                <% if (item.oldPrice) { %>
-                  <small class="text-muted text-decoration-line-through">₹<%= item.oldPrice %></small>
-                <% } %>
-              </p>
-              <div class="text-warning">
-                <% for (let i=1; i<=5; i++) { %>
-                  <i class="bi <%= i <= item.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
-                <% } %>
-              </div>
-            </div>
+        <div class="mt-5">
+          <h5 class="mb-4">
+            <i class="bi bi-columns-gap me-2"></i> Related Items
+          </h5>
+          <div class="row">
+            <% if (related && related.length > 0) { %>
+              <% related.forEach(item => { %>
+                <div class="col-md-3 col-6 mb-4">
+                  <div class="card h-100 border-0 shadow-sm">
+                    <a href="/book/<%= item.id %>">
+                      <img src="<%= item.coverImg %>" class="card-img-top" alt="<%= item.title %>" style="height:250px; object-fit:contain;">
+                    </a>
+                    <div class="card-body text-center">
+                      <h6 class="card-title"><%= item.title %></h6>
+                      <p class="mb-1">
+                        ₹<%= item.price %>
+                        <% if (item.oldPrice) { %>
+                          <small class="text-muted text-decoration-line-through">₹<%= item.oldPrice %></small>
+                        <% } %>
+                      </p>
+                      <div class="text-warning">
+                        <% for (let i=1; i<=5; i++) { %>
+                          <i class="bi <%= i <= item.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
+                        <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <p class="text-muted">No related items available.</p>
+            <% } %>
           </div>
         </div>
-      <% }) %>
-    <% } else { %>
-      <p class="text-muted">No related items available.</p>
-    <% } %>
-  </div>
-</div>
-
-
-
 
       </div>
     </div>
   </div>
 </div>
 
+<!-- alert box -->
+<div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="popupAlertMessage"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const mainImage = document.getElementById("mainImage");
-    const thumbs = document.querySelectorAll(".thumb-image");
-    const carousel = document.getElementById("imageCarousel");
-    const carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
+(function () {
+  const PRODUCT_ID = '<%= book._id %>'; 
 
-    
-    mainImage.addEventListener("click", function() {
-      const currentSrc = this.src;
-      const items = carousel.querySelectorAll(".carousel-item");
-      items.forEach((item, index) => {
-        const img = item.querySelector("img");
-        if (img.src.includes(currentSrc)) {
-          carouselInstance.to(index);
-        }
+  function showPopupAlert(message, title = 'Notification') {
+    document.getElementById('popupAlertTitle').innerText = title;
+    document.getElementById('popupAlertMessage').innerText = message;
+    const modalEl = document.getElementById('popupAlert');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    modal.show();
+  }
+
+  async function addToCart(productId, qty = 1) {
+    try {
+      console.log('Client productId:', productId, 'qty:', qty);
+      const url = `/cart/${productId}`;
+      console.log('Request URL:', url);
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        
+        body: JSON.stringify({ qty, productId })
       });
-    });
 
-    
-    thumbs.forEach((thumb, index) => {
-      thumb.addEventListener("click", function() {
-        mainImage.src = this.src;
-        thumbs.forEach(t => t.classList.remove("border", "border-2", "border-primary"));
-        this.classList.add("border", "border-2", "border-primary");
-        carouselInstance.to(index + 1); 
-      });
-    });
-
-    
-    const qtyInput = document.getElementById("quantityInput");
-    const btnMinus = document.getElementById("decreaseQty");
-    const btnPlus = document.getElementById("increaseQty");
-
-    btnMinus.addEventListener("click", function() {
-      let current = parseInt(qtyInput.value) || 1;
-      if (current > 1) {
-        qtyInput.value = current - 1;
+      if (res.ok) {
+        showPopupAlert('✅ Added to cart successfully!', 'Success');
+      } else {
+        let msg = 'Failed to add to cart.';
+        try {
+          const json = await res.json();
+          if (json && json.error) msg = json.error;
+        } catch(e) {}
+        showPopupAlert('❌ ' + msg, 'Error');
       }
+    } catch (err) {
+      console.error('addToCart error', err);
+      showPopupAlert(' Network or server error. Please try again.', 'Warning');
+    }
+  }
+
+ 
+  document.addEventListener('DOMContentLoaded', function () {
+    const qtyInput = document.getElementById('quantityInput');
+    const qtyHidden = document.getElementById('cartQuantityInput');
+    const btnDec = document.getElementById('decreaseQty');
+    const btnInc = document.getElementById('increaseQty');
+    const addBtn = document.getElementById('addToCartBtn');
+
+   
+    if (btnDec) btnDec.addEventListener('click', () => {
+      if (!qtyInput) return;
+      let v = parseInt(qtyInput.value || '1', 10);
+      if (isNaN(v)) v = 1;
+      if (v > 1) v--;
+      qtyInput.value = v;
+      if (qtyHidden) qtyHidden.value = v;
+    });
+    if (btnInc) btnInc.addEventListener('click', () => {
+      if (!qtyInput) return;
+      let v = parseInt(qtyInput.value || '1', 10);
+      if (isNaN(v) || v < 1) v = 1;
+      v++;
+      qtyInput.value = v;
+      if (qtyHidden) qtyHidden.value = v;
     });
 
-    btnPlus.addEventListener("click", function() {
-      let current = parseInt(qtyInput.value) || 1;
-      qtyInput.value = current + 1;
-    });
+    if (addBtn) {
+      addBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        const productId = addBtn.getAttribute('data-product-id') || PRODUCT_ID;
+        
+        if (!productId) {
+          console.error('No product id found on button or in page.');
+          showPopupAlert('Unable to identify product. Refresh and try again.', 'Error');
+          return;
+        }
+        let qty = 1;
+        if (qtyInput) qty = Math.max(1, parseInt(qtyInput.value || '1', 10) || 1);
+        else if (qtyHidden) qty = Math.max(1, parseInt(qtyHidden.value || '1', 10) || 1);
+
+        addToCart(productId, qty);
+      });
+    } else {
+      console.warn('addToCartBtn not found in DOM.');
+    }
   });
+})();
 </script>
+
+
 
 <%- include("../partials/user/footer.ejs") %>

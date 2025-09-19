@@ -35,12 +35,10 @@ const getproductAddPage = async (req,res)=>{
 const addProducts = async (req,res)=>{
     try {
 
-        console.log("Reached addProducts controller");
-console.log("req.body:", req.body);
-console.log("req.files:", req.files);
+ 
 
         const products = req.body;
-        console.log(products)
+        
         const productExists = await Product.findOne({
             productName:products.productName
         })
@@ -48,7 +46,7 @@ console.log("req.files:", req.files);
         if(!productExists){
  
  const files = req.files;
- console.log(files)
+ 
 
 
     let imagePaths = [];
@@ -65,7 +63,7 @@ console.log("req.files:", req.files);
             .toFile(filepath);
 
           imagePaths.push("/uploads/productImages/" + filename);
-          console.log(" image Saved:", filepath);
+          
         } catch (error) {
           console.error(" Sharp failed for file:", files[i].originalname, error);
         }
@@ -185,7 +183,7 @@ const getAllProducts = async (req,res)=>{
 const blockProdcut = async (req,res)=>{
     try {
         let id = req.query.id;
-        console.log('id is: ',id);
+        
         await Product.updateOne({_id:id},{$set:{isBlocked:true}})
         res.redirect('/admin/products')
 
@@ -197,7 +195,7 @@ const blockProdcut = async (req,res)=>{
 const unblockProdcut = async (req,res)=>{
     try {
         let id = req.query.id;
-        console.log('id is: ',id);
+        
         await Product.updateOne({_id:id},{$set:{isBlocked:false}})
         res.redirect('/admin/products')
 

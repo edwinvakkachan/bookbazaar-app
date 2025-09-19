@@ -1,0 +1,99 @@
+<!-- views/partials/userSidebar.ejs -->
+<style>
+  .user-account-sidebar {
+    padding: 1rem 1.25rem;
+    text-align: left;
+  }
+
+  .user-sidebar-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .user-avatar-wrap {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f5f7f9;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 0.6rem; /* spacing before name */
+  }
+
+  .user-avatar-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .user-name-pill {
+    display: inline-block;
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+
+  .user-sidebar-heading {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 1.25rem 0 0.75rem 0;
+  }
+
+  .user-sidebar-menu .nav-link {
+    display: block;
+    padding: 0.45rem 0;
+    color: #222;
+    text-decoration: none;
+  }
+
+  .user-sidebar-menu .nav-link.text-muted {
+    color: #9a9a9a !important;
+  }
+
+  .user-sidebar-menu .nav-link.fw-bold,
+  .user-sidebar-menu .nav-link.active {
+    font-weight: 700;
+    color: #111;
+  }
+</style>
+
+<div class="user-account-sidebar">
+  <div class="breadcrumb small text-muted mb-3">
+    Home / <span class="text-dark">My Account</span>
+  </div>
+
+  <!-- Avatar -->
+  <div class="user-sidebar-header">
+    <div class="user-avatar-wrap">
+      <% if (user && user.avatarUrl) { %>
+        <img src="<%= user.avatarUrl %>" alt="Profile Image">
+      <% } else { %>
+        <div class="d-flex align-items-center justify-content-center" style="height:100%;">
+          <i class="bi bi-person" style="font-size:44px;color:#9a9a9a"></i>
+        </div>
+      <% } %>
+    </div>
+
+    <div>
+      <button class="btn btn-light btn-sm user-name-pill">
+        <%= user ? (user.name || ( (user.firstName || '') + (user.lastName ? ' ' + user.lastName : '') )) : 'Customer Name' %>
+      </button>
+    </div>
+  </div>
+
+  <!-- Manage heading -->
+  <div class="user-sidebar-heading">Manage My Account</div>
+
+  <!-- Menu -->
+  <ul class="list-unstyled user-sidebar-menu">
+    <li><a href="/userProfile" class="nav-link <%= active==='profile' ? 'fw-bold text-dark' : 'text-dark' %>">My Profile</a></li>
+    <li><a href="/addresses" class="nav-link <%= active==='address' ? 'fw-bold text-dark' : 'text-dark' %>">Address Book</a></li>
+    <li><a href="/orders" class="nav-link <%= active==='orders' ? 'fw-bold' : '' %>">My Orders</a></li>
+    <li><a href="/wishlist" class="nav-link <%= active==='wishlist' ? 'fw-bold' : '' %>">My WishList</a></li>
+    <li><a href="/wallet" class="nav-link <%= active==='wallet' ? 'fw-bold' : '' %>">Wallet</a></li>
+    <li><a href="/coupons" class="nav-link <%= active==='coupons' ? 'fw-bold' : '' %>">Coupons</a></li>
+   
+  </ul>
+</div>

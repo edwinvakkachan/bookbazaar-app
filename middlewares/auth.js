@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 
 const userAuth = async (req, res, next) => {
   try {
+    
     if (!req.session.user) {
       return res.redirect("/login");
     }
@@ -49,6 +50,7 @@ const userAuth = async (req, res, next) => {
 
 const adminAuth = (req, res, next) => {
   const adminId = req.session.admin; 
+  // console.log(adminId)
 
   if (!adminId) {
     return res.redirect('/admin/login');
