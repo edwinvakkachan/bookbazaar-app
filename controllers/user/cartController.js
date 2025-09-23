@@ -229,5 +229,6 @@ module.exports = {
   addToCart,
   listCart,
   removeFromCart,
-  changeQuantity
+  changeQuantity,
+  
 };

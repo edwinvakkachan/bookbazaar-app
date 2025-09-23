@@ -65,6 +65,14 @@ router.post('/address/setPrimary/:addressId', userAuth, userController.setPrimar
 
 
 
+// userRoute.js — add under /userProfile routes
+router.post('/userProfile/requestEmailChange', userAuth, userController.requestEmailChange);
+router.post('/userProfile/verifyEmailOtp', userAuth, userController.verifyEmailOtp);
+router.post('/userProfile/resendEmailOtp', userAuth, userController.resendEmailOtp);
+
+
+
+
 //whishlist
 router.get('/wishlist',userAuth,userController.getWishlist)
 router.post('/wishlist/add',userAuth,userController.addToWishlist)
@@ -81,10 +89,14 @@ router.post('/api/cart/:productId/quantity', userAuth, cartController.changeQuan
 
 
 
+
+
 //checkOut page
 router.get('/checkout',userAuth,checkOutController.getCheckoutPage);
 router.post('/checkout',userAuth,orderController.createShowConforamtion)
 router.post('/checkout/address/add', userAuth, checkOutController.checkoutAddress);
+
+
 
 
 

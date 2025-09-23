@@ -62,11 +62,11 @@
           </div>
 
           <!-- Email -->
-          <div class="col-md-6">
+          <!-- <div class="col-md-6">
             <label class="form-label">Email</label>
-            <input name="email" type="email" class="form-control" value="<%= user.email || '' %>" >
-            <div class="form-text">Changing email will mark it unverified.</div>
-          </div>
+            <input name="email" type="email" class="form-control" value="<%= user.email || '' %>" > -->
+            <!-- <div class="form-text">Changing email will mark it unverified.</div> -->
+          <!-- </div> -->
 
           <!-- Phone -->
           <div class="col-md-6">
@@ -130,7 +130,7 @@
 
 <%- include("../partials/user/footer.ejs") %>
 
-<!-- Cropper JS (ensure this loads BEFORE our initialization script below) -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <script>
@@ -151,7 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentObjectUrl = null;
   const bsModal = new bootstrap.Modal(cropModalEl);
 
-  // When a file is selected: set src and show modal. Cropper will init on modal shown.
   avatarInput.addEventListener('change', (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -162,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     selectedFile = file;
-    // revoke previous object URL if any
+    
     if (currentObjectUrl) {
       try { URL.revokeObjectURL(currentObjectUrl); } catch (e) {}
       currentObjectUrl = null;
@@ -171,21 +170,21 @@ document.addEventListener('DOMContentLoaded', () => {
     currentObjectUrl = URL.createObjectURL(file);
     cropImage.src = currentObjectUrl;
 
-    // Show modal. We'll initialize Cropper in shown.bs.modal handler.
+   
     bsModal.show();
   });
 
-  // Initialize cropper when modal is visible (ensures correct sizing)
+ 
   cropModalEl.addEventListener('shown.bs.modal', () => {
     console.log('cropModal shown - initializing cropper, Cropper defined?', typeof Cropper === 'function');
 
-    // destroy existing cropper
+   
     if (cropper) {
       try { cropper.destroy(); } catch (e) { console.warn('cropper destroy error', e); }
       cropper = null;
     }
 
-    // If image not loaded yet, wait for load, otherwise init immediately
+   
     if (!cropImage.complete || cropImage.naturalWidth === 0) {
       cropImage.onload = () => {
         try {
@@ -223,13 +222,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Destroy cropper and cleanup when modal hides
+  
   cropModalEl.addEventListener('hidden.bs.modal', () => {
     if (cropper) {
       try { cropper.destroy(); } catch (e) { console.warn('destroy error', e); }
       cropper = null;
     }
-    // revoke object url
+    
     if (currentObjectUrl) {
       try { URL.revokeObjectURL(currentObjectUrl); } catch (e) {}
       currentObjectUrl = null;
@@ -237,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cropImage.src = '';
   });
 
-  // User confirms cropped image
+
   useCroppedBtn.addEventListener('click', () => {
     if (!cropper) {
       alert('Cropper not initialized. Try selecting the image again.');
@@ -267,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 'image/jpeg', 0.92);
   });
 
-  // Submit: build FormData including cropped blob if present
+ 
   saveBtn.addEventListener('click', async (ev) => {
     ev.preventDefault();
 

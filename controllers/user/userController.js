@@ -195,6 +195,20 @@ try {
     const user = req.session.user;
    
 
+
+
+
+     const {qty} = req.body
+      const userid = req.session.user._id;
+      const cart = await Cart.findOne({userid})
+      console.log(cart)
+    
+      const countcart = cart.items.length;
+      console.log('cart count is',countcart)
+
+
+      
+
     
     const categories = await Category.find({isListed:true})
     const allowedBrands = await Brand.find({ isBlocked: false }).select("_id"); 
@@ -797,7 +811,7 @@ const postEditProfile = async (req, res) => {
 
    
     if (!name || !String(name).trim()) errors.push({ msg: 'Name is required' });
-    if (!email || !/^\S+@\S+\.\S+$/.test(String(email))) errors.push({ msg: 'A valid email is required' });
+    
 
     if (newPassword && newPassword.length > 0) {
       if (!currentPassword || currentPassword.length === 0) {
@@ -825,22 +839,6 @@ const postEditProfile = async (req, res) => {
     const user = await User.findById(userId);
     
 
-    
-    const normalizedNewEmail = String(email).trim().toLowerCase();
-    if (normalizedNewEmail !== String(user.email || '').toLowerCase()) {
-      const conflict = await User.findOne({ email: normalizedNewEmail });
-      if (conflict && conflict._id.toString() !== user._id.toString()) {
-        return res.render('userEditProfile', {
-          user: { displayName: name || '', name, email, phone, dobFormatted: dob || '' },
-          active: 'profile',
-          errors: [{ msg: 'Email already in use by another account' }],
-          success: null,
-          csrfToken: typeof req.csrfToken === 'function' ? req.csrfToken() : undefined
-        });
-      }
-      user.email = normalizedNewEmail;
-      user.emailVerified = false;
-    }
 
     
     user.name = String(name || '').trim();
@@ -1279,6 +1277,160 @@ const test = async (req,res)=>{
 }
 
 
+
+
+
+
+
+function nowPlusMinutes(mins) {
+  return Date.now() + mins * 60 * 1000;
+}
+
+
+const requestEmailChange = async (req, res) => {
+  try {
+    const userId =  req.session.user._id;
+    
+
+    const { newEmail } = req.body || {};
+    if (!newEmail || !/^\S+@\S+\.\S+$/.test(String(newEmail))) {
+      return res.status(400).json({ success: false, message: 'Provide a valid new email' });
+    }
+    const normalizedNewEmail = String(newEmail).toLowerCase().trim();
+
+    const user = await User.findById(userId);
+
+    const conflict = await User.findOne({email:normalizedNewEmail})
+console.log('user id',user._id)
+    console.log('the conflict',conflict)
+    if (conflict) {
+      return res.status(400).json({ success: false, message: 'Email already in use' });
+    }
+
+   
+    const otp = generateOtp();
+    const expiresAt = nowPlusMinutes(2);
+
+    console.log('email change otp is',otp)
+
+    req.session.emailChange = {
+      pendingEmail: normalizedNewEmail,
+      otp,
+      expiresAt
+    };
+    
+    if (req.session.save) await new Promise(r => req.session.save(r));
+
+    
+    const mailOk = await sendVerificationEmail(normalizedNewEmail, otp);
+    if (!mailOk) {
+      
+      req.session.emailChange = null;
+      if (req.session.save) await new Promise(r => req.session.save(r));
+      return res.status(500).json({ success: false, message: 'Failed to send OTP email' });
+    }
+
+    return res.json({ success: true, message: 'OTP sent to new email', pendingEmail: normalizedNewEmail });
+  } catch (err) {
+    console.error('requestEmailChange error', err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+
+const verifyEmailOtp = async (req, res) => {
+  try {
+    const userId = req.session.user && req.session.user._id;
+    if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    const { otp } = req.body || {};
+    if (!otp) return res.status(400).json({ success: false, message: 'Provide OTP' });
+
+    const sessionData = req.session.emailChange;
+    if (!sessionData || !sessionData.pendingEmail) {
+      return res.status(400).json({ success: false, message: 'No pending email change found' });
+    }
+
+    if (!sessionData.otp || String(sessionData.otp) !== String(otp)) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' });
+    }
+
+    if (!sessionData.expiresAt || sessionData.expiresAt < Date.now()) {
+      req.session.emailChange = null;
+      if (req.session.save) await new Promise(r => req.session.save(r));
+      return res.status(400).json({ success: false, message: 'OTP expired. Request again.' });
+    }
+
+    
+    const existing = await User.findOne({ email: sessionData.pendingEmail, _id: { $ne: userId } });
+    if (existing) {
+      req.session.emailChange = null;
+      if (req.session.save) await new Promise(r => req.session.save(r));
+      return res.status(400).json({ success: false, message: 'That email was claimed by another account.' });
+    }
+
+    
+    const user = await User.findById(userId);
+    user.email = sessionData.pendingEmail;
+   
+    user.emailVerified = true;
+    await user.save();
+
+    
+    req.session.emailChange = null;
+    if (req.session.save) await new Promise(r => req.session.save(r));
+
+    
+    const fresh = await User.findById(user._id).lean();
+    if (fresh && fresh.password) delete fresh.password;
+    req.session.user = fresh;
+    if (req.session.save) await new Promise(r => req.session.save(r));
+
+    return res.json({ success: true, message: 'Email updated', email: user.email });
+  } catch (err) {
+    console.error('verifyEmailOtp error', err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+
+const resendEmailOtp = async (req, res) => {
+  try {
+    const userId = req.session.user && req.session.user._id;
+    if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    const sessionData = req.session.emailChange;
+    if (!sessionData || !sessionData.pendingEmail) {
+      return res.status(400).json({ success: false, message: 'No pending email change to resend for' });
+    }
+
+    
+    const otp = generateOtp();
+    console.log('resend profile email change otp is',otp)
+    sessionData.otp = otp;
+    sessionData.expiresAt = nowPlusMinutes(2);
+    req.session.emailChange = sessionData;
+    if (req.session.save) await new Promise(r => req.session.save(r));
+
+    const mailOk = await sendVerificationEmail(sessionData.pendingEmail, otp);
+    if (!mailOk) {
+      return res.status(500).json({ success: false, message: 'Failed to resend OTP' });
+    }
+    return res.json({ success: true, message: 'OTP resent to pending email' });
+  } catch (err) {
+    console.error('resendEmailOtp error', err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+
+
+
+
+
+
+
+
 module.exports = {
     loadHomepage,
     pageNotFound,
@@ -1312,6 +1464,9 @@ module.exports = {
     addToWishlist,
     getWishlist,
     removeFromWishlist,
+    requestEmailChange,
+    resendEmailOtp,
+    verifyEmailOtp,
     filterProduct,
     test,
 

@@ -4,3 +4,20 @@
 .bb-footer .bb-input-pill .btn{border-color:transparent}
 .bb-footer .bb-qr{width:84px;height:84px;object-fit:cover;background:#222}
 .hover-opacity:hover{opacity:1!important}
+
+
+
+
+
+
+
+html, body {
+  overflow: auto;             
+  -ms-overflow-style: none;    
+  scrollbar-width: none;       
+}
+
+html::-webkit-scrollbar, 
+body::-webkit-scrollbar {
+  display: none;              
+}

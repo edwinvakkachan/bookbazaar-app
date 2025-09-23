@@ -23,10 +23,76 @@
           </div>
 
           <!-- Email -->
-          <div class="col-12">
+          <!-- <div class="col-12">
             <label class="form-label">Email</label>
             <input type="text" class="form-control" value="<%= user.email || 'Not provided' %>" readonly>
+          </div> -->
+
+
+
+<!-- add near Email display in userProfile.ejs -->
+<div class="d-flex align-items-center">
+  <div>
+    <strong>Email: </strong> <span id="currentEmail"><%= user.email || 'Not provided' %></span>
+  </div>
+  <button id="editEmailBtn" class="btn btn-sm btn-outline-dark ms-3" data-bs-toggle="modal" data-bs-target="#editEmailModal">
+    <i class="bi bi-pencil"></i> Edit
+  </button>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="editEmailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="emailChangeForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Change email</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div id="stepEnterEmail">
+            <div class="mb-3">
+              <label class="form-label">New email</label>
+              <input id="newEmailInput" name="newEmail" type="email" class="form-control"  />
+            </div>
+            <% if (user.password) { %>
+            <div class="mb-3">
+              <label class="form-label">Current password</label>
+              <input id="currentPasswordInput" name="currentPassword" type="password" class="form-control" />
+              <div class="form-text">Enter your password to confirm email change.</div>
+            </div>
+            <% } %>
           </div>
+
+          <div id="stepEnterOtp" style="display:none;">
+            <div class="mb-3">
+              <p class="small">We sent an OTP to <span id="pendingEmailDisplay"></span></p>
+              <label class="form-label">OTP</label>
+              <input id="otpInput" name="otp" type="text" class="form-control" maxlength="6" />
+            </div>
+            <div class="mb-2">
+              <button id="resendOtp" type="button" class="btn btn-link p-0">Resend OTP</button>
+            </div>
+          </div>
+
+          <div id="emailChangeAlert" style="display:none;" class="alert" role="alert"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="modalCancel" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" id="modalPrimaryBtn" class="btn btn-primary">Send OTP</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
 
           <!-- Phone -->
           <div class="col-md-6">
@@ -61,5 +127,129 @@
     </main>
   </div>
 </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('emailChangeForm');
+  const stepEmail = document.getElementById('stepEnterEmail');
+  const stepOtp = document.getElementById('stepEnterOtp');
+  const primaryBtn = document.getElementById('modalPrimaryBtn');
+  const alertBox = document.getElementById('emailChangeAlert');
+  const pendingEmailDisplay = document.getElementById('pendingEmailDisplay');
+  const otpInput = document.getElementById('otpInput');
+  let pendingEmail = null;
+
+  function showAlert(msg, type='danger') {
+    alertBox.style.display = 'block';
+    alertBox.className = 'alert alert-' + type;
+    alertBox.textContent = msg;
+  }
+  function hideAlert(){ alertBox.style.display = 'none'; }
+
+  function enterStepOtp(email) {
+    pendingEmail = email;
+    pendingEmailDisplay.textContent = email;
+    stepEmail.style.display = 'none';
+    stepOtp.style.display = 'block';
+    primaryBtn.textContent = 'Verify OTP';
+  }
+  function enterStepEmail() {
+    pendingEmail = null;
+    stepEmail.style.display = 'block';
+    stepOtp.style.display = 'none';
+    primaryBtn.textContent = 'Send OTP';
+    hideAlert();
+    form.reset();
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+    if (!pendingEmail) {
+      
+      const newEmail = document.getElementById('newEmailInput').value.trim();
+      const currentPasswordEl = document.getElementById('currentPasswordInput');
+      const body = { newEmail };
+      if (currentPasswordEl) body.currentPassword = currentPasswordEl.value;
+
+      primaryBtn.disabled = true;
+      primaryBtn.textContent = 'Sending...';
+      try {
+        const resp = await fetch('/userProfile/requestEmailChange', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          credentials: 'same-origin'
+        });
+        const j = await resp.json();
+        if (!j.success) { showAlert(j.message || 'Failed to send OTP'); return; }
+        enterStepOtp(j.pendingEmail || newEmail);
+      } catch (err) {
+        console.error(err);
+        showAlert('Server error. Try again.');
+      } finally {
+        primaryBtn.disabled = false;
+        primaryBtn.textContent = pendingEmail ? 'Verify OTP' : 'Send OTP';
+      }
+    } else {
+      
+      const otp = otpInput.value.trim();
+      if (!otp) { showAlert('Enter the OTP'); return; }
+      primaryBtn.disabled = true;
+      primaryBtn.textContent = 'Verifying...';
+      try {
+        const resp = await fetch('/userProfile/verifyEmailOtp', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ otp }),
+          credentials: 'same-origin'
+        });
+        const j = await resp.json();
+        if (!j.success) { showAlert(j.message || 'Invalid OTP'); return; }
+        
+        document.getElementById('currentEmail').textContent = j.email;
+        
+        const modalEl = document.getElementById('editEmailModal');
+        const modal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.hide();
+        enterStepEmail();
+      } catch (err) {
+        console.error(err);
+        showAlert('Server error. Try later.');
+      } finally {
+        primaryBtn.disabled = false;
+        primaryBtn.textContent = 'Verify OTP';
+      }
+    }
+  });
+
+  document.getElementById('resendOtp').addEventListener('click', async () => {
+    if (!pendingEmail) return;
+    try {
+      const btn = document.getElementById('resendOtp');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      const resp = await fetch('/userProfile/resendEmailOtp', { method: 'POST', credentials: 'same-origin' });
+      const j = await resp.json();
+      if (!j.success) showAlert(j.message || 'Failed to resend');
+      else showAlert('OTP resent', 'success');
+    } catch (err) {
+      console.error(err);
+      showAlert('Failed to resend OTP');
+    } finally {
+      const btn = document.getElementById('resendOtp');
+      btn.disabled = false;
+      btn.textContent = 'Resend OTP';
+    }
+  });
+
+  
+  const modalEl = document.getElementById('editEmailModal');
+  modalEl.addEventListener('hidden.bs.modal', () => { enterStepEmail(); });
+});
+</script>
+
+
 
 <%- include("../partials/user/footer.ejs") %>
