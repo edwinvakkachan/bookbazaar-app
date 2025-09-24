@@ -24,13 +24,10 @@
   <div class="bestselling-books" id="bestselling-books"></div>
 </section>
 
-
 <!-- About Us Section -->
-        <section class="about-section">
-            <h2>ABOUT US</h2>
-        </section>
-
-
+<section class="about-section">
+  <h2>ABOUT US</h2>
+</section>
 
 <!-- Latest Books -->
 <section>
@@ -40,40 +37,35 @@
 
 <%- include("../partials/user/footer.ejs") %>
 
+<!-- Axios CDN -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 <script>
-
-
 async function fetchCategories() {
   const container = document.getElementById('popular-categories');
- 
   try {
-    const res = await fetch('/api/categories/popular', { method: 'GET', credentials: 'same-origin' });
-    if (!res.ok) throw new Error('Fetch categories error: ' + res.status);
-    const data = await res.json();
+    const res = await axios.get('/api/categories/popular', { withCredentials: true, timeout: 5000 });
+    const data = res.data;
     if (!Array.isArray(data) || data.length === 0) {
       container.innerHTML = '<p>No categories found.</p>';
       return;
     }
-
-    
     container.innerHTML = data.map(cat => {
       const idAttr = cat._id ? `data-id="${cat._id}"` : '';
-      const name = cat.name  || 'Unnamed';
-      return `<div class="category-card" ${idAttr} ><h3>${name}</h3></div>`;
+      const name = cat.name || 'Unnamed';
+      return `<div class="category-card" ${idAttr}><h3>${name}</h3></div>`;
     }).join('');
-
   } catch (err) {
     console.error('Error fetching categories', err);
     container.innerHTML = '<p class="error">Failed to load categories.</p>';
   }
 }
 
-
 function productHtml(p) {
-  const img =  p.productImage[0] ||'';
-  const price =  p.salePrice ||0
+  const img = p.productImage[0] || '';
+  const price = p.salePrice || 0;
   const coverStyle = "background-image:url('" + img + "');background-size:cover;background-position:center;";
-  const brandName = p.brand.brandName || '';
+  const brandName = p.brand && p.brand.brandName ? p.brand.brandName : '';
   const dataBrand = p.brand && p.brand._id ? `data-brand="${p.brand._id}"` : '';
   const dataCategory = p.category && p.category._id ? `data-category="${p.category._id}"` : '';
   return `
@@ -82,7 +74,7 @@ function productHtml(p) {
         <div class="latest-book-cover" style="${coverStyle}"></div>
         <div class="latest-book-info">
           <h4>${p.productName || 'Untitled'}</h4>
-          ${ brandName ? `<p>${brandName}</p>` : '' }
+          ${brandName ? `<p>${brandName}</p>` : ''}
           <div class="latest-book-price">₹${price}</div>
         </div>
       </div>
@@ -94,10 +86,8 @@ async function fetchBestSelling() {
   const container = document.getElementById('bestselling-books');
   if (!container) return;
   try {
-    const res = await fetch('/api/products/bestselling', { method: 'GET', credentials: 'same-origin' });
-    if (!res.ok) throw new Error('Fetch best selling error: ' + res.status);
-    const data = await res.json();
-    const items = Array.isArray(data) ? data.filter(p => p && p.brand) : [];
+    const res = await axios.get('/api/products/bestselling', { withCredentials: true, timeout: 5000 });
+    const items = Array.isArray(res.data) ? res.data.filter(p => p && p.brand) : [];
     if (items.length === 0) {
       container.innerHTML = '<p>No best selling items.</p>';
       return;
@@ -113,9 +103,8 @@ async function fetchLatest() {
   const container = document.getElementById('latest-books');
   if (!container) return;
   try {
-    const res = await fetch('/api/products/latest', { method: 'GET', credentials: 'same-origin' });
-    if (!res.ok) throw new Error('Fetch latest error: ' + res.status);
-    const data = await res.json();
+    const res = await axios.get('/api/products/latest', { withCredentials: true, timeout: 5000 });
+    const data = res.data;
     if (!Array.isArray(data) || data.length === 0) {
       container.innerHTML = '<p>No latest items.</p>';
       return;
@@ -164,5 +153,3 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!ok) startPolling(20000);
 });
 </script>
-
-
