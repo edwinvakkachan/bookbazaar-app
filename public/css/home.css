@@ -7,15 +7,15 @@
 }
 
 .latest-book {
-  flex: 0 0 200px;     /* card width */
+  flex: 0 0 200px;   
   border: 1px solid #ddd;
   border-radius: 8px;
   background: #fff;
   padding: 15px;
   display: flex;
   flex-direction: column;
-  align-items: center;   /* ⬅ centers image + text horizontally */
-  text-align: center;    /* ⬅ centers text */
+  align-items: center;  
+  text-align: center;    
 }
 
 .latest-book-cover {
@@ -26,3 +26,12 @@
   border-radius: 4px;
   margin-bottom: 10px;
 }
+
+  .latest-book { display:flex; gap:1rem; align-items:center; margin-bottom:1rem; }
+  .latest-book-cover { width:70px; height:100px; border-radius:6px; background-color:#eee; }
+  .latest-book-info h4 { margin:0 0 .25rem 0; font-size:1rem; }
+  .latest-book-price { font-weight:600; margin-top:.5rem; }
+  .categories { display:flex; gap:1rem; flex-wrap:wrap; }
+  .category-card { padding: .8rem 1rem; border-radius:8px; background:#f6f6f6; min-width:120px; text-align:center; }
+  .product-item { display:block; text-decoration:none; color:inherit; }
+  .error { color: #c00; }

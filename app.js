@@ -13,6 +13,11 @@ const cacheControlMiddleware = require('./middlewares/cacheControl');
 
 
 
+const { sseHandler } = require('./utils/sse');
+app.get('/api/updates/stream', sseHandler);
+
+
+
 
 app.use(sessionMiddleware);
 app.use(passportMiddlewares);

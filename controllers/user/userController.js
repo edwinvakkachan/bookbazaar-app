@@ -190,97 +190,24 @@ const pageNotFound = async (req,res)=>{
 
 
 
+
+
 const loadHomepage = async (req,res)=>{
 try {
-    const user = req.session.user;
    
-
-
-
-
-     const {qty} = req.body
-      const userid = req.session.user._id;
-      const cart = await Cart.findOne({userid})
-      console.log(cart)
-    
-      const countcart = cart.items.length;
-      console.log('cart count is',countcart)
-
-
-      
-
-    
-    const categories = await Category.find({isListed:true})
-    const allowedBrands = await Brand.find({ isBlocked: false }).select("_id"); 
-
-    let productData = await Product.find({isBlocked:false,
-                            category:{$in:categories.map(category=>category._id)},
-                            brand: { $in: allowedBrands.map(b => b._id) }, 
-                            quantity:{$gt:0}
-                            }).populate("brand", "brandName")    
-                              .populate("category", "name");       
-                            productData.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
-                            productData = productData.slice(0,4);  
-         
-        
-
-         //best selling products
-         let bestSellingData = await Product.find({isBlocked:false,
-                            category:{$in:categories.map(category=>category._id)},
-                            brand: { $in: allowedBrands.map(b => b._id) }, 
-                            quantity:{$gt:0}
-                            }).populate("brand", "brandName")    
-                              .populate("category", "name");      
-
-                            bestSellingData.sort((a,b)=>b.quantity - a.quantity)
-                            bestSellingData = bestSellingData.slice(0,4)
-                           
-//best categories 
-        let bestCategoryData =  await Product.find({isBlocked:false,
-                            category:{$in:categories.map(category=>category._id)},
-                             brand: { $in: allowedBrands.map(b => b._id) },
-                            quantity:{$gt:0}
-                            }).populate({ path: 'category', select: 'name' })
-
-                             bestCategoryData.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
-                            bestCategoryData = bestCategoryData.slice(0,4);  
-                            // console.log(bestCategoryData)
-
-const unique = [];
-const seen = new Set();
-
-for (const p of bestCategoryData) {
-  const id = p.category?._id?.toString();
-  if (!id || seen.has(id)) continue;
-  seen.add(id);
-  unique.push(p);                 
-  if (unique.length === 4) break; 
-}
-
-
-
-    if(user){
-        const userData  = await User.findOne({_id:user._id})
-        res.render('home',{
-            user:userData,
-            products:productData,
-            bestSelling:bestSellingData,
-            active: "home", 
-            popularCategory:unique}) 
-    }else{
-        return res.render('home',{
-            products:productData,
-            bestSelling:bestSellingData, 
-            popularCategory:unique,
-            active: "home",
-        });
-    }
+       
+   res.render('home',{ active: "home",});
 
 } catch (error) {
     console.error('Home page rendering failed',error.message)
     res.status(500).send('Home page rendering error')
 }
 }
+
+
+
+
+
 
 
 const securePassword = async (password) =>{

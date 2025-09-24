@@ -1,5 +1,7 @@
 const Category = require('../../models/categorySchema')
 const User = require('../../models/userSchema')
+const { broadcast } = require('../../utils/sse');
+
 
 const categoryInfo = async (req,res)=>{
     try {
@@ -68,6 +70,9 @@ const getListCategory = async (req,res)=>{
     try {
         let id = req.query.id;
         await Category.updateOne({_id:id},{$set:{isListed:false}});
+
+  broadcast('reload', { reason: 'categoryListed' }); //
+
         res.redirect('/admin/category')
     } catch (error) {
         console.error('category update fails to set false error',error)
@@ -79,6 +84,9 @@ const getUnlistCategory = async (req,res)=>{
     try {
         let id = req.query.id;
         await Category.updateOne({_id:id},{$set:{isListed:true}});
+
+         broadcast('reload', { reason: 'categoryUnlisted' }); //
+
         res.redirect('/admin/category')
     } catch (error) {
          console.error('category update fails to set true error',error)

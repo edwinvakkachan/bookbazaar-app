@@ -4,13 +4,14 @@ const userController = require('../controllers/user/userController');
 const cartController = require('../controllers/user/cartController')
 const checkOutController = require('../controllers/user/checkOutController');
 const orderController = require('../controllers/user/orderController')
+const homeController = require('../controllers/user/homeController')
 const passport = require('passport');
 const {userAuth,adminAuth} = require('../middlewares/auth')
 
 
 
 router.get('/pageNotFound',userController.pageNotFound)
-router.get('/',userController.loadHomepage);
+
 router.get('/signup',userController.loadSignup);
 router.post('/signup',userController.signup);
 router.post('/verify-otp',userController.verifyOtp);
@@ -33,6 +34,15 @@ router.post('/forgotPassword',userController.forgotPasswordSendOtp)
 router.get('/resetPassword',userController.loadResetPassword)
 router.post('/resetPassword',userController.resetPassword)
 router.post('/forgotPassword/resend', userController.resendForgotOtp);
+
+//homePage
+
+router.get('/',userController.loadHomepage);
+router.get('/api/categories/popular',homeController.loadCategories)
+router.get('/api/products/bestselling',homeController.bestselling)
+router.get('/api/products/latest',homeController.latest)
+
+
 
 //product page
 router.get('/shop',userAuth, userController.loadshoppingPage);

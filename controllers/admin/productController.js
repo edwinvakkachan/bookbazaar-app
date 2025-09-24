@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const mongoose = require('mongoose')
+const { broadcast } = require('../../utils/sse'); //
 
 
 
@@ -185,6 +186,7 @@ const blockProdcut = async (req,res)=>{
         let id = req.query.id;
         
         await Product.updateOne({_id:id},{$set:{isBlocked:true}})
+        broadcast('reload', { reason: 'productBlocked' }); //
         res.redirect('/admin/products')
 
     } catch (error) {
@@ -197,6 +199,7 @@ const unblockProdcut = async (req,res)=>{
         let id = req.query.id;
         
         await Product.updateOne({_id:id},{$set:{isBlocked:false}})
+        broadcast('reload', { reason: 'productUnBlocked' });//
         res.redirect('/admin/products')
 
     } catch (error) {
