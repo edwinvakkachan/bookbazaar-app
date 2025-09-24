@@ -2,20 +2,13 @@ const mongoose = require('mongoose');
 const User = require('../../models/userSchema')
 const Cart = require('../../models/cartSchema')
 const Product = require('../../models/productSchema')
+const Brand = require('../../models/brandSchema');
+const Category = require('../../models/categorySchema')
 
 
 
 
 
-const getCheckoutPage = async (req,res)=>{
-const userID  = req.session.user._id
-const cart = await Cart.findOne({ user: userID })
-const userdetails = req.session.user
-res.render('checkout',{
-    cart,
-    userdetails,
-})
-}
 
 
 const checkoutAddress = async (req, res) => {
@@ -81,6 +74,46 @@ const checkoutAddress = async (req, res) => {
 };
 
 
+const getCheckoutPage = async (req, res) => {
+  const userID = req.session.user._id;
+
+  
+  const allowedBrands = await Brand.find({ isBlocked: false }).select('_id').lean();
+  const allowedCategories = await Category.find({ isListed: true }).select('_id').lean();
+
+  
+  const cart = await Cart.findOne({ user: userID }).lean();
+  if (!cart || !cart.items || cart.items.length === 0) {
+    return res.render('checkout', { cart: { items: [] }, userdetails: req.session.user });
+  }
+
+  
+  const productIds = cart.items.map(it => it.product);
+
+  
+  const allowedProducts = await Product.find({
+    _id: { $in: productIds },
+    isBlocked: false,
+    brand: { $in: allowedBrands.map(b => b._id) },
+    category: { $in: allowedCategories.map(c => c._id) },
+    quantity: { $gt: 0 },
+    status: 'Available'
+  }).select('_id').lean();
+
+  
+  const allowedSet = new Set(allowedProducts.map(p => p._id.toString()));
+
+  
+  const filteredItems = cart.items.filter(it => allowedSet.has(it.product.toString()));
+
+ 
+  const cleanedCartForRender = { ...cart, items: filteredItems };
+
+  res.render('checkout', {
+    cart: cleanedCartForRender,
+    userdetails: req.session.user
+  });
+};
 
 
 

@@ -9,7 +9,7 @@ const loadCategories= async (req, res) => {
   try {
    
     const categories = await Category.find({isListed:true}).limit(4);
-    console.log('best categoreis',categories)
+    
     res.json(categories);
   } catch (err) {
     console.error(err);

@@ -2,8 +2,10 @@ const Order = require('../../models/OrderSchema');
 const User = require('../../models/userSchema')
 const Cart = require('../../models/cartSchema')
 const Product = require('../../models/productSchema')
-const { nextOrderId } = require('../../utils/orderId')
+const Brand = require('../../models/brandSchema');
+const Category = require('../../models/categorySchema')
 const mongoose = require('mongoose')
+const { nextOrderId } = require('../../utils/orderId')
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
@@ -57,44 +59,64 @@ const createShowConforamtion = async (req, res) => {
     const user = await User.findById(userId);
 
     const { addressId, paymentMethod, coupon = '' } = req.body;
-    const cart = await Cart.findOne({ user: userId });
+    const cart = await Cart.findOne({ user: userId }).lean();
     if (!cart || !cart.items || cart.items.length === 0) {
       return res.status(400).send('Cart is empty');
     }
 
+    
+    const allowedBrands = await Brand.find({ isBlocked: false }).select('_id').lean();
+    const allowedCategories = await Category.find({ isListed: true }).select('_id').lean();
+
+    
+    const productIds = cart.items.map(it => it.product);
+    const allowedProducts = await Product.find({
+      _id: { $in: productIds },
+      isBlocked: false,
+      brand: { $in: allowedBrands.map(b => b._id) },
+      category: { $in: allowedCategories.map(c => c._id) },
+      quantity: { $gt: 0 },
+      status: 'Available'
+    }).select('_id').lean();
+
+    const allowedSet = new Set(allowedProducts.map(p => p._id.toString()));
+
+    
+    const items = cart.items
+      .filter(it => allowedSet.has(it.product.toString()))
+      .map(it => ({
+        product: it.product,
+        title: it.title,
+        qty: Number(it.qty || 0),
+        priceAtAdd: it.priceAtAdd,
+        image: it.image
+      }));
+
+    if (items.length === 0) {
+      return res.status(400).send('No valid products available for checkout');
+    }
+
+    
     const address = (user.addresses || []).find(a => String(a._id) === String(addressId));
     if (!address) return res.status(400).send('Address not found');
 
     
-    const items = cart.items.map(it => ({
-      product: it.product,
-      title: it.title,
-      qty: Number(it.qty || 0),
-      priceAtAdd: it.priceAtAdd,
-      image: it.image
-    }));
-
-  
-    const decremented = []; 
+    const decremented = [];
     for (const it of items) {
       const pid = it.product;
       const qty = Number(it.qty || 0);
       if (!pid || qty <= 0) {
-       
         for (const d of decremented) await incrementStock(d.productId, d.qty);
         return res.status(400).send('Invalid cart item quantity');
       }
 
       const r = await decrementStock(pid, qty);
       if (!r.ok) {
-        
         for (const d of decremented) {
           try { await incrementStock(d.productId, d.qty); } catch(e){ console.error('rollback error', e); }
         }
         return res.status(400).send(`Could not place order: ${r.message} for item ${it.title}`);
       }
-
-     
       decremented.push({ productId: pid, qty });
     }
 
@@ -103,7 +125,7 @@ const createShowConforamtion = async (req, res) => {
     const shipping = 0;
     const total = subtotal + shipping;
 
-   
+    
     const orderId = await nextOrderId();
 
     const order = await Order.create({
@@ -119,11 +141,8 @@ const createShowConforamtion = async (req, res) => {
       status: 'created'
     });
 
-   
-    cart.items = [];
-    await cart.save();
+    await Cart.updateOne({ user: userId }, { $set: { items: [] } });
 
-    
     const created = order.createdAt || new Date();
     const dateStr = created.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     const timeStr = created.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -143,7 +162,6 @@ const createShowConforamtion = async (req, res) => {
 
   } catch (error) {
     console.error('createShowConforamtion error:', error);
-    
     return res.status(500).send('Server error while placing order');
   }
 };
