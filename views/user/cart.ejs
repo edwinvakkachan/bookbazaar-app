@@ -211,7 +211,18 @@
         incBtn.disabled = !!reachedMax;
       }
 
-      subtotal += price * (qty||0);
+    
+
+
+      
+      const isOut = !!it.outOfStock ||
+                    (it.product && ((typeof it.product.quantity === 'number' && it.product.quantity <= 0) || (typeof it.product.stock === 'number' && it.product.stock <= 0)));
+
+      if (!isOut) {
+        subtotal += price * (qty || 0);
+      }
+
+
     });
 
     updateTotals(subtotal);
@@ -233,6 +244,8 @@
       });
       const data = await safeJson(res);
       if(res.ok && data && data.success && data.cart) {
+        
+        if (typeof data.total !== 'undefined') updateTotals(data.total);
         rebuildFromCartData(data.cart);
       } else {
         showAlert((data && data.error) || 'Failed to set quantity', 'danger');
@@ -253,9 +266,11 @@
       });
       const data = await safeJson(res);
 
-      if(res.ok && data && data.success && data.cart){
+            if(res.ok && data && data.success && data.cart){
+        if (typeof data.total !== 'undefined') updateTotals(data.total);
         rebuildFromCartData(data.cart);
       } else {
+
         
         showAlert((data && data.error) || 'Failed to update', 'danger');
       }
@@ -274,11 +289,13 @@
         body:JSON.stringify({remove:true})
       });
       const data = await safeJson(res);
-      if(res.ok && data && data.success && data.cart){
+           if(res.ok && data && data.success && data.cart){
+        if (typeof data.total !== 'undefined') updateTotals(data.total);
         rebuildFromCartData(data.cart);
         const card = document.querySelector('[data-cart-item][data-product-id="'+productId+'"]');
         if(card) card.remove();
       } else {
+
         showAlert((data && data.error) || 'Failed to remove', 'danger');
       }
     });
@@ -288,5 +305,25 @@
   window.rebuildFromCartData = rebuildFromCartData;
 })();
 </script>
+
+
+<script>
+  (function(){
+    if (!('EventSource' in window)) return;
+    try {
+      const es = new EventSource('/api/updates/stream');
+      
+      es.addEventListener('reload', function(e){
+     
+        location.reload();
+      });
+      
+      es.onmessage = function(){ location.reload(); };
+    } catch (err) {
+      console.warn('SSE connection failed', err);
+    }
+  })();
+</script>
+
 
 <%- include("../partials/user/footer.ejs") %>

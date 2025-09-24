@@ -67,13 +67,32 @@ const listCart = async (req, res) => {
       };
     });
 
+ 
+    const calcTotalFromItems = (cartItems) => {
+      if (!Array.isArray(cartItems)) return 0;
+      return cartItems.reduce((sum, it) => {
+        const product = it.product || {};
+        const stock = safeNumber(product.quantity);
+        const itemOutOfStock =
+          !product ||
+          stock <= 0 ||
+          product.isBlocked === true ||
+          (product.category && product.category.isListed === false) ||
+          (product.brand && product.brand.isBlocked === true) ||
+          !!it.outOfStock; 
+
+        if (itemOutOfStock) return sum;
+        const price = safeNumber(it.priceAtAdd || product.salePrice || product.price || 0);
+        const qty = safeNumber(it.qty);
+        return sum + price * qty;
+      }, 0);
+    };
+
     const total =
       typeof cart.getSubtotal === 'function'
-        ? cart.getSubtotal()
-        : cart.items.reduce(
-            (s, it) => s + safeNumber(it.priceAtAdd) * safeNumber(it.qty),
-            0
-          );
+        ? calcTotalFromItems(cart.items) 
+        : calcTotalFromItems(cart.items);
+
 
     return res.render('cart', { items, total, cartBottomImageUrl: null });
   } catch (err) {
@@ -193,8 +212,26 @@ const productMax = DEFAULT_MAX_PER_ORDER;
     cart.updatedAt = new Date();
     await cart.save();
 
-    const populated = await Cart.findById(cart._id).populate('items.product');
-    return res.json({ success: true, cart: populated });
+
+
+
+
+        const populated = await Cart.findById(cart._id).populate({
+      path: 'items.product',
+      populate: [
+        { path: 'brand', select: 'brandName isBlocked' },
+        { path: 'category', select: 'name isListed' }
+      ]
+    });
+
+   
+    const total = calcTotalFromItems(populated.items);
+
+    return res.json({ success: true, cart: populated, total });
+
+
+
+
   } catch (err) {
     console.error('changeQuantity error', err);
     const status = err.status || 500;
@@ -212,8 +249,31 @@ const removeFromCart = async (req, res) => {
 
     cart.items = cart.items.filter(it => it.product.toString() !== productId);
     cart.updatedAt = new Date();
-    await cart.save();
-    return res.json({ success: true,cart });
+
+
+  
+
+
+
+        await cart.save();
+
+    const populated = await Cart.findById(cart._id).populate({
+      path: 'items.product',
+      populate: [
+        { path: 'brand', select: 'brandName isBlocked' },
+        { path: 'category', select: 'name isListed' }
+      ]
+    });
+
+    const total = calcTotalFromItems(populated.items);
+
+    return res.json({ success: true, cart: populated, total });
+
+
+
+
+
+
   } catch (err) {
     console.error('removeFromCart error', err);
     return res.status(500).json({ error: 'Server error' });
