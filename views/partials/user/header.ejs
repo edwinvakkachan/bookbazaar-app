@@ -101,16 +101,15 @@
             </a>
           </li>
 
-          <li class="nav-item me-2">
-            <a href="/cart" class="nav-link position-relative" aria-label="Cart">
-              <i class="bi bi-bag"></i>
-              <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                  <%= cartCount %>
-                </span>
-              <% } %>
-            </a>
-          </li>
+          <a href="/cart" class="nav-link position-relative" aria-label="Cart">
+  <i class="bi bi-bag"></i>
+  <span id="cart-count-badge"
+        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+        style="<%= (typeof cartCount !== 'undefined' && cartCount > 0) ? '' : 'display:none' %>">
+    <%= cartCount || 0 %>
+  </span>
+</a>
+
 
           <% if (user) { %>
             <li class="nav-item dropdown">
