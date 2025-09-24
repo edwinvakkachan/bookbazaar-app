@@ -16,12 +16,13 @@
       </form>
     </div>
 
-    <% items.forEach(item => { 
+    <% items.forEach(item => {
          const p = item.productId || {};
          const img = (p.productImage && p.productImage.length) ? p.productImage[0] : '/images/placeholder.png';
          const title = p.productName || 'Untitled';
          const author = p.author || '';
          const price = typeof p.salePrice !== 'undefined' ? p.salePrice : (p.regularPrice || 0);
+         const outOfStock = !!p.isOutOfStock;
     %>
       <div class="row align-items-center border-bottom py-3">
         <!-- Product Image -->
@@ -33,15 +34,24 @@
         <div class="col-6 col-md-7">
           <h6 class="mb-1"><%= title %></h6>
           <% if (author) { %><small class="text-muted"><%= author %></small><% } %>
-          <div class="mt-1">
-            <span class="text-warning">
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star"></i>
-            </span>
-          </div>
+
+          <!-- OUT OF STOCK BADGE -->
+          <% if (outOfStock) { %>
+            <div class="mt-2">
+              <span class="badge bg-danger">Out of stock</span>
+            </div>
+          <% } else { %>
+            <div class="mt-1">
+              <span class="text-warning">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star"></i>
+              </span>
+            </div>
+          <% } %>
+
           <p class="fw-bold mt-1">₹<%= price %></p>
         </div>
 
@@ -50,10 +60,16 @@
           <a href="/wishlist/remove/<%= p._id %>" class="btn btn-dark btn-sm w-100 mb-2">
             <i class="bi bi-trash"></i> Remove
           </a>
+
           <form action="/cart/add" method="post">
             <input type="hidden" name="productId" value="<%= p._id %>">
-            <button type="submit" class="btn btn-secondary btn-sm w-100">
-              <i class="bi bi-cart"></i> Add To Cart
+            <button
+              type="submit"
+              class="btn btn-secondary btn-sm w-100"
+              <% if (outOfStock) { %> disabled title="This item is currently unavailable" <% } %>
+            >
+              <i class="bi bi-cart"></i>
+              <% if (outOfStock) { %> Out of stock <% } else { %> Add To Cart <% } %>
             </button>
           </form>
         </div>
@@ -62,12 +78,12 @@
   <% } %>
 </div>
 
-<!-- Recommendation Section -->
+<!-- Recommendation Section (unchanged) -->
 <% if (typeof recommendations !== 'undefined' && Array.isArray(recommendations) && recommendations.length) { %>
   <div class="container my-5">
     <h5 class="fw-bold mb-3">Just For You</h5>
     <div class="row g-3">
-      <% recommendations.forEach(product => { 
+      <% recommendations.forEach(product => {
            const rImg = (product.productImage && product.productImage.length) ? product.productImage[0] : '/images/placeholder.png';
            const rTitle = product.productName || 'Untitled';
            const rAuthor = product.author || '';
@@ -95,3 +111,25 @@
 <% } %>
 
 <%- include("../partials/user/footer.ejs") %>
+
+
+<script>
+  (function() {
+    if (!('EventSource' in window)) return;
+    try {
+      const es = new EventSource('/api/updates/stream'); 
+      es.addEventListener('reload', function(e) {
+      
+        location.reload();
+      });
+      
+      es.onmessage = function() {
+      
+        location.reload();
+      };
+    } catch (err) {
+      
+      console.warn('SSE connection failed', err);
+    }
+  })();
+</script>
