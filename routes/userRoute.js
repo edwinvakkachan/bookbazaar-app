@@ -6,6 +6,7 @@ const checkOutController = require('../controllers/user/checkOutController');
 const orderController = require('../controllers/user/orderController')
 const homeController = require('../controllers/user/homeController')
 const shopController = require('../controllers/user/shopController')
+const wishlistCOntroller = require('../controllers/user/wishlistController')
 const passport = require('passport');
 const {userAuth,adminAuth} = require('../middlewares/auth')
 
@@ -87,9 +88,9 @@ router.post('/userProfile/resendEmailOtp', userAuth, userController.resendEmailO
 
 
 //whishlist
-router.get('/wishlist',userAuth,userController.getWishlist)
-router.post('/wishlist/add',userAuth,userController.addToWishlist)
-router.get('/wishlist/remove/:productId',userAuth,userController.removeFromWishlist)
+router.get('/wishlist',userAuth,wishlistCOntroller.getWishlist)
+router.post('/wishlist/add',userAuth,wishlistCOntroller.addToWishlist)
+router.get('/wishlist/remove/:productId',userAuth,wishlistCOntroller.removeFromWishlist)
 
 
 
