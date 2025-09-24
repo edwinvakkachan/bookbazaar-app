@@ -5,6 +5,7 @@ const cartController = require('../controllers/user/cartController')
 const checkOutController = require('../controllers/user/checkOutController');
 const orderController = require('../controllers/user/orderController')
 const homeController = require('../controllers/user/homeController')
+const shopController = require('../controllers/user/shopController')
 const passport = require('passport');
 const {userAuth,adminAuth} = require('../middlewares/auth')
 
@@ -45,9 +46,11 @@ router.get('/api/products/latest',homeController.latest)
 
 
 //product page
-router.get('/shop',userAuth, userController.loadshoppingPage);
-router.get('/filter',userController.filterProduct);
-router.get('/book/:id',userAuth,userController.getBookDetails);
+router.get('/shop',userAuth, shopController.loadshoppingPage);
+router.get('/book/:id',userAuth,shopController.getBookDetails);
+router.get('/api/products', shopController.apiGetProducts);
+router.get('/api/categories', shopController.apiGetCategories);
+router.get('/api/brands', shopController.apiGetBrands);
 
 //userProfile
 

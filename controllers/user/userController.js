@@ -487,161 +487,6 @@ const resendForgotOtp = async (req, res) => {
 };
 
 
-const loadshoppingPage = async (req,res)=>{
-  try {
-    let { category, brand, price, sort, page = 1 } = req.query;
-
-    const limit = 9; 
-    const skip = (page - 1) * limit;
-
-    let query = { isBlocked: false };  
-
-    if (category) {
-      query.category = { $in: category.split(",") };
-    }
-
-    if (brand) {
-      query.brand = { $in: brand.split(",") };
-    }
-
-    if (price) {
-      if (price === "under100") query.salePrice = { $lt: 100 };
-      if (price === "100-250") query.salePrice = { $gte: 100, $lte: 250 };
-      if (price === "250-500") query.salePrice = { $gte: 250, $lte: 500 };
-      if (price === "above500") query.salePrice = { $gt: 500 };
-    }
-
-    let sortQuery = { createdAt: -1 }; 
-    if (sort === "popularity") {
-      sortQuery = { sold: -1 };
-    } else if (sort === "newest") {
-      sortQuery = { createdAt: -1 };
-    } else if (sort === "priceAsc") {
-      sortQuery = { salePrice: 1 };
-    } else if (sort === "priceDesc") {
-      sortQuery = { salePrice: -1 };
-    }
-
-   
-    const allowedCategories = await Category.find({ isListed: true }).select("_id");
-
-    if (!category) {
-      query.category = { $in: allowedCategories.map(c => c._id) };
-    }
-   
- 
-const allowedbrands = await Brand.find({ isBlocked: false }).select("_id");
-
-    if (!brand) {
-      query.brand = { $in: allowedbrands.map(c => c._id) };
-    }
-
-  
-    const products = await Product.find(query)
-  .populate("category", "name")   
-  .populate("brand", "brandName")      
-  .sort(sortQuery)
-  .skip(skip)
-  .limit(limit);
-
-    
-const totalProducts = await Product.countDocuments(query);
-const totalPages = Math.ceil(totalProducts / limit);
-
-
-
-res.render("shop", {
-  products,
-  category: await Category.find({ isListed: true }),
-  brand: await Brand.find({ isBlocked: false }), 
-  currentPage: Number(page),
-  totalPages,
-  active: "books",
-  query: req.query,
-  sort: sort || ""    
-});
-
-  } catch (error) {
-    console.error("Shop error:", error);
-    res.status(500).send("Server Error");
-  }
-}
-
-
-const getBookDetails = async (req,res)=>{
-  try {
-    const productId = req.params.id;
-    const product = await Product.findById(productId).populate("category");
-
-    if (!product) {
-      return res.status(404).send("Book not found");
-    }
-
-   
-    const relatedItems = await Product.find({
-      category: product.category._id,
-      _id: { $ne: product._id }
-    })
-    .limit(4); 
-
- 
-    const book = {
-      _id: product._id,  
-  title: product.productName,
-  author: product.author,  
-  pages: product.pages,
-  language: product.language,
-  published: product.createdAt ? product.createdAt.toDateString() : "N/A",
-  isbn: product.isbn,
-  price: product.salePrice,
-  oldPrice: product.regularPrice,
-  stock: product.quantity > 0,
-  
-  // Ratings reviews
-  rating: product.rating,
-  avgRating: product.avgRating,
-  reviews: product.reviews,
-  ratingBreakdown: product.ratingBreakdown,
-  reviewsList: product.reviewsList,
-
-  // Descriptions
-  description: product.description,
-  longDescription: product.longDescription,
-  benefits: product.benefits,
-
-  // Images
-  coverImg: product.productImage?.[0] || "/images/no-image.png",
-  thumbnails: product.productImage?.slice(1) || []
-};
-
-
-
-
-    
-    const related = relatedItems.map(item => ({
-      id: item._id,
-      title: item.productName,
-      price: item.salePrice || 0,
-      oldPrice: item.regularPrice || 0,
-      rating: item.rating || 4,
-      coverImg: item.productImage?.[0] || "/images/no-image.png"
-    }));
-
-
-
-    res.render("bookDetails", {
-      book,
-      related,
-      user: req.session.user || null,
-      active: "books"
-    });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
-  }
-}
-
 
 const getUserProfile = async (req, res) => {
   try {
@@ -1368,8 +1213,6 @@ module.exports = {
     loadLogin,
     login,
     logout,
-    loadshoppingPage,
-    getBookDetails,
     loadForgotPassword,
     forgotPasswordSendOtp,
     loadResetPassword,
@@ -1394,7 +1237,6 @@ module.exports = {
     requestEmailChange,
     resendEmailOtp,
     verifyEmailOtp,
-    filterProduct,
     test,
 
 };

@@ -9,59 +9,23 @@
           <h5 class="fw-bold">Filters</h5>
           <hr>
 
-          <!-- Category Filter -->
-          <div class="mb-3">
-            <h6 class="d-flex justify-content-between align-items-center">
-              Categories
-            </h6>
-            <% for (let i = 0; i < category.length; i++) { %>
-              <div class="form-check">
-                <input class="form-check-input"
-                       type="checkbox"
-                       id="cat-<%= category[i]._id %>"
-                       onclick="applyFilter('category','<%= category[i]._id %>')"
-                       <%= (query.category && query.category.split(',').includes(category[i]._id.toString()))
-                            ? 'checked' : '' %> >
-                <label class="form-check-label" for="cat-<%= category[i]._id %>">
-                  <%= category[i].name %>
-                </label>
-              </div>
-            <% } %>
+          <div id="categories-root" class="mb-3">
+            <h6>Categories</h6>
+            <div id="categories-list">Loading...</div>
           </div>
 
-          <!-- Brand Filter -->
-          <div class="mb-3">
+          <div id="brands-root" class="mb-3">
             <h6>Brands</h6>
-            <% for (let i = 0; i < brand.length; i++) { %>
-              <div class="form-check">
-                <input class="form-check-input"
-                       type="checkbox"
-                       id="brand-<%= brand[i]._id %>"
-                       onclick="applyFilter('brand','<%= brand[i]._id %>')"
-                       <%= (query.brand && query.brand.split(',').includes(brand[i]._id.toString()))
-                            ? 'checked' : '' %> >
-                <label class="form-check-label" for="brand-<%= brand[i]._id %>">
-                  <%= brand[i].brandName %>
-                </label>
-              </div>
-            <% } %>
+            <div id="brands-list">Loading...</div>
           </div>
 
-          <!-- Price Filter -->
           <div class="mb-3">
             <h6>Price</h6>
             <div class="d-flex flex-column gap-2">
-              <button type="button" class="btn btn-outline-dark <%= query.price === 'under100' ? 'active' : '' %>"
-                      onclick="applyFilter('price','under100')">Under ₹100</button>
-
-              <button type="button" class="btn btn-outline-dark <%= query.price === '100-250' ? 'active' : '' %>"
-                      onclick="applyFilter('price','100-250')">₹100 - ₹250</button>
-
-              <button type="button" class="btn btn-outline-dark <%= query.price === '250-500' ? 'active' : '' %>"
-                      onclick="applyFilter('price','250-500')">₹250 - ₹500</button>
-
-              <button type="button" class="btn btn-outline-dark <%= query.price === 'above500' ? 'active' : '' %>"
-                      onclick="applyFilter('price','above500')">Above ₹500</button>
+              <button type="button" class="btn btn-outline-dark" data-price="under100">Under ₹100</button>
+              <button type="button" class="btn btn-outline-dark" data-price="100-250">₹100 - ₹250</button>
+              <button type="button" class="btn btn-outline-dark" data-price="250-500">₹250 - ₹500</button>
+              <button type="button" class="btn btn-outline-dark" data-price="above500">Above ₹500</button>
             </div>
           </div>
         </div>
@@ -69,89 +33,21 @@
 
       <!-- Products + Sorting -->
       <main class="col-md-9">
-        <!-- Sort bar -->
         <div class="d-flex justify-content-end mb-3">
-          <ul class="nav nav-pills">
-            <li class="nav-item">
-              <a class="nav-link <%= sort === 'popularity' ? 'active' : '' %>"
-                 href="javascript:void(0)" onclick="applySort('popularity')">Popularity</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link <%= sort === 'newest' ? 'active' : '' %>"
-                 href="javascript:void(0)" onclick="applySort('newest')">Newest First</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link <%= sort === 'priceAsc' ? 'active' : '' %>"
-                 href="javascript:void(0)" onclick="applySort('priceAsc')">Price Low - High</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link <%= sort === 'priceDesc' ? 'active' : '' %>"
-                 href="javascript:void(0)" onclick="applySort('priceDesc')">Price High - Low</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link <%= !sort ? 'active' : '' %>"
-                 href="javascript:void(0)" onclick="applySort('')">Default</a>
-            </li>
+          <ul id="sort-bar" class="nav nav-pills">
+            <li class="nav-item"><a class="nav-link" data-sort="">Default</a></li>
+            <li class="nav-item"><a class="nav-link" data-sort="popularity">Popularity</a></li>
+            <li class="nav-item"><a class="nav-link" data-sort="newest">Newest</a></li>
+            <li class="nav-item"><a class="nav-link" data-sort="priceAsc">Price ↑</a></li>
+            <li class="nav-item"><a class="nav-link" data-sort="priceDesc">Price ↓</a></li>
           </ul>
         </div>
 
-        <!-- Product Grid -->
-        <div class="row">
-          <% for (let i = 0; i < products.length; i++) { %>
-            <div class="col-md-4 mb-4">
-              <div class="card h-100">
-  <!-- Wishlist button top-right -->
-  <div class="position-absolute top-0 end-0 p-2">
-    <form action="/wishlist/add" method="POST">
-      <input type="hidden" name="productId" value="<%= products[i]._id %>">
-      <!-- <button type="submit" class="btn btn-sm btn-outline-dark" title="Add to Wishlist">🖤</button> -->
-    <button type="submit" class="btn btn-sm btn-dark" title="Add to Wishlist">
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
-    <path d="M8 2.748-.717 5.932C.281 3.493 3.005.399 8 5.748 12.995.399 15.719 3.493 14.717 5.932L8 15l-6.717-9.068z"/>
-  </svg>
-</button>
-    </form>
-  </div>
-                <img src="<%= products[i].productImage[0] %>" class="card-img-top" alt="<%= products[i].productName %>">
-                <div class="card-body">
-                  <h6 class="card-title"><%= products[i].productName %></h6>
-                  <p class="mb-1">Brand: <%= products[i].brand?.brandName || "N/A" %></p>
-                  <p>₹<%= products[i].salePrice %>
-                    <span class="text-muted"><strike>₹<%= products[i].regularPrice %></strike></span>
-                  </p>
-                  <div class="d-flex justify-content-between">
-                    <a href="/book/<%= products[i]._id %>" class="btn btn-sm btn-outline-dark">View Details</a>
-                    
-                    
-                    
-                    <form onsubmit="event.preventDefault(); addToCart('<%= products[i]._id %>');">
-  <button type="submit" class="btn btn-sm btn-dark">Add to Cart</button>
-</form>
-
-
-
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% } %>
+        <div id="product-grid" class="row">
+          <div class="col-12">Loading products...</div>
         </div>
 
-        <!-- Pagination -->
-        <div class="pagination mt-4">
-          <% if (currentPage > 1) { %>
-            <a class="btn btn-outline-dark" href="javascript:void(0)" onclick="goToPage(<%= currentPage - 1 %>)">Prev</a>
-          <% } %>
-
-          <% for (let i = 1; i <= totalPages; i++) { %>
-            <a class="btn <%= currentPage === i ? 'btn-dark' : 'btn-outline-dark' %>"
-               href="javascript:void(0)" onclick="goToPage(<%= i %>)"><%= i %></a>
-          <% } %>
-
-          <% if (currentPage < totalPages) { %>
-            <a class="btn btn-outline-dark" href="javascript:void(0)" onclick="goToPage(<%= currentPage + 1 %>)">Next</a>
-          <% } %>
-        </div>
+        <div id="pagination" class="pagination mt-4"></div>
       </main>
     </div>
   </section>
@@ -163,110 +59,231 @@
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
         <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" id="popupAlertMessage">
-        <!-- Message will be injected here -->
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">OK</button>
-      </div>
+      <div class="modal-body" id="popupAlertMessage"></div>
+      <div class="modal-footer"><button class="btn btn-dark" data-bs-dismiss="modal">OK</button></div>
     </div>
   </div>
 </div>
 
 
 
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 <script>
-  function applyFilter(type, value) {
-    const params = new URLSearchParams(window.location.search);
 
-    
-    if (type !== 'price') {
-      let current = params.get(type) ? params.get(type).split(",") : [];
 
-      if (current.includes(value)) {
-        current = current.filter(v => v !== value); 
-      } else {
-        current.push(value); 
-      }
+const DEFAULT_LIMIT = 9;
 
-      if (current.length > 0) {
-        params.set(type, current.join(","));
-      } else {
-        params.delete(type);
-      }
-    } else {
-     
-      const currentPrice = params.get('price');
-      if (currentPrice === value) {
-        
-        params.delete('price');
-      } else {
-       
-        params.set('price', value);
-      }
-    }
 
-    
-    params.set('page', 1);
-
-   
-    window.location.href = '/shop?' + params.toString();
+function qs() { return new URLSearchParams(window.location.search); }
+function setHistory(params, push = true) {
+  if (!push) return;
+  const url = '/shop?' + params.toString();
+  window.history.pushState({ params: params.toString() }, '', url);
+}
+function showMessage(text) {
+  const title = document.getElementById('popupAlertTitle');
+  const body = document.getElementById('popupAlertMessage');
+  if (title && body) {
+    title.innerText = 'Notification';
+    body.innerText = text;
+    new bootstrap.Modal(document.getElementById('popupAlert')).show();
+  } else {
+    alert(text);
   }
+}
 
+
+function renderCategories(items) {
+  const root = document.getElementById('categories-list');
+  if (!root) return;
+  root.innerHTML = items.map(c =>
+    `<div class="form-check">
+       <input class="form-check-input" type="checkbox" data-id="${c.id}" id="cat-${c.id}">
+       <label class="form-check-label" for="cat-${c.id}">${c.name}</label>
+     </div>`
+  ).join('');
   
-  function applySort(value) {
-    const params = new URLSearchParams(window.location.search);
-    if (value) {
-      params.set('sort', value);
-    } else {
-      params.delete('sort');
-    }
-    params.set('page', 1);
-    window.location.href = '/shop?' + params.toString();
-  }
+  root.querySelectorAll('input[type="checkbox"]').forEach(cb =>
+    cb.addEventListener('change', () => applyFilter('category', cb.dataset.id))
+  );
+}
 
-  function goToPage(pageNumber) {
-    const params = new URLSearchParams(window.location.search);
-    params.set('page', pageNumber);
-    window.location.href = '/shop?' + params.toString();
-  }
-
+function renderBrands(items) {
+  const root = document.getElementById('brands-list');
+  if (!root) return;
+  root.innerHTML = items.map(b =>
+    `<div class="form-check">
+       <input class="form-check-input" type="checkbox" data-id="${b.id}" id="brand-${b.id}">
+       <label class="form-check-label" for="brand-${b.id}">${b.brandName}</label>
+     </div>`
+  ).join('');
   
+  root.querySelectorAll('input[type="checkbox"]').forEach(cb =>
+    cb.addEventListener('change', () => applyFilter('brand', cb.dataset.id))
+  );
+}
 
-
-function showPopupAlert(message, title = "Notification") {
-   
-    document.getElementById("popupAlertTitle").innerText = title;
-    document.getElementById("popupAlertMessage").innerText = message;
-
-    
-    const myModal = new bootstrap.Modal(document.getElementById("popupAlert"));
-    myModal.show();
+function renderProducts(products) {
+  const grid = document.getElementById('product-grid');
+  if (!grid) return;
+  if (!products || products.length === 0) {
+    grid.innerHTML = '<div class="col-12"><p>No products found.</p></div>';
+    return;
   }
+  grid.innerHTML = products.map(p => {
+    const img = (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/no-image.png';
+    return `<div class="col-md-4 mb-4">
+      <div class="card h-100">
+        <img src="${img}" class="card-img-top" alt="${p.productName}">
+        <div class="card-body">
+          <h6 class="card-title">${p.productName}</h6>
+          <p class="mb-1">Brand: ${p.brandName || 'N/A'}</p>
+          <p>₹${p.salePrice} <span class="text-muted"><strike>₹${p.regularPrice || ''}</strike></span></p>
+          <div class="d-flex justify-content-between">
+            <a href="/book/${p.id}" class="btn btn-sm btn-outline-dark">View</a>
+            <button class="btn btn-sm btn-dark" onclick="addToCart('${p.id}')">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-  function addToCart(productId) {
-    fetch(`/cart/${productId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'same-origin',
-      body: JSON.stringify({ productId })
-    }).then(res => {
-      if (res.ok) {
-        showPopupAlert('✅ Added to cart successfully.', 'Success');
-      } else {
-        showPopupAlert('❌ Failed to add to cart.', 'Error');
-      }
+function renderPagination(pagination) {
+  const root = document.getElementById('pagination');
+  if (!root) return;
+  const cur = pagination.currentPage || 1;
+  const total = pagination.totalPages || 1;
+  let html = '';
+  if (cur > 1) html += `<a class="btn btn-outline-dark" data-page="${cur-1}">Prev</a> `;
+  for (let i = 1; i <= total; i++) {
+    html += `<a class="btn ${i === cur ? 'btn-dark' : 'btn-outline-dark'}" data-page="${i}">${i}</a> `;
+  }
+  if (cur < total) html += `<a class="btn btn-outline-dark" data-page="${cur+1}">Next</a>`;
+  root.innerHTML = html;
+  root.querySelectorAll('[data-page]').forEach(el => el.addEventListener('click', () => goToPage(Number(el.dataset.page))));
+}
+
+
+function applyFilter(type, value) {
+  const params = qs();
+  if (type !== 'price') {
+    const arr = params.get(type) ? params.get(type).split(',') : [];
+    if (arr.includes(value)) {
+      // remove
+      params.set(type, arr.filter(x => x !== value).join(','));
+      if (!params.get(type)) params.delete(type);
+    } else {
+      arr.push(value);
+      params.set(type, arr.join(','));
+    }
+  } else {
+    // price single value
+    const cur = params.get('price');
+    if (cur === value) params.delete('price'); else params.set('price', value);
+  }
+  params.set('page', 1);
+  loadProducts(params);
+}
+
+function applySort(val) {
+  const params = qs();
+  if (val) params.set('sort', val); else params.delete('sort');
+  params.set('page', 1);
+  loadProducts(params);
+}
+
+function goToPage(page) {
+  const params = qs();
+  params.set('page', page);
+  loadProducts(params);
+}
+
+function addToCart(productId) {
+  axios.post(`/cart/${productId}`, { productId }, { withCredentials: true })
+    .then(res => {
+      if (res.status === 200) showMessage('Added to cart');
+      else showMessage('Failed to add to cart');
+    })
+    .catch(() => showMessage('Error adding to cart'));
+}
+
+
+function loadFilters() {
+  return axios.get('/api/categories').then(r => {
+    if (r.data && r.data.success) renderCategories(r.data.categories);
+  }).catch(() => {
+    document.getElementById('categories-list').innerText = 'Error loading';
+  }).then(() =>
+    axios.get('/api/brands').then(r => {
+      if (r.data && r.data.success) renderBrands(r.data.brands);
     }).catch(() => {
-      showPopupAlert(' Something went wrong.', 'Warning');
+      document.getElementById('brands-list').innerText = 'Error loading';
+    })
+  );
+}
+
+function loadProducts(params, pushHistory = true) {
+  const grid = document.getElementById('product-grid');
+  grid.innerHTML = '<div class="col-12"><p>Loading...</p></div>';
+  if (!params.get('page')) params.set('page', 1);
+  if (!params.get('limit')) params.set('limit', DEFAULT_LIMIT);
+
+  axios.get('/api/products', { params: Object.fromEntries(params.entries()) })
+    .then(res => {
+      if (res.data && res.data.success) {
+        renderProducts(res.data.products);
+        renderPagination(res.data.pagination);
+        setHistory(params, pushHistory);
+      } else {
+        grid.innerHTML = '<div class="col-12"><p>No products</p></div>';
+      }
+    })
+    .catch(() => {
+      grid.innerHTML = '<div class="col-12"><p>Error loading products</p></div>';
     });
-  }
+}
+
+// SSE
+function setupSSE() {
+  if (!('EventSource' in window)) return;
+  const es = new EventSource('/api/updates/stream');
+  es.addEventListener('reload', () => {
+    //
+    loadFilters();
+    loadProducts(qs(), false); // 
+  });
+  window.addEventListener('beforeunload', () => es.close());
+}
 
 
+window.addEventListener('popstate', ev => {
+  const paramsStr = ev.state ? ev.state.params : window.location.search.substring(1);
+  const params = new URLSearchParams(paramsStr);
+  loadProducts(params, false);
+});
 
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  loadFilters().then(() => {
+    loadProducts(qs(), false);
+  });
+
+  // price buttons
+  document.querySelectorAll('[data-price]').forEach(btn => btn.addEventListener('click', () => {
+    applyFilter('price', btn.dataset.price);
+  }));
+
+  // sort bar
+  document.querySelectorAll('#sort-bar [data-sort]').forEach(link => link.addEventListener('click', () => {
+    applySort(link.dataset.sort || '');
+  }));
+
+  setupSSE();
+});
 </script>
-
-
 
 <%- include("../partials/user/footer.ejs") %>
