@@ -14,7 +14,25 @@ const whishlistSchema = require('../../models/whishlistSchema');
 const safeNumber = v => (typeof v === 'number' ? v : (parseInt(v, 10) || 0));
 
 
+const calcTotalFromItems = (cartItems) => {
+      if (!Array.isArray(cartItems)) return 0;
+      return cartItems.reduce((sum, it) => {
+        const product = it.product || {};
+        const stock = safeNumber(product.quantity);
+        const itemOutOfStock =
+          !product ||
+          stock <= 0 ||
+          product.isBlocked === true ||
+          (product.category && product.category.isListed === false) ||
+          (product.brand && product.brand.isBlocked === true) ||
+          !!it.outOfStock; 
 
+        if (itemOutOfStock) return sum;
+        const price = safeNumber(it.priceAtAdd || product.salePrice || product.price || 0);
+        const qty = safeNumber(it.qty);
+        return sum + price * qty;
+      }, 0);
+    };
 
 const listCart = async (req, res) => {
   try {
@@ -68,25 +86,7 @@ const listCart = async (req, res) => {
     });
 
  
-    const calcTotalFromItems = (cartItems) => {
-      if (!Array.isArray(cartItems)) return 0;
-      return cartItems.reduce((sum, it) => {
-        const product = it.product || {};
-        const stock = safeNumber(product.quantity);
-        const itemOutOfStock =
-          !product ||
-          stock <= 0 ||
-          product.isBlocked === true ||
-          (product.category && product.category.isListed === false) ||
-          (product.brand && product.brand.isBlocked === true) ||
-          !!it.outOfStock; 
-
-        if (itemOutOfStock) return sum;
-        const price = safeNumber(it.priceAtAdd || product.salePrice || product.price || 0);
-        const qty = safeNumber(it.qty);
-        return sum + price * qty;
-      }, 0);
-    };
+    //
 
     const total =
       typeof cart.getSubtotal === 'function'
