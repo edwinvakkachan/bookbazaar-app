@@ -173,7 +173,7 @@ function applyFilter(type, value) {
   if (type !== 'price') {
     const arr = params.get(type) ? params.get(type).split(',') : [];
     if (arr.includes(value)) {
-      // remove
+      
       params.set(type, arr.filter(x => x !== value).join(','));
       if (!params.get(type)) params.delete(type);
     } else {
@@ -181,7 +181,7 @@ function applyFilter(type, value) {
       params.set(type, arr.join(','));
     }
   } else {
-    // price single value
+    
     const cur = params.get('price');
     if (cur === value) params.delete('price'); else params.set('price', value);
   }
@@ -202,14 +202,41 @@ function goToPage(page) {
   loadProducts(params);
 }
 
+
+function updateCartBadge(count) {
+  const badge = document.getElementById('cart-count-badge');
+  if (!badge) return;
+  if (Number(count) > 0) {
+    badge.style.display = ''; // show
+    badge.innerText = count;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
 function addToCart(productId) {
-  axios.post(`/cart/${productId}`, { productId }, { withCredentials: true })
-    .then(res => {
-      if (res.status === 200) showMessage('Added to cart');
-      else showMessage('Failed to add to cart');
+  fetch(`/cart/${productId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include', 
+    body: JSON.stringify({ productId })
+  })
+    .then(async (res) => {
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data.cartCount !== 'undefined') {
+          updateCartBadge(data.cartCount);
+        }
+        showMessage('Added to cart');
+      } else {
+        showMessage('Failed to add to cart');
+      }
     })
     .catch(() => showMessage('Error adding to cart'));
 }
+
 
 
 function loadFilters() {
@@ -266,7 +293,7 @@ window.addEventListener('popstate', ev => {
   loadProducts(params, false);
 });
 
-// Init
+
 document.addEventListener('DOMContentLoaded', () => {
   loadFilters().then(() => {
     loadProducts(qs(), false);

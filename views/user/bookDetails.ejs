@@ -330,7 +330,8 @@
     modal.show();
   }
 
-  async function addToCart(productId, qty = 1) {
+
+async function addToCart(productId, qty = 1) {
     try {
       console.log('Client productId:', productId, 'qty:', qty);
       const url = `/cart/${productId}`;
@@ -345,6 +346,10 @@
       });
 
       if (res.ok) {
+        let data ={}
+         data = await res.json();
+         updateCartBadge(data.cartCount);
+
         showPopupAlert('✅ Added to cart successfully!', 'Success');
       } else {
         let msg = 'Failed to add to cart.';
@@ -361,6 +366,9 @@
   }
 
  
+
+
+
   document.addEventListener('DOMContentLoaded', function () {
     const qtyInput = document.getElementById('quantityInput');
     const qtyHidden = document.getElementById('cartQuantityInput');

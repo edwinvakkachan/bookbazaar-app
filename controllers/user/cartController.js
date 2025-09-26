@@ -104,47 +104,38 @@ const listCart = async (req, res) => {
 
 
 
+
+
 const addToCart = async (req, res) => {
   try {
     const userId = req.session.user._id;
     const { productId, qty = 1 } = req.body;
+    console.log('the quantity is ',qty)
 
- 
     const quantityRequested = Math.max(1, parseInt(qty, 10) || 1);
 
-   
     const product = await validateProductForCart(productId);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
-   
     const stock = safeNumber(product.quantity);
     if (stock <= 0) return res.status(400).json({ error: 'Product out of stock' });
 
-    
-    const productMax =  DEFAULT_MAX_PER_ORDER;
+    const productMax = DEFAULT_MAX_PER_ORDER;
 
-    
     const addQty = Math.min(quantityRequested, productMax, stock);
 
-    
     const imageUrl = product.productImage?.[0] || '';
 
-    
     let cart = await Cart.findOne({ user: userId });
     if (!cart) {
-      
       cart = new Cart({ user: userId, items: [] });
     }
 
-   
     const idx = cart.items.findIndex(it => it.product.toString() === product._id.toString());
     if (idx >= 0) {
-      
       const newQty = Math.min(cart.items[idx].qty + addQty, productMax, stock);
       cart.items[idx].qty = newQty;
-      
     } else {
-      
       cart.items.push({
         product: product._id,
         title: product.productName || product.title || '',
@@ -159,17 +150,24 @@ const addToCart = async (req, res) => {
     cart.updatedAt = new Date();
     await cart.save();
 
-    
     await Wishlist.deleteOne({ userId: userId, productId: product._id }).catch(()=>{});
+//total quantity 
+    const totalQuantity = (cart.items || []).reduce((sum, it) => {
+      return sum + (parseInt(it.qty, 10) || 0);
+    }, 0);
 
     
-    return res.redirect('/cart');
+
+    return res.json({ success: true, cartCount: totalQuantity });
+
+
   } catch (err) {
     console.error('addToCart error', err);
     const status = err.status || 500;
     return res.status(status).json({ error: err.message || 'Server error' });
   }
 };
+
 
 
 const changeQuantity = async (req, res) => {

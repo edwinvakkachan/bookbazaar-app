@@ -98,5 +98,38 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+
+<script>
+
+function updateCartBadge(count) {
+  const badge = document.getElementById('cart-count-badge');
+  if (!badge) return;
+  const n = Number(count) || 0;
+  if (n > 0) {
+    badge.style.display = '';
+    badge.innerText = n;
+  } else {
+    badge.style.display = 'none';
+    badge.innerText = 0;
+  }
+}
+
+
+async function fetchCartCountAndUpdate() {
+  try {
+    const res = await fetch('/api/cart/count', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && typeof data.count !== 'undefined') updateCartBadge(data.count);
+  } catch (err) {
+
+    console.warn('fetchCartCountAndUpdate error', err);
+  }
+}
+
+
+</script>
+
+
 </body>
 </html>
