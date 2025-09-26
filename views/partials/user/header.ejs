@@ -96,10 +96,16 @@
           </li>
 
           <li class="nav-item me-1">
-            <a href="/wishlist" class="nav-link position-relative" aria-label="Wishlist">
-              <i class="bi bi-heart"></i>
-            </a>
-          </li>
+  <a href="/wishlist" class="nav-link position-relative" aria-label="Wishlist">
+    <i class="bi bi-heart"></i>
+    <span id="wishlist-count-badge"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+          style="<%= (typeof wishlistCount !== 'undefined' && wishlistCount > 0) ? '' : 'display:none' %>">
+      <%= wishlistCount || 0 %>
+    </span>
+  </a>
+</li>
+
 
           <a href="/cart" class="nav-link position-relative" aria-label="Cart">
   <i class="bi bi-bag"></i>

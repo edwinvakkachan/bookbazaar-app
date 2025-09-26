@@ -90,7 +90,7 @@ router.post('/userProfile/resendEmailOtp', userAuth, userController.resendEmailO
 //whishlist
 router.get('/wishlist',userAuth,wishlistCOntroller.getWishlist)
 router.post('/wishlist/add',userAuth,wishlistCOntroller.addToWishlist)
-router.get('/wishlist/remove/:productId',userAuth,wishlistCOntroller.removeFromWishlist)
+router.post('/wishlist/remove/:productId',userAuth,wishlistCOntroller.removeFromWishlist)
 
 
 

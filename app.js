@@ -11,6 +11,7 @@ const passportMiddlewares = require('./middlewares/passport');
 const localsMiddleware = require('./middlewares/locals');
 const cacheControlMiddleware = require('./middlewares/cacheControl');
 const cartCountMiddleware = require('./middlewares/cartCount');
+const wishlistCount = require('./middlewares/wishlistCount')
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
@@ -34,6 +35,7 @@ app.set("views",[path.join(__dirname,"views/user"),path.join(__dirname,'views/ad
 app.use(express.static(path.join(__dirname, "public")))  
 
 app.use(cartCountMiddleware);
+app.use(wishlistCount)
 
 app.use('/',userRoute)
 app.use('/admin',adminRoute)

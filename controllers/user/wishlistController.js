@@ -9,17 +9,23 @@ const addToWishlist = async (req, res) => {
     const { productId } = req.body;
     const userId = req.session.user._id; 
 
-    
+    if (!productId) {
+      return res.status(400).json({ success: false, message: 'productId required' });
+    }
+
     const exists = await Wishlist.findOne({ userId, productId });
     if (exists) {
-       return res.redirect('/wishlist');
+      const count = await Wishlist.countDocuments({ userId });
+      return res.json({ success: true, message: 'Already in wishlist', wishlistCount: count });
     }
 
     await Wishlist.create({ userId, productId });
-    res.redirect("/wishlist");
+   const wishlistCount = await Wishlist.countDocuments({ userId });
+
+    res.json({ success: true, message: 'Added to wishlist', wishlistCount });
   } catch (err) {
     console.error(err);
-    res.render("wishlist", { error: "Something went wrong" });
+     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -28,16 +34,24 @@ const addToWishlist = async (req, res) => {
 
 const removeFromWishlist = async (req, res) => {
   try {
+    console.log('prodcut removed')
     const { productId } = req.params;
+      if (!productId) {
+      return res.status(400).json({ success: false, message: 'productId required' });
+    }
     const userId = req.session.user._id;
 
     await Wishlist.deleteOne({ userId, productId });
-    res.redirect("/wishlist");
+     const wishlistCount = await Wishlist.countDocuments({ userId });
+
+    res.json({ success: true, message: 'Removed from wishlist', wishlistCount });
+   
   } catch (err) {
     console.error(err);
-    res.render("wishlist", { error: "Could not remove item" });
+     res.status(500).json({ success: false, message: 'Could not remove item' });
   }
 };
+
 
 
 
@@ -45,10 +59,8 @@ const getWishlist = async (req, res) => {
   try {
     const userId = req.session.user._id;
 
-  
     const items = await Wishlist.find({ userId }).populate('productId');
 
-   
     const categoryIds = new Set();
     const brandIds = new Set();
     items.forEach(it => {
@@ -57,36 +69,22 @@ const getWishlist = async (req, res) => {
       if (p.brand) brandIds.add(String(p.brand));
     });
 
-    
     const categories = await Category.find({ _id: { $in: Array.from(categoryIds) } }).lean();
     const brands = await Brand.find({ _id: { $in: Array.from(brandIds) } }).lean();
 
-    
     const categoryMap = {};
     categories.forEach(c => { categoryMap[String(c._id)] = c; });
     const brandMap = {};
     brands.forEach(b => { brandMap[String(b._id)] = b; });
 
-    
     items.forEach(it => {
       const p = it.productId;
       if (!p) return;
-
-      
       const cat = p.category ? categoryMap[String(p.category)] : null;
       const br = p.brand ? brandMap[String(p.brand)] : null;
-
-      
-      const productBlocked = !!p.isBlocked;
-      const categoryBlocked = !!(cat && cat.isListed === false);
-
-      const brandBlocked = !!(br && br.isBlocked);
-
-      p.isOutOfStock = productBlocked || categoryBlocked || brandBlocked;
-      
+      p.isOutOfStock = !!p.isBlocked || !!(cat && cat.isListed === false) || !!(br && br.isBlocked);
     });
 
-   
     const wishlistProductIds = items
       .map(it => it.productId && it.productId._id)
       .filter(Boolean);
@@ -101,23 +99,18 @@ const getWishlist = async (req, res) => {
       ]);
     }
 
-    res.render('wishlist', {
+    res.json({
+      success: true,
       items,
-      recommendations,
-      user: req.session.user,
-      cartCount: req.session.cart ? req.session.cart.length : 0
+      recommendations
     });
   } catch (err) {
     console.error('getWishlist error:', err);
-    res.render('wishlist', {
-      items: [],
-      recommendations: [],
-      error: 'Unable to load wishlist',
-      user: req.session.user,
-      cartCount: req.session.cart ? req.session.cart.length : 0
-    });
+    res.status(500).json({ success: false, message: 'Unable to load wishlist' });
   }
 };
+
+
 
 module.exports = {
     addToWishlist,

@@ -73,7 +73,6 @@
 
 <script>
 
-
 const DEFAULT_LIMIT = 9;
 
 
@@ -94,6 +93,54 @@ function showMessage(text) {
     alert(text);
   }
 }
+function escapeHtml(unsafe) {
+  if (unsafe === null || unsafe === undefined) return '';
+  return String(unsafe)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+
+const userWishlist = new Set(); 
+
+function updateWishlistBadge(count) {
+  const badge = document.getElementById('wishlist-count-badge');
+  if (!badge) return;
+  badge.innerText = count;
+  badge.style.display = Number(count) > 0 ? '' : 'none';
+}
+function updateCartBadge(count) {
+  const badge = document.getElementById('cart-count-badge');
+  if (!badge) return;
+  if (Number(count) > 0) {
+    badge.style.display = '';
+    badge.innerText = count;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+
+async function fetchUserWishlist() {
+  try {
+    const res = await fetch('/wishlist', { credentials: 'include' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !data.success || !Array.isArray(data.items)) return;
+    userWishlist.clear();
+    data.items.forEach(it => {
+      
+      const pid = it && it.productId && (it.productId._id || it.productId) ? String(it.productId._id || it.productId) : null;
+      if (pid) userWishlist.add(pid);
+    });
+    updateWishlistBadge(userWishlist.size);
+  } catch (err) {
+    console.error('fetchUserWishlist error', err);
+  }
+}
 
 
 function renderCategories(items) {
@@ -102,29 +149,27 @@ function renderCategories(items) {
   root.innerHTML = items.map(c =>
     `<div class="form-check">
        <input class="form-check-input" type="checkbox" data-id="${c.id}" id="cat-${c.id}">
-       <label class="form-check-label" for="cat-${c.id}">${c.name}</label>
+       <label class="form-check-label" for="cat-${c.id}">${escapeHtml(c.name)}</label>
      </div>`
   ).join('');
-  
   root.querySelectorAll('input[type="checkbox"]').forEach(cb =>
     cb.addEventListener('change', () => applyFilter('category', cb.dataset.id))
   );
 }
-
 function renderBrands(items) {
   const root = document.getElementById('brands-list');
   if (!root) return;
   root.innerHTML = items.map(b =>
     `<div class="form-check">
        <input class="form-check-input" type="checkbox" data-id="${b.id}" id="brand-${b.id}">
-       <label class="form-check-label" for="brand-${b.id}">${b.brandName}</label>
+       <label class="form-check-label" for="brand-${b.id}">${escapeHtml(b.brandName)}</label>
      </div>`
   ).join('');
-  
   root.querySelectorAll('input[type="checkbox"]').forEach(cb =>
     cb.addEventListener('change', () => applyFilter('brand', cb.dataset.id))
   );
 }
+
 
 function renderProducts(products) {
   const grid = document.getElementById('product-grid');
@@ -133,24 +178,39 @@ function renderProducts(products) {
     grid.innerHTML = '<div class="col-12"><p>No products found.</p></div>';
     return;
   }
+
   grid.innerHTML = products.map(p => {
+    const id = String(p.id || p._id || (p._id && p._id.toString && p._id.toString()) || '');
     const img = (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/no-image.png';
+    const inWishlist = userWishlist.has(id);
+    const heartClass = inWishlist ? 'bi-heart-fill' : 'bi-heart';
+    const heartBtnClass = inWishlist ? 'btn-danger' : 'btn-outline-danger';
+
     return `<div class="col-md-4 mb-4">
       <div class="card h-100">
-        <img src="${img}" class="card-img-top" alt="${p.productName}">
-        <div class="card-body">
-          <h6 class="card-title">${p.productName}</h6>
-          <p class="mb-1">Brand: ${p.brandName || 'N/A'}</p>
-          <p>₹${p.salePrice} <span class="text-muted"><strike>₹${p.regularPrice || ''}</strike></span></p>
-          <div class="d-flex justify-content-between">
-            <a href="/book/${p.id}" class="btn btn-sm btn-outline-dark">View</a>
-            <button class="btn btn-sm btn-dark" onclick="addToCart('${p.id}')">Add to Cart</button>
+        <img src="${escapeHtml(img)}" class="card-img-top" alt="${escapeHtml(p.productName || '')}">
+        <div class="card-body d-flex flex-column">
+          <h6 class="card-title">${escapeHtml(p.productName || '')}</h6>
+          <p class="mb-1">Brand: ${escapeHtml(p.brandName || 'N/A')}</p>
+          <p>₹${escapeHtml(p.salePrice ?? '')} <span class="text-muted"><strike>₹${escapeHtml(p.regularPrice ?? '')}</strike></span></p>
+          <div class="mt-auto d-flex justify-content-between">
+            <a href="/book/${id}" class="btn btn-sm btn-outline-dark">View</a>
+            <button class="btn btn-sm btn-dark" onclick="addToCart('${id}')">Add to Cart</button>
+            <button
+              class="btn btn-sm ${heartBtnClass}"
+              onclick="toggleWishlist('${id}', this)"
+              aria-pressed="${inWishlist ? 'true' : 'false'}"
+              title="${inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}"
+            >
+              <i class="bi ${heartClass}"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>`;
   }).join('');
 }
+
 
 function renderPagination(pagination) {
   const root = document.getElementById('pagination');
@@ -173,7 +233,6 @@ function applyFilter(type, value) {
   if (type !== 'price') {
     const arr = params.get(type) ? params.get(type).split(',') : [];
     if (arr.includes(value)) {
-      
       params.set(type, arr.filter(x => x !== value).join(','));
       if (!params.get(type)) params.delete(type);
     } else {
@@ -181,21 +240,18 @@ function applyFilter(type, value) {
       params.set(type, arr.join(','));
     }
   } else {
-    
     const cur = params.get('price');
     if (cur === value) params.delete('price'); else params.set('price', value);
   }
   params.set('page', 1);
   loadProducts(params);
 }
-
 function applySort(val) {
   const params = qs();
   if (val) params.set('sort', val); else params.delete('sort');
   params.set('page', 1);
   loadProducts(params);
 }
-
 function goToPage(page) {
   const params = qs();
   params.set('page', page);
@@ -203,85 +259,142 @@ function goToPage(page) {
 }
 
 
-function updateCartBadge(count) {
-  const badge = document.getElementById('cart-count-badge');
-  if (!badge) return;
-  if (Number(count) > 0) {
-    badge.style.display = ''; // show
-    badge.innerText = count;
-  } else {
-    badge.style.display = 'none';
-  }
-}
-
 function addToCart(productId) {
   fetch(`/cart/${productId}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include', 
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ productId })
   })
     .then(async (res) => {
       if (res.ok) {
-        const data = await res.json();
-        if (data && typeof data.cartCount !== 'undefined') {
-          updateCartBadge(data.cartCount);
-        }
+        const data = await res.json().catch(() => ({}));
+        if (data && typeof data.cartCount !== 'undefined') updateCartBadge(data.cartCount);
         showMessage('Added to cart');
       } else {
-        showMessage('Failed to add to cart');
+        const err = await res.json().catch(() => null);
+        showMessage(err && err.message ? err.message : 'Failed to add to cart');
       }
     })
     .catch(() => showMessage('Error adding to cart'));
 }
 
 
+async function toggleWishlist(productId, btnEl) {
+  try {
+    const inWL = userWishlist.has(String(productId));
+    const url = inWL ? `/wishlist/remove/${productId}` : '/wishlist/add';  
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: inWL ? null : JSON.stringify({ productId }) 
+    });
 
-function loadFilters() {
-  return axios.get('/api/categories').then(r => {
-    if (r.data && r.data.success) renderCategories(r.data.categories);
-  }).catch(() => {
-    document.getElementById('categories-list').innerText = 'Error loading';
-  }).then(() =>
-    axios.get('/api/brands').then(r => {
-      if (r.data && r.data.success) renderBrands(r.data.brands);
-    }).catch(() => {
-      document.getElementById('brands-list').innerText = 'Error loading';
-    })
-  );
+    const data = await res.json().catch(() => ({ success: false }));
+
+    if (!res.ok || !data.success) {
+      showMessage(data.message || (inWL ? 'Failed to remove' : 'Failed to add'));
+      return;
+    }
+
+    if (inWL) userWishlist.delete(String(productId));
+    else userWishlist.add(String(productId));
+
+    refreshWishlistButton(btnEl, userWishlist.has(String(productId)));
+    updateWishlistBadge(data.wishlistCount ?? userWishlist.size);
+    showMessage(data.message);
+  } catch (err) {
+    console.error('toggleWishlist error', err);
+    showMessage('Error processing wishlist action');
+  }
 }
 
-function loadProducts(params, pushHistory = true) {
+function refreshWishlistButton(btnEl, isInWishlist) {
+  if (!btnEl) return;
+  const icon = btnEl.querySelector('i');
+  if (isInWishlist) {
+    btnEl.classList.remove('btn-outline-danger');
+    btnEl.classList.add('btn-danger');
+    if (icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill'); }
+    btnEl.setAttribute('aria-pressed', 'true');
+    btnEl.title = 'Remove from wishlist';
+  } else {
+    btnEl.classList.remove('btn-danger');
+    btnEl.classList.add('btn-outline-danger');
+    if (icon) { icon.classList.remove('bi-heart-fill'); icon.classList.add('bi-heart'); }
+    btnEl.setAttribute('aria-pressed', 'false');
+    btnEl.title = 'Add to wishlist';
+  }
+}
+
+
+async function loadFilters() {
+  try {
+    const r1 = await fetch('/api/categories', { credentials: 'include' });
+    if (r1.ok) {
+      const d1 = await r1.json().catch(() => null);
+      if (d1 && d1.success && Array.isArray(d1.categories)) renderCategories(d1.categories);
+      else document.getElementById('categories-list').innerText = 'No categories';
+    } else {
+      document.getElementById('categories-list').innerText = 'Error loading';
+    }
+  } catch (e) {
+    document.getElementById('categories-list').innerText = 'Error loading';
+  }
+
+  try {
+    const r2 = await fetch('/api/brands', { credentials: 'include' });
+    if (r2.ok) {
+      const d2 = await r2.json().catch(() => null);
+      if (d2 && d2.success && Array.isArray(d2.brands)) renderBrands(d2.brands);
+      else document.getElementById('brands-list').innerText = 'No brands';
+    } else {
+      document.getElementById('brands-list').innerText = 'Error loading';
+    }
+  } catch (e) {
+    document.getElementById('brands-list').innerText = 'Error loading';
+  }
+}
+
+
+async function loadProducts(params = qs(), pushHistory = true) {
   const grid = document.getElementById('product-grid');
+  if (!grid) return;
   grid.innerHTML = '<div class="col-12"><p>Loading...</p></div>';
+
   if (!params.get('page')) params.set('page', 1);
   if (!params.get('limit')) params.set('limit', DEFAULT_LIMIT);
 
-  axios.get('/api/products', { params: Object.fromEntries(params.entries()) })
-    .then(res => {
-      if (res.data && res.data.success) {
-        renderProducts(res.data.products);
-        renderPagination(res.data.pagination);
-        setHistory(params, pushHistory);
-      } else {
-        grid.innerHTML = '<div class="col-12"><p>No products</p></div>';
-      }
-    })
-    .catch(() => {
+  try {
+   
+    const queryString = params.toString();
+    const res = await fetch('/api/products?' + queryString, { credentials: 'include' });
+    if (!res.ok) {
       grid.innerHTML = '<div class="col-12"><p>Error loading products</p></div>';
-    });
+      return;
+    }
+    const data = await res.json().catch(() => null);
+    if (data && data.success) {
+      renderProducts(data.products || []);
+      renderPagination(data.pagination || { currentPage: 1, totalPages: 1 });
+      setHistory(params, pushHistory);
+    } else {
+      grid.innerHTML = '<div class="col-12"><p>No products</p></div>';
+    }
+  } catch (err) {
+    console.error('loadProducts error', err);
+    grid.innerHTML = '<div class="col-12"><p>Error loading products</p></div>';
+  }
 }
 
-// SSE
+
 function setupSSE() {
   if (!('EventSource' in window)) return;
   const es = new EventSource('/api/updates/stream');
   es.addEventListener('reload', () => {
-    //
     loadFilters();
-    loadProducts(qs(), false); // 
+    loadProducts(qs(), false);
   });
   window.addEventListener('beforeunload', () => es.close());
 }
@@ -295,8 +408,8 @@ window.addEventListener('popstate', ev => {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadFilters().then(() => {
-    loadProducts(qs(), false);
+  fetchUserWishlist().finally(() => {
+    loadFilters().then(() => loadProducts(qs(), false));
   });
 
   // price buttons
@@ -305,7 +418,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }));
 
   // sort bar
-  document.querySelectorAll('#sort-bar [data-sort]').forEach(link => link.addEventListener('click', () => {
+  document.querySelectorAll('#sort-bar [data-sort]').forEach(link => link.addEventListener('click', (ev) => {
+    ev.preventDefault();
     applySort(link.dataset.sort || '');
   }));
 
