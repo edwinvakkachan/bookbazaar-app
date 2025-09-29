@@ -106,10 +106,10 @@
               <button type="button" class="btn btn-dark" id="addToCartBtn" data-product-id="<%= book._id %>">Add to Cart</button>
 
               <!-- Wishlist -->
-              <form action="/wishlist/add" method="POST" class="d-inline">
-                <input type="hidden" name="productId" value="<%= book._id %>">
-                <button type="submit" class="btn btn-dark" title="Add to Wishlist">🖤</button>
-              </form>
+              <button type="button" id ='addTowhislistbtn' class="btn btn-dark add-to-wishlist" 
+        data-product-id="<%= book._id %>" 
+        title="Add to Wishlist">🖤</button>
+
             </div>
 
             <!-- Buy Now -->
@@ -418,6 +418,87 @@ async function addToCart(productId, qty = 1) {
 })();
 </script>
 
+<!-- <script>
+document.getElementById("wishlist-form-<%= book._id %>").addEventListener("submit", async function(e) {
+  e.preventDefault(); // stop normal form submission
 
+  const productId = this.querySelector('input[name="productId"]').value;
+
+  try {
+    const res = await fetch("/wishlist/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"  // tell server JSON
+      },
+      body: JSON.stringify({ productId })   // send productId
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Added to Wishlist 🖤");
+      // optionally update wishlist count badge dynamically
+      // document.getElementById("wishlist-count").innerText = data.count;
+    } else {
+      alert(data.message || "Something went wrong");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Error adding to wishlist");
+  }
+});
+</script> -->
+
+<script>
+function updateWishlistBadge(count) {
+const badge = document.getElementById('wishlist-count-badge');
+if (!badge) return;
+badge.innerText = count;
+badge.style.display = Number(count) > 0 ? '' : 'none';
+}function updateWishlistBadge(count) {
+const badge = document.getElementById('wishlist-count-badge');
+if (!badge) return;
+badge.innerText = count;
+badge.style.display = Number(count) > 0 ? '' : 'none';
+}
+
+
+
+function showPopupAlert(message, title = 'Notification') {
+    document.getElementById('popupAlertTitle').innerText = title;
+    document.getElementById('popupAlertMessage').innerText = message;
+    const modalEl = document.getElementById('popupAlert');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    modal.show();
+  }
+
+
+  document.getElementById('addTowhislistbtn').addEventListener('click', async (e)=>{
+      e.preventDefault();
+    const productId = e.currentTarget.dataset.productId;;
+    try {
+       const res = await fetch('/wishlist/add',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({productId})
+    })
+  
+
+    const data = await res.json();
+      if(data.success){
+        showPopupAlert(data.message)
+      }else{
+        showPopupAlert(data.message)
+      }
+
+      updateWishlistBadge(data.wishlistCount)
+
+    } catch (error) {
+       console.error('Wishlist error:', err);
+    showPopupAlert('⚠️ Network or server error. Please try again.', 'Error');
+    }
+   
+
+  })
+</script>
 
 <%- include("../partials/user/footer.ejs") %>

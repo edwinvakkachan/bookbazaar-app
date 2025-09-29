@@ -20,9 +20,9 @@ const addToWishlist = async (req, res) => {
     }
 
     await Wishlist.create({ userId, productId });
-   const wishlistCount = await Wishlist.countDocuments({ userId });
+   const count = await Wishlist.countDocuments({ userId });
 
-    res.json({ success: true, message: 'Added to wishlist', wishlistCount });
+    res.json({ success: true, message: 'Added to wishlist', wishlistCount:count });
   } catch (err) {
     console.error(err);
      res.status(500).json({ success: false, message: 'Server error' });
@@ -98,11 +98,14 @@ const getWishlist = async (req, res) => {
         { $sample: { size: 4 } }
       ]);
     }
+    const count = await Wishlist.countDocuments(userId)
 
     res.json({
       success: true,
       items,
-      recommendations
+      recommendations,
+      cartCount:count,
+
     });
   } catch (err) {
     console.error('getWishlist error:', err);
