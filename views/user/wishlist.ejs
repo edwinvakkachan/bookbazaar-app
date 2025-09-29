@@ -1,135 +1,311 @@
-<%- include('../partials/user/header.ejs', { active: 'wishlist', user: user, cartCount: cartCount }) %>
+<%- include('../partials/user/header.ejs') %>
 
-<div class="container my-5">
-  <h4 class="fw-bold mb-4">Wishlist (<%= Array.isArray(items) ? items.length : 0 %>)</h4>
-
-  <% if (!items || items.length === 0) { %>
-    <div class="text-center py-5">
-      <i class="bi bi-heart fs-1 text-muted"></i>
-      <p class="mt-3 text-muted">Your wishlist is empty.</p>
-      <a href="/shop" class="btn btn-dark mt-2">Shop Now</a>
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Your Wishlist</h3>
+    <div>
+      <a href="/shop" class="btn btn-outline-secondary btn-sm me-2">Continue shopping</a>
+      <a href="/cart" class="btn btn-dark btn-sm">Go to cart</a>
     </div>
-  <% } else { %>
-    <div class="text-end mb-3">
-      <form action="/wishlist/moveAllToCart" method="post">
-        <button type="submit" class="btn btn-outline-dark">Move All To Bag</button>
-      </form>
-    </div>
+  </div>
 
-    <% items.forEach(item => {
-         const p = item.productId || {};
-         const img = (p.productImage && p.productImage.length) ? p.productImage[0] : '/images/placeholder.png';
-         const title = p.productName || 'Untitled';
-         const author = p.author || '';
-         const price = typeof p.salePrice !== 'undefined' ? p.salePrice : (p.regularPrice || 0);
-         const outOfStock = !!p.isOutOfStock;
-    %>
-      <div class="row align-items-center border-bottom py-3">
-        <!-- Product Image -->
-        <div class="col-3 col-md-2">
-          <img src="<%= img %>" alt="<%= title %>" class="img-fluid rounded" style="max-height:90px; object-fit:cover;">
-        </div>
+  <div id="wishlist-items"></div>
 
-        <!-- Product  -->
-        <div class="col-6 col-md-7">
-          <h6 class="mb-1"><%= title %></h6>
-          <% if (author) { %><small class="text-muted"><%= author %></small><% } %>
+  <hr class="my-4">
 
-          <!-- OUT OF STOCK BADGE -->
-          <% if (outOfStock) { %>
-            <div class="mt-2">
-              <span class="badge bg-danger">Out of stock</span>
-            </div>
-          <% } else { %>
-            <div class="mt-1">
-              <span class="text-warning">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star"></i>
-              </span>
-            </div>
-          <% } %>
-
-          <p class="fw-bold mt-1">₹<%= price %></p>
-        </div>
-
-        <!-- Actions -->
-        <div class="col-3 text-end">
-          <a href="/wishlist/remove/<%= p._id %>" class="btn btn-dark btn-sm w-100 mb-2">
-            <i class="bi bi-trash"></i> Remove
-          </a>
-
-          <form action="/cart/add" method="post">
-            <input type="hidden" name="productId" value="<%= p._id %>">
-            <button
-              type="submit"
-              class="btn btn-secondary btn-sm w-100"
-              <% if (outOfStock) { %> disabled title="This item is currently unavailable" <% } %>
-            >
-              <i class="bi bi-cart"></i>
-              <% if (outOfStock) { %> Out of stock <% } else { %> Add To Cart <% } %>
-            </button>
-          </form>
-        </div>
-      </div>
-    <% }) %>
-  <% } %>
+  <h5>Recommendations</h5>
+  <div id="wishlist-recommendations" class="row g-3"></div>
 </div>
 
-<!-- Recommendation Section (unchanged) -->
-<% if (typeof recommendations !== 'undefined' && Array.isArray(recommendations) && recommendations.length) { %>
-  <div class="container my-5">
-    <h5 class="fw-bold mb-3">Just For You</h5>
-    <div class="row g-3">
-      <% recommendations.forEach(product => {
-           const rImg = (product.productImage && product.productImage.length) ? product.productImage[0] : '/images/placeholder.png';
-           const rTitle = product.productName || 'Untitled';
-           const rAuthor = product.author || '';
-           const rPrice = typeof product.salePrice !== 'undefined' ? product.salePrice : (product.regularPrice || 0);
-      %>
-        <div class="col-6 col-md-3">
-          <div class="card h-100">
-            <img src="<%= rImg %>" class="card-img-top" alt="<%= rTitle %>" style="height:180px; object-fit:cover;">
-            <div class="card-body text-center">
-              <h6 class="card-title"><%= rTitle %></h6>
-              <% if (rAuthor) { %><small class="text-muted"><%= rAuthor %></small><% } %>
-              <p class="fw-bold mt-2">₹<%= rPrice %></p>
-              <form action="/wishlist/add" method="post">
-                <input type="hidden" name="productId" value="<%= product._id %>">
-                <button type="submit" class="btn btn-outline-dark btn-sm">
-                  <i class="bi bi-heart"></i> Add to Wishlist
-                </button>
-              </form>
+<!-- Popup Modal (reuse from shop page) -->
+<div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="popupAlertMessage"></div>
+      <div class="modal-footer"><button class="btn btn-dark" data-bs-dismiss="modal">OK</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+
+
+
+
+
+function escapeHtml(unsafe) {
+  if (unsafe === undefined || unsafe === null) return '';
+  return String(unsafe)
+    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+    .replaceAll('"','&quot;').replaceAll("'", '&#039;');
+}
+function showMessage(text) {
+  const title = document.getElementById('popupAlertTitle');
+  const body = document.getElementById('popupAlertMessage');
+  if (title && body) {
+    title.innerText = 'Notification';
+    body.innerText = text;
+    new bootstrap.Modal(document.getElementById('popupAlert')).show();
+  } else {
+    alert(text);
+  }
+}
+function updateWishlistBadge(count) {
+  const badge = document.getElementById('wishlist-count-badge');
+  if (!badge) return;
+  badge.innerText = count;
+  badge.style.display = Number(count) > 0 ? '' : 'none';
+}
+
+const wishlistSet = new Set(); 
+
+
+async function apiGetWishlist() {
+  try {
+    const r = await fetch('/wishlist', { credentials: 'include' });
+    const data = await r.json();
+    return data;
+  } catch (e) {
+    console.error('apiGetWishlist', e);
+    return { success:false, items:[], recommendations:[] };
+  }
+}
+async function apiAddToWishlist(productId) {
+  try {
+    const r = await fetch('/wishlist/add', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId })
+    });
+    return await r.json();
+  } catch (e) { console.error(e); return { success:false }; }
+}
+async function apiRemoveFromWishlist(productId) {
+  try {
+    const r = await fetch(`/wishlist/remove/${productId}`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    return await r.json();
+  } catch (e) { console.error(e); return { success:false }; }
+}
+
+
+function renderWishlistItems(items) {
+  const root = document.getElementById('wishlist-items');
+  if (!root) return;
+  if (!items || items.length === 0) {
+    root.innerHTML = '<div class="alert alert-info">Your wishlist is empty.</div>';
+    return;
+  }
+
+  root.innerHTML = items.map(it => {
+    const p = it.productId || {};
+    const id = String(p._id || p.id || '');
+    const img = (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/no-image.png';
+    const title = escapeHtml(p.productName || 'Untitled');
+    const price = escapeHtml(p.salePrice ?? '');
+    const regular = escapeHtml(p.regularPrice ?? '');
+    const inWL = wishlistSet.has(id);
+    const btnClass = inWL ? 'btn-danger' : 'btn-outline-danger';
+    const iconClass = inWL ? 'bi-heart-fill' : 'bi-heart';
+
+    return `
+      <div class="card mb-3 wishlist-card" data-product-id="${id}">
+        <div class="row g-0 align-items-center">
+          <div class="col-auto p-2">
+            <img src="${escapeHtml(img)}" alt="${title}" style="width:100px;height:120px;object-fit:cover;">
+          </div>
+          <div class="col">
+            <div class="card-body py-2">
+              <h6 class="card-title mb-1">${title}</h6>
+              <p class="mb-1">₹${price} <span class="text-muted"><strike>₹${regular}</strike></span></p>
+              <div class="d-flex gap-2">
+                <a href="/book/${id}" class="btn btn-sm btn-outline-dark">View</a>
+                <button class="btn btn-sm btn-dark" onclick="addToCart('${id}')">Add to Cart</button>
+                
+                <button class="btn btn-sm btn-outline-secondary" onclick="removeFromWishlistAndRemoveCard('${id}', this)">Remove</button>
+              </div>
             </div>
           </div>
         </div>
-      <% }) %>
-    </div>
-  </div>
-<% } %>
+      </div>`;
+  }).join('');
+}
 
-<%- include("../partials/user/footer.ejs") %>
+function renderRecommendations(recs) {
+  const root = document.getElementById('wishlist-recommendations');
+  if (!root) return;
+  if (!recs || recs.length === 0) {
+    root.innerHTML = '<div class="text-muted">No recommendations.</div>';
+    return;
+  }
+  root.innerHTML = recs.map(p => {
+    const id = String(p._id || p.id || '');
+    const img = (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/no-image.png';
+    const title = escapeHtml(p.productName || 'Untitled');
+    const inWL = wishlistSet.has(id);
+    const btnClass = inWL ? 'btn-danger' : 'btn-outline-danger';
+    const iconClass = inWL ? 'bi-heart-fill' : 'bi-heart';
+    return `
+      <div class="col-3">
+        <div class="card">
+          <img src="${escapeHtml(img)}" class="card-img-top" style="height:140px;object-fit:cover;" alt="${title}">
+          <div class="card-body p-2">
+            <h6 class="card-title small mb-1">${title}</h6>
+            <div class="d-flex gap-1">
+              <a href="/book/${id}" class="btn btn-sm btn-outline-dark">View</a>
+              <button class="btn btn-sm ${btnClass}" onclick="toggleWishlist('${id}', this)">
+                <i class="bi ${iconClass}"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
 
 
-<script>
-  (function() {
-    if (!('EventSource' in window)) return;
-    try {
-      const es = new EventSource('/api/updates/stream'); 
-      es.addEventListener('reload', function(e) {
-      
-        location.reload();
-      });
-      
-      es.onmessage = function() {
-      
-        location.reload();
-      };
-    } catch (err) {
-      
-      console.warn('SSE connection failed', err);
+async function addToCart(productId){
+  try {
+    const add = productId;
+    const res = await fetch(`/cart/${add}`,{
+      method:'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId,qty: 1 })
+    });
+    const data = await res.json();
+    if(data.success){
+      showMessage('Added to the cart')
+    }else{
+      showMessage('failed to add')
     }
-  })();
+  } catch (error) {
+     console.error(error);
+    showMessage('Something went wrong');
+  }
+}
+
+
+
+
+
+async function toggleWishlist(productId, btnEl) {
+  const id = String(productId);
+  const inWL = wishlistSet.has(id);
+
+  if (btnEl) btnEl.disabled = true;
+
+  try {
+    let res;
+    if (inWL) {
+      res = await apiRemoveFromWishlist(id);
+    } else {
+      res = await apiAddToWishlist(id);
+    }
+    if (!res || !res.success) {
+      showMessage(res && res.message ? res.message : 'Action failed');
+      return;
+    }
+
+    if (inWL) wishlistSet.delete(id); else wishlistSet.add(id);
+
+   
+    refreshButtonsForProduct(id);
+
+    
+    if (typeof res.wishlistCount !== 'undefined') updateWishlistBadge(res.wishlistCount);
+    else updateWishlistBadge(wishlistSet.size);
+
+    showMessage(res.message || (inWL ? 'Removed from wishlist' : 'Added to wishlist'));
+  } catch (err) {
+    console.error(err);
+    showMessage('Error processing wishlist action');
+  } finally {
+    if (btnEl) btnEl.disabled = false;
+  }
+}
+
+async function removeFromWishlistAndRemoveCard(productId, btnEl) {
+  const id = String(productId);
+  if (btnEl) btnEl.disabled = true;
+  try {
+    const res = await apiRemoveFromWishlist(id);
+    if (!res || !res.success) { showMessage(res && res.message ? res.message : 'Remove failed'); return; }
+    
+    document.querySelectorAll(`.wishlist-card[data-product-id="${id}"]`).forEach(c => c.remove());
+    wishlistSet.delete(id);
+    if (typeof res.wishlistCount !== 'undefined') updateWishlistBadge(res.wishlistCount);
+    else updateWishlistBadge(wishlistSet.size);
+    showMessage(res.message || 'Removed from wishlist');
+  } catch (err) {
+    console.error(err);
+    showMessage('Error removing item');
+  } finally {
+    if (btnEl) btnEl.disabled = false;
+  }
+}
+
+
+function refreshButtonsForProduct(productId) {
+  const id = String(productId);
+  const inWL = wishlistSet.has(id);
+  // wishlist-card buttons
+  document.querySelectorAll(`.wishlist-card[data-product-id="${id}"]`).forEach(card => {
+    const btn = card.querySelector('button[onclick^="toggleWishlist"]');
+    if (btn) refreshBtnVisual(btn, inWL);
+  });
+  // recommendation buttons (match onclick containing id)
+  document.querySelectorAll(`#wishlist-recommendations button`).forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${id}'`)) {
+      refreshBtnVisual(b, inWL);
+    }
+  });
+}
+function refreshBtnVisual(btn, inWL) {
+  if (!btn) return;
+  const icon = btn.querySelector('i');
+  if (inWL) {
+    btn.classList.remove('btn-outline-danger');
+    btn.classList.add('btn-danger');
+    if (icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill'); }
+    btn.innerHTML = '<i class="bi bi-heart-fill"></i> Remove';
+  } else {
+    btn.classList.remove('btn-danger');
+    btn.classList.add('btn-outline-danger');
+    if (icon) { icon.classList.remove('bi-heart-fill'); icon.classList.add('bi-heart'); }
+    btn.innerHTML = '<i class="bi bi-heart"></i> Add';
+  }
+}
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+  const data = await apiGetWishlist();
+  if (!data || !data.success) {
+    document.getElementById('wishlist-items').innerHTML = '<div class="alert alert-danger">Unable to load wishlist.</div>';
+    return;
+  }
+
+  wishlistSet.clear();
+  data.items.forEach(it => {
+    const pid = it.productId && (it.productId._id || it.productId) ? String(it.productId._id || it.productId) : null;
+    if (pid) wishlistSet.add(pid);
+  });
+
+
+  renderWishlistItems(data.items);
+  renderRecommendations(data.recommendations);
+
+  
+  updateWishlistBadge(wishlistSet.size);
+});
 </script>
+
+<%- include('../partials/user/footer.ejs') %>

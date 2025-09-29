@@ -111,9 +111,13 @@ const getWishlist = async (req, res) => {
 };
 
 
+const getWishlistPage = async (req,res)=>{
+  res.render('wishlist')
+}
 
 module.exports = {
     addToWishlist,
     getWishlist,
     removeFromWishlist,
+    getWishlistPage,
 }
