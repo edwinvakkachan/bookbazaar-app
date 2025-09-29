@@ -96,9 +96,9 @@
             <div id="book-actions" class="d-flex align-items-center gap-2 mt-4">
               <!-- Quantity Selector -->
               <div class="input-group w-auto" style="max-width: 120px;">
-                <button class="btn btn-outline-secondary" type="button" id="decreaseQty" aria-label="Decrease quantity">-</button>
+                <!-- <button class="btn btn-outline-secondary" type="button" id="decreaseQty" aria-label="Decrease quantity">-</button> -->
                 <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1" style="max-width:64px;">
-                <button class="btn btn-outline-secondary" type="button" id="increaseQty" aria-label="Increase quantity">+</button>
+                <!-- <button class="btn btn-outline-secondary" type="button" id="increaseQty" aria-label="Increase quantity">+</button> -->
               </div>
 
               <!-- Add to Cart (JS-driven) -->
@@ -314,15 +314,8 @@
 </div>
 
 
-
-
-
-
 <script>
-(function () {
-  const PRODUCT_ID = '<%= book._id %>'; 
-
-  function showPopupAlert(message, title = 'Notification') {
+function showPopupAlert(message, title = 'Notification') {
     document.getElementById('popupAlertTitle').innerText = title;
     document.getElementById('popupAlertMessage').innerText = message;
     const modalEl = document.getElementById('popupAlert');
@@ -330,93 +323,46 @@
     modal.show();
   }
 
-
-async function addToCart(productId, qty = 1) {
-    try {
-      console.log('Client productId:', productId, 'qty:', qty);
-      const url = `/cart/${productId}`;
-      console.log('Request URL:', url);
-
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        
-        body: JSON.stringify({ qty, productId })
-      });
-
-      if (res.ok) {
-        let data ={}
-         data = await res.json();
-         updateCartBadge(data.cartCount);
-
-        showPopupAlert('✅ Added to cart successfully!', 'Success');
-      } else {
-        let msg = 'Failed to add to cart.';
-        try {
-          const json = await res.json();
-          if (json && json.error) msg = json.error;
-        } catch(e) {}
-        showPopupAlert('❌ ' + msg, 'Error');
-      }
-    } catch (err) {
-      console.error('addToCart error', err);
-      showPopupAlert(' Network or server error. Please try again.', 'Warning');
-    }
-  }
-
  
 
+  document.getElementById('addToCartBtn').addEventListener('click',async (e)=>{
+    e.preventDefault();
+   try {
+     const productId = e.currentTarget.dataset.productId;
+    const add = productId;
+let qty= 1;
+ qty = Number(document.getElementById('quantityInput').value)
 
+    const res =  await fetch(`/cart/${add}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({productId,qty})
+    })
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const qtyInput = document.getElementById('quantityInput');
-    const qtyHidden = document.getElementById('cartQuantityInput');
-    const btnDec = document.getElementById('decreaseQty');
-    const btnInc = document.getElementById('increaseQty');
-    const addBtn = document.getElementById('addToCartBtn');
-
-   
-    if (btnDec) btnDec.addEventListener('click', () => {
-      if (!qtyInput) return;
-      let v = parseInt(qtyInput.value || '1', 10);
-      if (isNaN(v)) v = 1;
-      if (v > 1) v--;
-      qtyInput.value = v;
-      if (qtyHidden) qtyHidden.value = v;
-    });
-    if (btnInc) btnInc.addEventListener('click', () => {
-      if (!qtyInput) return;
-      let v = parseInt(qtyInput.value || '1', 10);
-      if (isNaN(v) || v < 1) v = 1;
-      v++;
-      qtyInput.value = v;
-      if (qtyHidden) qtyHidden.value = v;
-    });
-
-    if (addBtn) {
-      addBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        const productId = addBtn.getAttribute('data-product-id') || PRODUCT_ID;
-        
-        if (!productId) {
-          console.error('No product id found on button or in page.');
-          showPopupAlert('Unable to identify product. Refresh and try again.', 'Error');
-          return;
-        }
-        let qty = 1;
-        if (qtyInput) qty = Math.max(1, parseInt(qtyInput.value || '1', 10) || 1);
-        else if (qtyHidden) qty = Math.max(1, parseInt(qtyHidden.value || '1', 10) || 1);
-
-        addToCart(productId, qty);
-      });
-    } else {
-      console.warn('addToCartBtn not found in DOM.');
+    const data = await res.json()
+    updateCartBadge(data.cartCount);
+    if(data.success){
+      showPopupAlert('added to the cart');
+    }else{
+      showPopupAlert('failed to add to cart');
     }
-  });
-})();
+
+
+   } catch (error) {
+    console.log(error);
+    showPopupAlert('newtwork error while adding the cart')
+   }
+  })
+
+
+
+
+
+
+
+
 </script>
+
 
 
 <script>
