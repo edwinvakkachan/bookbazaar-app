@@ -91,7 +91,8 @@
             </h5>
 
             <p class="mt-3"><%= book.description %></p>
-            <p class="mt-3 text-success">In Stock — <%= book.quantity %> left</p>
+            <!-- total quantity -->
+            <p  id="stock-info" class="mt-3 text-success">In Stock — <%= book.quantity %> left</p> 
 
 
             <!-- Action Buttons -->
@@ -334,6 +335,19 @@ function showPopupAlert(message, title = 'Notification') {
     const add = productId;
 let qty= 1;
  qty = Number(document.getElementById('quantityInput').value)
+const quantity = Number('<%= book.quantity %>') || 0;
+const status =   <%= book.stock %>;
+if(status==false){
+  showPopupAlert('product out of stock');
+  return;
+}
+else if(quantity<qty){
+  showPopupAlert(`only ${quantity} product left`)
+  return;
+}else if(qty>5){
+  showPopupAlert(`only max 5 product is allowed`);
+  return;
+}
 
     const res =  await fetch(`/cart/${add}`,{
       method:'POST',
