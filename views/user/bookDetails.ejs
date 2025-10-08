@@ -91,6 +91,8 @@
             </h5>
 
             <p class="mt-3"><%= book.description %></p>
+            <p class="mt-3 text-success">In Stock — <%= book.quantity %> left</p>
+
 
             <!-- Action Buttons -->
             <div id="book-actions" class="d-flex align-items-center gap-2 mt-4">
@@ -344,7 +346,7 @@ let qty= 1;
     if(data.success){
       showPopupAlert('added to the cart');
     }else{
-      showPopupAlert('failed to add to cart');
+      showPopupAlert('Product out of stock');
     }
 
 

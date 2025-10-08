@@ -39,28 +39,17 @@ const getBookDetails = async (req,res)=>{
 
 
 
-
-// checking whether admin blocked the product
-
-const allowedBrands = await Brand.find({isBlocked:false}).select('_id')
-const allowedCategories = await Category.find({isListed:true}).select('_id')
-
-const stock1 = await Product.find({
-  _id:productId,
-  brand: { $in: allowedBrands.map(b => b._id) },
-  category: { $in: allowedCategories.map(c => c._id) },
-  quantity: { $gt: 0 }
-});
-let stockStatus
-console.log(stock1);
-if(stock1.length>0){
-  stockStatus=true
+const stockStatus = await Product.findById(productId).select('isBlocked quantity').populate('brand','isBlocked').populate('category','isListed')
+// console.log('stock status',stockStatus)
+let status = true;
+ if((stockStatus.brand.isBlocked==true) || 
+    stockStatus.category.isListed==false ||
+    stockStatus.quantity <=0 ||
+    stockStatus.isBlocked==true
+){
+  status = false;
 }
-else stockStatus =false;
-console.log('product',productId)
-console.log('brand',allowedBrands)
-console.log('category',allowedCategories)
- 
+// console.log('status is',status)
     const book = {
       _id: product._id,  
   title: product.productName,
@@ -71,8 +60,8 @@ console.log('category',allowedCategories)
   isbn: product.isbn,
   price: product.salePrice,
   oldPrice: product.regularPrice,
-  // stock: product.quantity > 0,
- stock:stockStatus, 
+  quantity:product.quantity,
+ stock:status,     //prodcut status
   // Ratings reviews
   rating: product.rating,
   avgRating: product.avgRating,
@@ -89,6 +78,9 @@ console.log('category',allowedCategories)
   coverImg: product.productImage?.[0] || "/images/no-image.png",
   thumbnails: product.productImage?.slice(1) || []
 };
+
+
+console.log(book)
 
 
 
