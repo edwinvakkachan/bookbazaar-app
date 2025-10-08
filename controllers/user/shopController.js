@@ -37,6 +37,29 @@ const getBookDetails = async (req,res)=>{
     })
     .limit(4); 
 
+
+
+
+// checking whether admin blocked the product
+
+const allowedBrands = await Brand.find({isBlocked:false}).select('_id')
+const allowedCategories = await Category.find({isListed:true}).select('_id')
+
+const stock1 = await Product.find({
+  _id:productId,
+  brand: { $in: allowedBrands.map(b => b._id) },
+  category: { $in: allowedCategories.map(c => c._id) },
+  quantity: { $gt: 0 }
+});
+let stockStatus
+console.log(stock1);
+if(stock1.length>0){
+  stockStatus=true
+}
+else stockStatus =false;
+console.log('product',productId)
+console.log('brand',allowedBrands)
+console.log('category',allowedCategories)
  
     const book = {
       _id: product._id,  
@@ -48,8 +71,8 @@ const getBookDetails = async (req,res)=>{
   isbn: product.isbn,
   price: product.salePrice,
   oldPrice: product.regularPrice,
-  stock: product.quantity > 0,
-  
+  // stock: product.quantity > 0,
+ stock:stockStatus, 
   // Ratings reviews
   rating: product.rating,
   avgRating: product.avgRating,
