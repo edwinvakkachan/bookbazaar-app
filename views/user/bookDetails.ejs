@@ -369,14 +369,6 @@ else if(quantity<qty){
     showPopupAlert('newtwork error while adding the cart')
    }
   })
-
-
-
-
-
-
-
-
 </script>
 
 
@@ -426,6 +418,15 @@ function showPopupAlert(message, title = 'Notification') {
    
 
   })
+</script>
+
+
+<script>
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'forceReload') {
+      location.reload(); 
+    }
+  });
 </script>
 
 <%- include("../partials/user/footer.ejs") %>

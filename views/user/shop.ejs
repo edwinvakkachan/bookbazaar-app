@@ -427,4 +427,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script>
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'forceReload') {
+      location.reload();
+    }
+  });
+</script>
+
 <%- include("../partials/user/footer.ejs") %>

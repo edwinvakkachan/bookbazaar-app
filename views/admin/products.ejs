@@ -221,6 +221,9 @@ confirmBtnAjax.addEventListener('click',async ()=>{
         // Close modal
         const modalInstance = bootstrap.Modal.getInstance(confirmModal);
         modalInstance.hide();
+
+ localStorage.setItem('forceReload', Date.now()); //user page reloading
+
       } else {
         
         showPopupAlert(json.message);

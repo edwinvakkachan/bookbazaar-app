@@ -32,8 +32,8 @@ router.post('/editCategory/:id',adminAuth,categoryController.editCategory)
 //brandMangement
 router.get('/brands',adminAuth,brandController.getBrandPage);
 router.post('/addBrand',adminAuth,upload.single("image"),brandController.addBrand);
-router.get('/blockBrand',adminAuth,brandController.blockBrand);
-router.get('/unblockBrand',adminAuth,brandController.unblockBrand)
+router.post('/blockBrand',adminAuth,brandController.blockBrand);
+router.post('/unblockBrand',adminAuth,brandController.unblockBrand)
 router.get('/deleteBrand',adminAuth,brandController.deleteBrand)
 
 //productMangement

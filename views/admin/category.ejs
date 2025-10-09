@@ -148,6 +148,7 @@
 
         // console.log('Success:', data);
         location.reload();
+        localStorage.setItem('forceReload', Date.now()); // user side reload
       } catch (error) {
         Swal.fire({ icon: 'error', title: 'Oops', text: error.message || 'An error occurred' });
       }

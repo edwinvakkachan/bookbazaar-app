@@ -153,3 +153,11 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!ok) startPolling(20000);
 });
 </script>
+
+<script>
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'forceReload') {
+      location.reload(); 
+    }
+  });
+</script>
