@@ -129,7 +129,7 @@ const getAllProducts = async (req,res)=>{
     try {
         const search = req.query.search || "";
         const page = parseInt(req.query.page) || 1;
-        const limit = 4;
+        const limit = 6;
 
          
         const matchedBrands = await Brand.find({
@@ -181,29 +181,31 @@ const getAllProducts = async (req,res)=>{
 };
 
 
-const blockProdcut = async (req,res)=>{
-    try {
-        let id = req.query.id;
-        
-        await Product.updateOne({_id:id},{$set:{isBlocked:true}})
-        broadcast('reload', { reason: 'productBlocked' }); //
-        res.redirect('/admin/products')
 
-    } catch (error) {
-        console.error("product block error",error)
-    }
+const blockProdcut = async (req,res)=>{
+
+try {
+    const { id } = req.body;
+    await Product.findByIdAndUpdate(id, { isBlocked: true });
+    res.json({ success: true, isBlocked: true });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: 'Failed to block product' });
+  }
+
 }
+
 
 const unblockProdcut = async (req,res)=>{
     try {
-        let id = req.query.id;
+        const {id} = req.body;
         
-        await Product.updateOne({_id:id},{$set:{isBlocked:false}})
-        broadcast('reload', { reason: 'productUnBlocked' });//
-        res.redirect('/admin/products')
+        await Product.findByIdAndUpdate(id,{isBlocked:false})
+       res.json({success:true,isBlocked:false})
 
     } catch (error) {
-        console.error("product unblock error",error)
+        console.error("product unblock error",error);
+        res.json({success:false,message:'Failed to unBlock the product'})
     }
 }
 
