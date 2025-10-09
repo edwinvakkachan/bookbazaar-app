@@ -34,8 +34,9 @@ const addToWishlist = async (req, res) => {
 
 const removeFromWishlist = async (req, res) => {
   try {
-    console.log('prodcut removed')
-    const { productId } = req.params;
+
+    const {productId} =  req.body
+    
       if (!productId) {
       return res.status(400).json({ success: false, message: 'productId required' });
     }
@@ -59,56 +60,43 @@ const getWishlist = async (req, res) => {
   try {
     const userId = req.session.user._id;
 
-    const items = await Wishlist.find({ userId }).populate('productId');
+    const items = await Wishlist.find({ userId })
+  .populate({
+    path: 'productId',
+    populate: [
+      { path: 'brand', select: 'brandName isBlocked' },   
+      { path: 'category', select: 'name isListed' }       
+    ]
+  });
 
-    const categoryIds = new Set();
-    const brandIds = new Set();
-    items.forEach(it => {
-      const p = it.productId || {};
-      if (p.category) categoryIds.add(String(p.category));
-      if (p.brand) brandIds.add(String(p.brand));
-    });
 
-    const categories = await Category.find({ _id: { $in: Array.from(categoryIds) } }).lean();
-    const brands = await Brand.find({ _id: { $in: Array.from(brandIds) } }).lean();
+ const wishlistProductIds = items
+  .map(it => it.productId)
+  .filter(Boolean)
+  .filter(p =>
+    !p.isBlocked &&                     
+    p.brand && !p.brand.isBlocked &&    
+    p.category && p.category.isListed   
+  )
+  .map(p => p._id); 
 
-    const categoryMap = {};
-    categories.forEach(c => { categoryMap[String(c._id)] = c; });
-    const brandMap = {};
-    brands.forEach(b => { brandMap[String(b._id)] = b; });
-
-    items.forEach(it => {
-      const p = it.productId;
-      if (!p) return;
-      const cat = p.category ? categoryMap[String(p.category)] : null;
-      const br = p.brand ? brandMap[String(p.brand)] : null;
-      p.isOutOfStock = !!p.isBlocked || !!(cat && cat.isListed === false) || !!(br && br.isBlocked);
-    });
-
-    const wishlistProductIds = items
-      .map(it => it.productId && it.productId._id)
-      .filter(Boolean);
-
-    let recommendations;
-    if (wishlistProductIds.length === 0) {
-      recommendations = await Product.aggregate([{ $sample: { size: 4 } }]);
-    } else {
-      recommendations = await Product.aggregate([
-        { $match: { _id: { $nin: wishlistProductIds } } },
-        { $sample: { size: 4 } }
-      ]);
-    }
-    const count = await Wishlist.countDocuments(userId)
+    let recommendations = await Product.aggregate([
+      { $match: { _id: { $nin: wishlistProductIds } } },
+         { $sample: { size: 4 } }
+       ]);
+ 
+    
+    const count = await Wishlist.countDocuments({userId:userId})
 
     res.json({
       success: true,
       items,
-      recommendations,
-      cartCount:count,
+       recommendations,
+      wishlistCount:count,
 
     });
-  } catch (err) {
-    console.error('getWishlist error:', err);
+  } catch (error) {
+    console.error('getWishlist error:', error);
     res.status(500).json({ success: false, message: 'Unable to load wishlist' });
   }
 };

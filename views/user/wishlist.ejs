@@ -31,30 +31,30 @@
   </div>
 </div>
 
+
+<!-- alert box -->
+<div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="popupAlertMessage"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<%- include('../partials/user/footer.ejs') %>
+
 <script>
 
 
-
-
-
-
-function escapeHtml(unsafe) {
-  if (unsafe === undefined || unsafe === null) return '';
-  return String(unsafe)
-    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-    .replaceAll('"','&quot;').replaceAll("'", '&#039;');
-}
-function showMessage(text) {
-  const title = document.getElementById('popupAlertTitle');
-  const body = document.getElementById('popupAlertMessage');
-  if (title && body) {
-    title.innerText = 'Notification';
-    body.innerText = text;
-    new bootstrap.Modal(document.getElementById('popupAlert')).show();
-  } else {
-    alert(text);
-  }
-}
 function updateWishlistBadge(count) {
   const badge = document.getElementById('wishlist-count-badge');
   if (!badge) return;
@@ -62,250 +62,141 @@ function updateWishlistBadge(count) {
   badge.style.display = Number(count) > 0 ? '' : 'none';
 }
 
-const wishlistSet = new Set(); 
-
-
-async function apiGetWishlist() {
-  try {
-    const r = await fetch('/wishlist', { credentials: 'include' });
-    const data = await r.json();
-    return data;
-  } catch (e) {
-    console.error('apiGetWishlist', e);
-    return { success:false, items:[], recommendations:[] };
-  }
-}
-async function apiAddToWishlist(productId) {
-  try {
-    const r = await fetch('/wishlist/add', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId })
-    });
-    return await r.json();
-  } catch (e) { console.error(e); return { success:false }; }
-}
-async function apiRemoveFromWishlist(productId) {
-  try {
-    const r = await fetch(`/wishlist/remove/${productId}`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    return await r.json();
-  } catch (e) { console.error(e); return { success:false }; }
-}
-
-
-function renderWishlistItems(items) {
-  const root = document.getElementById('wishlist-items');
-  if (!root) return;
-  if (!items || items.length === 0) {
-    root.innerHTML = '<div class="alert alert-info">Your wishlist is empty.</div>';
-    return;
+function showPopupAlert(message, title = 'Notification') {
+    document.getElementById('popupAlertTitle').innerText = title;
+    document.getElementById('popupAlertMessage').innerText = message;
+    const modalEl = document.getElementById('popupAlert');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    modal.show();
   }
 
-  root.innerHTML = items.map(it => {
-    const p = it.productId || {};
-    const id = String(p._id || p.id || '');
-    const img = (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/no-image.png';
-    const title = escapeHtml(p.productName || 'Untitled');
-    const price = escapeHtml(p.salePrice ?? '');
-    const regular = escapeHtml(p.regularPrice ?? '');
-    const inWL = wishlistSet.has(id);
-    const btnClass = inWL ? 'btn-danger' : 'btn-outline-danger';
-    const iconClass = inWL ? 'bi-heart-fill' : 'bi-heart';
 
-    return `
-      <div class="card mb-3 wishlist-card" data-product-id="${id}">
-        <div class="row g-0 align-items-center">
-          <div class="col-auto p-2">
-            <img src="${escapeHtml(img)}" alt="${title}" style="width:100px;height:120px;object-fit:cover;">
-          </div>
-          <div class="col">
-            <div class="card-body py-2">
-              <h6 class="card-title mb-1">${title}</h6>
-              <p class="mb-1">₹${price} <span class="text-muted"><strike>₹${regular}</strike></span></p>
-              <div class="d-flex gap-2">
-                <a href="/book/${id}" class="btn btn-sm btn-outline-dark">View</a>
-                <button class="btn btn-sm btn-dark" onclick="addToCart('${id}')">Add to Cart</button>
-                
-                <button class="btn btn-sm btn-outline-secondary" onclick="removeFromWishlistAndRemoveCard('${id}', this)">Remove</button>
+
+async function getwishlist(){
+  try {
+    const res = await fetch('/wishlist');
+const json = await res.json();
+if(!json.success){
+showPopupAlert(json.message)
+return
+}
+const { items, recommendations, wishlistCount } = json;
+
+updateWishlistBadge( wishlistCount);
+
+ const wishlistContainer = document.getElementById('wishlist-items');
+    wishlistContainer.innerHTML = items.length
+      ? items.map(it => `
+        <div class="card mb-3 shadow-sm">
+          <div class="row g-0 align-items-center">
+            <div class="col-md-2">
+              <img src="${it.productId?.productImage?.[0] || '/images/placeholder.png'}"
+                   class="img-fluid rounded-start" alt="${it.productId?.name}">
+            </div>
+            <div class="col-md-8">
+              <div class="card-body">
+                <h5 class="card-title">${it.productId?.productName}</h5>
+                <p class="card-text mb-1 text-muted">${it.productId?.brand?.brandName || 'No brand'}</p>
+                <p class="card-text fw-bold">₹${it.productId?.salePrice}</p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function renderRecommendations(recs) {
-  const root = document.getElementById('wishlist-recommendations');
-  if (!root) return;
-  if (!recs || recs.length === 0) {
-    root.innerHTML = '<div class="text-muted">No recommendations.</div>';
-    return;
-  }
-  root.innerHTML = recs.map(p => {
-    const id = String(p._id || p.id || '');
-    const img = (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/no-image.png';
-    const title = escapeHtml(p.productName || 'Untitled');
-    const inWL = wishlistSet.has(id);
-    const btnClass = inWL ? 'btn-danger' : 'btn-outline-danger';
-    const iconClass = inWL ? 'bi-heart-fill' : 'bi-heart';
-    return `
-      <div class="col-3">
-        <div class="card">
-          <img src="${escapeHtml(img)}" class="card-img-top" style="height:140px;object-fit:cover;" alt="${title}">
-          <div class="card-body p-2">
-            <h6 class="card-title small mb-1">${title}</h6>
-            <div class="d-flex gap-1">
-              <a href="/book/${id}" class="btn btn-sm btn-outline-dark">View</a>
-              <button class="btn btn-sm ${btnClass}" onclick="toggleWishlist('${id}', this)">
-                <i class="bi ${iconClass}"></i>
+            <div class="col-md-2 d-flex flex-column align-items-end pe-3 gap-2">
+              <button class="btn btn-sm btn-success w-100 add-to-cart-btn" 
+                      data-id="${it.productId?._id}">
+                <i class="bi bi-cart-plus"></i> Add to Cart
+              </button>
+              <button class="btn btn-sm btn-danger remove-btn w-100" data-product-id="${it.productId?._id}">
+                <i class="bi bi-trash"></i> Remove
               </button>
             </div>
           </div>
-        </div>
-      </div>`;
-  }).join('');
-}
+        </div>`
+      ).join('')
+      : '<p class="text-muted">Your wishlist is empty.</p>';
 
 
-async function addToCart(productId){
-  try {
-    const add = productId;
-    const res = await fetch(`/cart/${add}`,{
-      method:'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId,qty: 1 })
-    });
-    const data = await res.json();
-    if(data.success){
-      showMessage('Added to the cart')
-    }else{
-      showMessage('failed to add')
-    }
+    // Display Recommended items
+   const recContainer = document.getElementById('wishlist-recommendations');
+    recContainer.innerHTML = (recommendations && recommendations.length)
+      ? recommendations.map(r => `
+        <div class="col-md-3">
+          <div class="card h-100 shadow-sm">
+            <img src="${r.productImage?.[0] || '/images/placeholder.png'}"
+                 class="card-img-top" alt="${r.name}">
+            <div class="card-body">
+              <h6 class="card-title">${r.productName}</h6>
+              <p class="card-text fw-bold mb-1">₹${r.salePrice}</p>
+              <a href="/book/${r._id}" class="btn btn-outline-dark btn-sm w-100 mb-2">
+                View
+              </a>
+              <button class="btn btn-dark btn-sm w-100 add-to-cart-btn" 
+                      data-id="${r._id}">
+                <i class="bi bi-cart-plus"></i> Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>`
+      ).join('')
+      : '<p class="text-muted">No recommendations available.</p>';
+
   } catch (error) {
-     console.error(error);
-    showMessage('Something went wrong');
+    howPopupAlert('Something went wrong while loading wishlist.');
   }
 }
 
-
-
-
-
-async function toggleWishlist(productId, btnEl) {
-  const id = String(productId);
-  const inWL = wishlistSet.has(id);
-
-  if (btnEl) btnEl.disabled = true;
-
-  try {
-    let res;
-    if (inWL) {
-      res = await apiRemoveFromWishlist(id);
+document.addEventListener('click', async (e) => {
+  const removeBtn = e.target.closest('.remove-btn');
+  if (removeBtn) {
+    const id = removeBtn.dataset.productId;
+    // const productId = id
+    const res = await fetch('/wishlist/remove', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({productId:id})
+     }); 
+    const json = await res.json();
+    if (json.success) {
+      showPopupAlert('Removed from wishlist');
+      getwishlist();
     } else {
-      res = await apiAddToWishlist(id);
+      showPopupAlert(json.message || 'Failed to remove item');
     }
-    if (!res || !res.success) {
-      showMessage(res && res.message ? res.message : 'Action failed');
-      return;
+  }
+});
+
+
+document.addEventListener('click', async (e) => {
+  const cartBtn = e.target.closest('.add-to-cart-btn');
+  if (cartBtn) {
+    const productId = cartBtn.dataset.id;
+    const res = await fetch('/cart/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, quantity: 1 })
+    });
+    const json = await res.json();
+    if (json.success) {
+      showPopupAlert('Item added to cart!');
+      getwishlist();
+    } else {
+      showPopupAlert(json.message || 'Failed to add item to cart');
     }
-
-    if (inWL) wishlistSet.delete(id); else wishlistSet.add(id);
-
-   
-    refreshButtonsForProduct(id);
-
-    
-    if (typeof res.wishlistCount !== 'undefined') updateWishlistBadge(res.wishlistCount);
-    else updateWishlistBadge(wishlistSet.size);
-
-    showMessage(res.message || (inWL ? 'Removed from wishlist' : 'Added to wishlist'));
-  } catch (err) {
-    console.error(err);
-    showMessage('Error processing wishlist action');
-  } finally {
-    if (btnEl) btnEl.disabled = false;
   }
-}
-
-async function removeFromWishlistAndRemoveCard(productId, btnEl) {
-  const id = String(productId);
-  if (btnEl) btnEl.disabled = true;
-  try {
-    const res = await apiRemoveFromWishlist(id);
-    if (!res || !res.success) { showMessage(res && res.message ? res.message : 'Remove failed'); return; }
-    
-    document.querySelectorAll(`.wishlist-card[data-product-id="${id}"]`).forEach(c => c.remove());
-    wishlistSet.delete(id);
-    if (typeof res.wishlistCount !== 'undefined') updateWishlistBadge(res.wishlistCount);
-    else updateWishlistBadge(wishlistSet.size);
-    showMessage(res.message || 'Removed from wishlist');
-  } catch (err) {
-    console.error(err);
-    showMessage('Error removing item');
-  } finally {
-    if (btnEl) btnEl.disabled = false;
-  }
-}
+});
 
 
-function refreshButtonsForProduct(productId) {
-  const id = String(productId);
-  const inWL = wishlistSet.has(id);
-  // wishlist-card buttons
-  document.querySelectorAll(`.wishlist-card[data-product-id="${id}"]`).forEach(card => {
-    const btn = card.querySelector('button[onclick^="toggleWishlist"]');
-    if (btn) refreshBtnVisual(btn, inWL);
-  });
-  // recommendation buttons (match onclick containing id)
-  document.querySelectorAll(`#wishlist-recommendations button`).forEach(b => {
-    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${id}'`)) {
-      refreshBtnVisual(b, inWL);
-    }
-  });
-}
-function refreshBtnVisual(btn, inWL) {
-  if (!btn) return;
-  const icon = btn.querySelector('i');
-  if (inWL) {
-    btn.classList.remove('btn-outline-danger');
-    btn.classList.add('btn-danger');
-    if (icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill'); }
-    btn.innerHTML = '<i class="bi bi-heart-fill"></i> Remove';
-  } else {
-    btn.classList.remove('btn-danger');
-    btn.classList.add('btn-outline-danger');
-    if (icon) { icon.classList.remove('bi-heart-fill'); icon.classList.add('bi-heart'); }
-    btn.innerHTML = '<i class="bi bi-heart"></i> Add';
-  }
-}
 
 
 document.addEventListener('DOMContentLoaded', async () => {
 
-  const data = await apiGetWishlist();
-  if (!data || !data.success) {
-    document.getElementById('wishlist-items').innerHTML = '<div class="alert alert-danger">Unable to load wishlist.</div>';
-    return;
-  }
+ await getwishlist();
 
-  wishlistSet.clear();
-  data.items.forEach(it => {
-    const pid = it.productId && (it.productId._id || it.productId) ? String(it.productId._id || it.productId) : null;
-    if (pid) wishlistSet.add(pid);
-  });
+})
 
 
-  renderWishlistItems(data.items);
-  renderRecommendations(data.recommendations);
 
-  
-  updateWishlistBadge(wishlistSet.size);
-});
+
+
+
+
+
 </script>
-
-<%- include('../partials/user/footer.ejs') %>
