@@ -92,7 +92,7 @@
 
             <p class="mt-3"><%= book.description %></p>
             <!-- total quantity -->
-            <p  id="stock-info" class="mt-3 text-success">In Stock — <%= book.quantity %> left</p> 
+            <p  id="stock-info" data-stock="<%= book.quantity %>" class="mt-3 text-success">In Stock — <%= book.quantity %> left</p> 
 
 
             <!-- Action Buttons -->
@@ -117,10 +117,10 @@
 
             <!-- Buy Now -->
             <div class="mt-3">
-              <form action="/cart/<%= book._id %>" method="POST">
-  <input type="hidden" name="productId" value="<%= book._id %>">
-  <input type="hidden" name="qty" value="1">
-  <button type="submit" class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
+              <form action="/directCheckout/<%= book._id %>" method="GET">
+  <input type="hidden" name="productId" id="productId" value="<%= book._id %>">
+  <input type="hidden" name="qty" id="hiddenQty" value="1">
+  <button type="submit" id="buyNowBtn" class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
 </form>
             </div>
 
@@ -338,7 +338,7 @@ let qty= 1;
 const quantity = Number('<%= book.quantity %>') || 0;
 const status =   <%= book.stock %>;
 if(status==false){
-  showPopupAlert('product out of stock');
+  showPopupAlert('This book is out of stock. Please check back later.');
   return;
 }
 else if(quantity<qty){
@@ -360,7 +360,7 @@ else if(quantity<qty){
     if(data.success){
       showPopupAlert('added to the cart');
     }else{
-      showPopupAlert('Product out of stock');
+      showPopupAlert('This book is out of stock. Please check back later.');
     }
 
 
@@ -393,7 +393,16 @@ function showPopupAlert(message, title = 'Notification') {
 
   document.getElementById('addTowhislistbtn').addEventListener('click', async (e)=>{
       e.preventDefault();
-    const productId = e.currentTarget.dataset.productId;;
+    const productId = e.currentTarget.dataset.productId;
+
+
+const stockAvailable = <%= book.stock%>;
+if(stockAvailable==false){
+    showPopupAlert('This book is out of stock. Please check back later.')
+     updateWishlistBadge(data.wishlistCount)
+    return 
+  }
+
     try {
        const res = await fetch('/wishlist/add',{
       method:'POST',
@@ -419,6 +428,51 @@ function showPopupAlert(message, title = 'Notification') {
 
   })
 </script>
+
+
+<script>
+
+function showPopupAlert(message, title = 'Notification') {
+    document.getElementById('popupAlertTitle').innerText = title;
+    document.getElementById('popupAlertMessage').innerText = message;
+    const modalEl = document.getElementById('popupAlert');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    modal.show();
+  }
+
+  const stockAvailable = <%= book.stock%>;
+document.getElementById('buyNowBtn').addEventListener('click',(e)=>{
+  const quantity = document.getElementById('quantityInput').value;
+  const availableQuantity = document.getElementById('stock-info').dataset.stock;
+  
+  if(stockAvailable==false){
+    showPopupAlert('This book is out of stock. Please check back later.')
+    e.preventDefault();
+    return 
+  }
+if(availableQuantity<quantity){
+  showPopupAlert(`Only ${availableQuantity} quantity is left`);
+    e.preventDefault();
+    return 
+}
+  if(quantity>5){
+    showPopupAlert('Only Five products are allowed');
+    e.preventDefault();
+    return 
+  }
+const hiddenQty = document.getElementById('hiddenQty');
+hiddenQty.value = quantity;
+
+
+
+  
+
+
+})
+
+
+</script>
+
 
 
 <script>

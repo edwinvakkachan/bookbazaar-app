@@ -7,6 +7,7 @@ const orderController = require('../controllers/user/orderController')
 const homeController = require('../controllers/user/homeController')
 const shopController = require('../controllers/user/shopController')
 const wishlistCOntroller = require('../controllers/user/wishlistController')
+const directCheckoutController = require('../controllers/user/directCheckoutController');
 const passport = require('passport');
 const {userAuth,adminAuth} = require('../middlewares/auth')
 
@@ -109,6 +110,12 @@ router.post('/api/cart/:productId/quantity', userAuth, cartController.changeQuan
 router.get('/checkout',userAuth,checkOutController.getCheckoutPage);
 router.post('/checkout',userAuth,orderController.createShowConforamtion)
 router.post('/checkout/address/add', userAuth, checkOutController.checkoutAddress);
+
+//directCheckout
+
+router.get('/directCheckout/:productId',userAuth,directCheckoutController.showDirectCheckout);
+router.post('/directCheckout',userAuth,directCheckoutController.placeDirectOrder);
+router.get('/orders/:orderId/success', userAuth, directCheckoutController.showPaymentConfirmation);
 
 
 
