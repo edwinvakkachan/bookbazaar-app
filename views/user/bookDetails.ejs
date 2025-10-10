@@ -45,10 +45,21 @@
                     <div class="carousel-inner">
                       <% [book.coverImg, ...book.thumbnails].forEach((img, index) => { %>
                         <div class="carousel-item <%= index === 0 ? 'active' : '' %> text-center">
-                          <img src="<%= img %>" 
+                          <!-- <img src="<%= img %>" 
                                class="img-fluid w-100" 
                                style="max-height: 80vh; object-fit: contain;" 
-                               alt="Preview">
+                               alt="Preview"> -->
+
+                          <img src="<%= img %>" 
+     class="img-fluid w-100 modal-zoom-image" 
+     style="max-height: 80vh; object-fit: contain;" 
+     alt="Preview"
+     data-highres="<%= img %>">
+
+
+
+
+
                         </div>
                       <% }) %>
                     </div>
@@ -483,4 +494,329 @@ hiddenQty.value = quantity;
   });
 </script>
 
+<!-- imge zoom -->
+<style>
+ 
+  .modal-zoom-grid {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    height: 80vh; /* adjust to desired modal height */
+  }
+  .modal-zoom-image-wrap {
+    flex: 1 1 60%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    overflow:hidden;
+  }
+  .modal-zoom-image-wrap img.modal-zoom-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    cursor: crosshair;
+  }
+
+  .modal-zoom-result {
+    flex: 1 1 40%;
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: cover;
+    min-width: 450px; /* prevents collapsing on narrow screens */
+    height: 100%;
+  }
+
+ 
+  .zoom-lens {
+    position: absolute;
+    pointer-events: none;
+    border: 2px solid rgba(0,0,0,0.15);
+    background-color: rgba(255,255,255,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border-radius: 4px;
+  }
+
+ 
+  @media (max-width: 768px) {
+    .modal-zoom-result { display: none !important; }
+    .modal-zoom-grid { height: 70vh; }
+    .modal-zoom-image-wrap img.modal-zoom-image { cursor: grab; }
+  }
+</style>
+
+<script>
+(function () {
+ 
+  const ZOOM_LEVEL = 2.6; // 2.6x zoom in pane 
+  const LENS_SIZE = { w: 160, h: 160 }; // visual lens size 
+  const LENS_ENABLED = true; 
+
+  
+  function $(s, parent = document) { return parent.querySelector(s); }
+  function $all(s, parent = document) { return Array.from(parent.querySelectorAll(s)); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const imageModal = document.getElementById('imageModal'); 
+    if (!imageModal) return;
+
+    
+    
+    const modalBody = imageModal.querySelector('.modal-body') || imageModal;
+   
+    const grid = document.createElement('div');
+    grid.className = 'modal-zoom-grid';
+
+    
+    const left = document.createElement('div');
+    left.className = 'modal-zoom-image-wrap position-relative';
+
+   
+    const right = document.createElement('div');
+    right.className = 'modal-zoom-result';
+
+   
+    const lens = document.createElement('div');
+    lens.className = 'zoom-lens';
+    lens.style.width = LENS_SIZE.w + 'px';
+    lens.style.height = LENS_SIZE.h + 'px';
+    lens.style.display = 'none';
+    left.appendChild(lens);
+
+  
+    grid.appendChild(left);
+    grid.appendChild(right);
+
+    
+    const existingCarousel = modalBody.querySelector('.carousel');
+    const originalImage = modalBody.querySelector('img.modal-zoom-image');
+
+    if (existingCarousel) {
+      left.appendChild(existingCarousel);
+    } else if (originalImage) {
+      
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '100%';
+      wrapper.style.height = '100%';
+      wrapper.style.display = 'flex';
+      wrapper.style.alignItems = 'center';
+      wrapper.style.justifyContent = 'center';
+      wrapper.appendChild(originalImage);
+      left.appendChild(wrapper);
+    } else {
+      
+      console.warn('No modal image or carousel found for zoom pane.');
+      return;
+    }
+
+    
+    while (modalBody.firstChild) modalBody.removeChild(modalBody.firstChild);
+    modalBody.appendChild(grid);
+
+    
+    function getModalImages() {
+      return $all('img.modal-zoom-image', left);
+    }
+
+   
+    function setZoomImage(img) {
+      if (!img) return;
+      
+      const src = img.dataset.highres || img.src;
+     
+      const naturalW = img.naturalWidth || (img.width * (img.naturalWidth ? 1 : 1));
+      const naturalH = img.naturalHeight || (img.height * (img.naturalHeight ? 1 : 1));
+      
+      right.style.backgroundImage = `url('${src}')`;
+      
+      if (naturalW && naturalH) {
+        right.style.backgroundSize = (naturalW * ZOOM_LEVEL) + 'px ' + (naturalH * ZOOM_LEVEL) + 'px';
+      } else {
+       
+        right.style.backgroundSize = (img.width * ZOOM_LEVEL) + 'px ' + (img.height * ZOOM_LEVEL) + 'px';
+      }
+    }
+
+    
+    function onMoveOverImage(e, img) {
+      
+      const rect = img.getBoundingClientRect();
+      const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
+
+      let x = clientX - rect.left; 
+      let y = clientY - rect.top;
+
+      
+      x = Math.max(0, Math.min(rect.width, x));
+      y = Math.max(0, Math.min(rect.height, y));
+
+     
+      const px = x / rect.width;
+      const py = y / rect.height;
+
+     
+      const rightRect = right.getBoundingClientRect();
+      const bgWidth = parseFloat(getComputedStyle(right).backgroundSize.split(' ')[0]) || (rect.width * ZOOM_LEVEL);
+      const bgHeight = parseFloat(getComputedStyle(right).backgroundSize.split(' ')[1]) || (rect.height * ZOOM_LEVEL);
+
+      
+      const bgX = px * bgWidth;
+      const bgY = py * bgHeight;
+
+     
+      const posX = (rightRect.width / 2) - bgX;
+      const posY = (rightRect.height / 2) - bgY;
+
+     
+      right.style.backgroundPosition = `${posX}px ${posY}px`;
+
+     
+      if (LENS_ENABLED) {
+        lens.style.display = 'block';
+        
+        const lensLeft = (clientX - rect.left) - (LENS_SIZE.w / 2);
+        const lensTop = (clientY - rect.top) - (LENS_SIZE.h / 2);
+        lens.style.left = Math.max(0, Math.min(rect.width - LENS_SIZE.w, lensLeft)) + 'px';
+        lens.style.top = Math.max(0, Math.min(rect.height - LENS_SIZE.h, lensTop)) + 'px';
+      }
+    }
+
+   
+    function enableZoomFor(img) {
+      if (!img) return;
+     
+      setZoomImage(img);
+
+     
+      const moveHandler = (e) => onMoveOverImage(e, img);
+      const enterHandler = (e) => {
+       
+        right.style.opacity = 1;
+        if (img.complete) setZoomImage(img);
+      };
+      const leaveHandler = (e) => {
+        right.style.opacity = 1; 
+        if (LENS_ENABLED) lens.style.display = 'none';
+      };
+
+      
+      img.addEventListener('mousemove', moveHandler);
+      img.addEventListener('touchmove', moveHandler, { passive: true });
+      img.addEventListener('mouseenter', enterHandler);
+      img.addEventListener('mouseleave', leaveHandler);
+      img.addEventListener('touchstart', enterHandler, { passive: true });
+      img.addEventListener('touchend', leaveHandler, { passive: true });
+
+      
+      img.addEventListener('load', () => setZoomImage(img));
+
+      
+      img.__zoomCleanup = () => {
+        img.removeEventListener('mousemove', moveHandler);
+        img.removeEventListener('touchmove', moveHandler);
+        img.removeEventListener('mouseenter', enterHandler);
+        img.removeEventListener('mouseleave', leaveHandler);
+        img.removeEventListener('touchstart', enterHandler);
+        img.removeEventListener('touchend', leaveHandler);
+      };
+    }
+
+
+    function initAll() {
+    
+      const imgs = getModalImages();
+      imgs.forEach(img => {
+        if (img.__zoomCleanup) img.__zoomCleanup();
+      });
+
+    
+      getModalImages().forEach(img => enableZoomFor(img));
+    }
+
+   
+    const carousels = left.querySelectorAll('.carousel');
+    carousels.forEach(c => {
+      c.addEventListener('slid.bs.carousel', () => {
+       
+        if (LENS_ENABLED) lens.style.display = 'none';
+        initAll();
+      });
+    });
+
+   
+    imageModal.addEventListener('shown.bs.modal', () => {
+      initAll();
+      
+      const activeImg = left.querySelector('.carousel-item.active img.modal-zoom-image') || left.querySelector('img.modal-zoom-image');
+      if (activeImg) {
+        setZoomImage(activeImg);
+      }
+    });
+
+  
+    imageModal.addEventListener('hidden.bs.modal', () => {
+      const imgs = getModalImages();
+      imgs.forEach(img => {
+        if (img.__zoomCleanup) img.__zoomCleanup();
+      });
+      if (LENS_ENABLED) lens.style.display = 'none';
+      right.style.backgroundImage = '';
+    });
+
+    
+    initAll();
+  });
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const imageModal = document.getElementById('imageModal');
+  const carouselEl = document.getElementById('imageCarousel');
+  if (!imageModal || !carouselEl) return;
+
+  const bsModal = bootstrap.Modal.getOrCreateInstance(imageModal);
+  const bsCarousel = bootstrap.Carousel.getOrCreateInstance(carouselEl);
+
+  
+  const thumbs = document.querySelectorAll('.thumb-image');
+  thumbs.forEach((thumb, idx) => {
+    thumb.style.cursor = 'pointer';
+    thumb.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      const targetIndex = idx + 1;
+      
+      bsModal.show();
+      const handler = () => {
+        bsCarousel.to(targetIndex);
+        imageModal.removeEventListener('shown.bs.modal', handler);
+      };
+      imageModal.addEventListener('shown.bs.modal', handler);
+    });
+  });
+
+  
+  const mainImage = document.getElementById('mainImage');
+  mainImage?.addEventListener('click', (e) => {
+    bsModal.show();
+    const handler = () => {
+      bsCarousel.to(0);
+      imageModal.removeEventListener('shown.bs.modal', handler);
+    };
+    imageModal.addEventListener('shown.bs.modal', handler);
+  });
+});
+</script>
+
+
+
+
 <%- include("../partials/user/footer.ejs") %>
+
+
