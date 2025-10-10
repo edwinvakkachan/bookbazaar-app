@@ -223,7 +223,7 @@ const cancelOrder = async (req, res) => {
     const { itemIndex, reason } = req.body || {};
     const userId = req.session.user._id;
 
-    
+    console.log('the reason is',reason);
 
     const order = await Order.findOne({ orderId, user: userId });
     // console.log('user order details is', order);
