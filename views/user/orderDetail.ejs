@@ -81,6 +81,7 @@
               <p class="fw-bold">Total: ₹<%= order.total %></p>
             </div>
             <% if (!order.isCancelled) { %>
+              <!-- note: changed to open modal instead of simple confirm -->
               <button class="btn btn-danger btn-sm btn-cancel-order" data-order="<%= order.orderId %>">
                 Cancel Entire Order
               </button>
@@ -103,10 +104,31 @@
       <div class="modal-body">
         <input type="hidden" id="cancelItemOrderId" name="orderId">
         <input type="hidden" id="cancelItemIndex" name="itemIndex">
+
+        <!-- Predefined reasons -->
         <div class="mb-3">
-          <label class="form-label">Reason (optional)</label>
-          <textarea name="reason" class="form-control" rows="3"></textarea>
+          <label class="form-label">Reason</label>
+          <div id="cancelItemReasons">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="reasonPresetItem" id="item_reason_1" value="Changed my mind" checked>
+              <label class="form-check-label" for="item_reason_1">Changed my mind</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="reasonPresetItem" id="item_reason_2" value="Will not arrive on time">
+              <label class="form-check-label" for="item_reason_2">Will not arrive on time</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="reasonPresetItem" id="item_reason_3" value="Found cheaper elsewhere">
+              <label class="form-check-label" for="item_reason_3">Found cheaper elsewhere</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="reasonPresetItem" id="item_reason_other" value="other">
+              <label class="form-check-label" for="item_reason_other">Other</label>
+            </div>
+            <textarea id="cancelItemOtherText" class="form-control mt-2" rows="3" placeholder="Add your reason" style="display:none"></textarea>
+          </div>
         </div>
+
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
@@ -116,7 +138,51 @@
   </div>
 </div>
 
-<!-- Return Item Modal -->
+<!-- Cancel Entire Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="cancelOrderForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cancel Entire Order</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cancelOrderOrderId" name="orderId">
+
+        <!-- Predefined reasons -->
+        <div class="mb-3">
+          <label class="form-label">Reason</label>
+          <div id="cancelOrderReasons">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="reasonPresetOrder" id="order_reason_1" value="Ordered by mistake" checked>
+              <label class="form-check-label" for="order_reason_1">Ordered by mistake</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="reasonPresetOrder" id="order_reason_2" value="Delivery time too long">
+              <label class="form-check-label" for="order_reason_2">Delivery time too long</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="reasonPresetOrder" id="order_reason_3" value="Need to change address">
+              <label class="form-check-label" for="order_reason_3">Need to change address</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="reasonPresetOrder" id="order_reason_other" value="other">
+              <label class="form-check-label" for="order_reason_other">Other</label>
+            </div>
+            <textarea id="cancelOrderOtherText" class="form-control mt-2" rows="3" placeholder="Add your reason" style="display:none"></textarea>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-danger btn-sm">Confirm Cancel Order</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Return Item Modal (unchanged) -->
 <div class="modal fade" id="returnItemModal" tabindex="-1">
   <div class="modal-dialog">
     <form id="returnItemForm" class="modal-content">
@@ -143,16 +209,35 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const cancelItemModal = new bootstrap.Modal(document.getElementById('cancelItemModal'));
+  const cancelOrderModal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
   const returnItemModal = new bootstrap.Modal(document.getElementById('returnItemModal'));
 
+  
   document.querySelectorAll('.btn-cancel-item').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.getElementById('cancelItemOrderId').value = btn.dataset.order;
       document.getElementById('cancelItemIndex').value = btn.dataset.index;
+      
+      document.querySelector('input[name="reasonPresetItem"][value="Changed my mind"]').checked = true;
+      document.getElementById('cancelItemOtherText').style.display = 'none';
+      document.getElementById('cancelItemOtherText').value = '';
       cancelItemModal.show();
     });
   });
 
+  
+  document.querySelectorAll('.btn-cancel-order').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.getElementById('cancelOrderOrderId').value = btn.dataset.order;
+      
+      document.querySelector('input[name="reasonPresetOrder"][value="Ordered by mistake"]').checked = true;
+      document.getElementById('cancelOrderOtherText').style.display = 'none';
+      document.getElementById('cancelOrderOtherText').value = '';
+      cancelOrderModal.show();
+    });
+  });
+
+  
   document.querySelectorAll('.btn-return-item').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.getElementById('returnItemOrderId').value = btn.dataset.order;
@@ -161,20 +246,75 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  
+  document.querySelectorAll('input[name="reasonPresetItem"]').forEach(r => {
+    r.addEventListener('change', () => {
+      if (document.getElementById('item_reason_other').checked) {
+        document.getElementById('cancelItemOtherText').style.display = '';
+      } else {
+        document.getElementById('cancelItemOtherText').style.display = 'none';
+      }
+    });
+  });
+
+ 
+  document.querySelectorAll('input[name="reasonPresetOrder"]').forEach(r => {
+    r.addEventListener('change', () => {
+      if (document.getElementById('order_reason_other').checked) {
+        document.getElementById('cancelOrderOtherText').style.display = '';
+      } else {
+        document.getElementById('cancelOrderOtherText').style.display = 'none';
+      }
+    });
+  });
+
+
   document.getElementById('cancelItemForm').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const orderId = ev.target.orderId.value;
     const itemIndex = ev.target.itemIndex.value;
-    const reason = ev.target.reason.value;
-    const res = await fetch(`/orders/${orderId}/cancel`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ itemIndex, reason })
-    });
-    const data = await res.json();
-    if(data.success) location.reload(); else alert(data.message);
+    
+    const preset = document.querySelector('input[name="reasonPresetItem"]:checked')?.value;
+    const reason = (preset === 'other') ? document.getElementById('cancelItemOtherText').value.trim() : preset;
+    try {
+      const res = await fetch(`/orders/${orderId}/cancel`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ itemIndex, reason })
+      });
+      
+      let data;
+      try { data = await res.json(); } catch(e) { window.location.reload(); return; }
+      if(data.success) location.reload(); else alert(data.message || 'Cancel failed');
+    } catch (err) {
+      console.error(err);
+      alert('Network error');
+    }
   });
 
+ 
+  document.getElementById('cancelOrderForm').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const orderId = ev.target.orderId.value;
+    const preset = document.querySelector('input[name="reasonPresetOrder"]:checked')?.value;
+    const reason = (preset === 'other') ? document.getElementById('cancelOrderOtherText').value.trim() : preset;
+    
+    try {
+      const res = await fetch(`/orders/${orderId}/cancel`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ itemIndex: null, reason })
+      });
+      let data;
+      try { data = await res.json(); } catch(e) { window.location.reload(); return; }
+      if(data.success) location.reload(); else alert(data.message || 'Cancel failed');
+    } catch (err) {
+      console.error(err);
+      alert('Network error');
+    }
+  });
+
+ 
   document.getElementById('returnItemForm').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const orderId = ev.target.orderId.value;
@@ -190,14 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(data.success) location.reload(); else alert(data.message);
   });
 
-  document.querySelector('.btn-cancel-order')?.addEventListener('click', async (ev) => {
-    if(!confirm('Cancel the entire order?')) return;
-    const orderId = ev.target.dataset.order;
-    const res = await fetch(`/orders/${orderId}/cancel`, { method:'POST' });
-    const data = await res.json();
-    if(data.success) location.reload(); else alert(data.message);
-  });
 });
 </script>
 
-<%- include('../partials/user/footer.ejs') %>  
+<%- include('../partials/user/footer.ejs') %>
