@@ -108,8 +108,8 @@
                     </div>
 
                     <div class="mt-3">
-  <h5 style="margin:0;"><%= order.items[0] ? order.items[0].title : 'Order items' %></h5>
-  <div class="text-muted">Price : <%= order.items[0] ? order.items[0].priceAtAdd : '' %></div>
+  <!-- <h5 style="margin:0;"><%= order.items[0] ? order.items[0].title : 'Order items' %></h5>
+  <div class="text-muted">Price : <%= order.items[0] ? order.items[0].priceAtAdd : '' %></div> -->
 
   <% if (order.status && order.status === 'cancelled') { %>
     <div class="text-danger fw-semibold">Cancelled</div>

@@ -80,12 +80,12 @@
               <p class="mb-0">Shipping: ₹<%= order.shipping %></p>
               <p class="fw-bold">Total: ₹<%= order.total %></p>
             </div>
-            <% if (!order.isCancelled) { %>
-              <!-- note: changed to open modal instead of simple confirm -->
-              <button class="btn btn-danger btn-sm btn-cancel-order" data-order="<%= order.orderId %>">
-                Cancel Entire Order
-              </button>
-            <% } %>
+            <% const allItemsCancelled = Array.isArray(order.items) && order.items.length > 0 && order.items.every(i => i.status === 'cancelled'); %>
+<% if (!(order.isCancelled || order.status === 'cancelled'|| order.status === 'returned' || allItemsCancelled)) { %>
+  <button class="btn btn-danger btn-sm btn-cancel-order" data-order="<%= order.orderId %>">
+    Cancel Entire Order
+  </button>
+<% } %>
           </div>
         </div>
       </div>
