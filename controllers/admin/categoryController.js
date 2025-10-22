@@ -9,13 +9,22 @@ const categoryInfo = async (req,res)=>{
          
         const limit = 4;
         const skip = (page-1)*limit;
-        const categoryData = await Category.find({})
+        const search = (req.query.search || '').trim();
+        const filter = {};
+    if (search) {
+      filter.name = { $regex: search, $options: 'i' }
+    }
+    const total = await Category.countDocuments(filter)
+    const totalPages = Math.ceil(total / limit) || 1;
+
+
+        const categoryData = await Category.find(filter)
         .sort({createdAt:-1}) //change here for sorting 
         .skip(skip)
         .limit(limit);
 
-        const totalCategories = await Category.countDocuments();
-        const totalPages = Math.ceil(totalCategories/limit);
+        // const totalCategories = await Category.countDocuments();
+        // const totalPages = Math.ceil(totalCategories/limit);
 
 
         const adminData = req.session.admin;
@@ -25,11 +34,11 @@ const categoryInfo = async (req,res)=>{
         res.render('category',{
             cat:categoryData,
             currentPage:page,
-            totalPages:totalPages,
-            totalCategories:totalCategories,
+            totalPages,
+            totalCategories:total,
             admin:adminEmail,
             activePage:'category',
-            search:'',
+            search,
             category:categoryData,
         });
     } catch (error) {
