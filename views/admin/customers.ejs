@@ -52,6 +52,11 @@
 
 <script>
 
+  let pagination; 
+let searchInput;
+let searchBtn;
+let currentPage = 1;
+
 async function loadCustomers(page = 1){
   try {
     const res = await fetch(`/admin/api/customers?page=${page}`);
@@ -98,7 +103,8 @@ data.users.forEach(user => {
       li.innerHTML = `<a href="#" class="page-link">${i}</a>`;
       li.addEventListener('click', e => {
         e.preventDefault();
-        loadCustomers(i);
+        currentPage = i;
+        loadCustomers(currentPage);
       });
       pagination.appendChild(li);
     }
@@ -118,10 +124,9 @@ data.users.forEach(user => {
 
 
 document.addEventListener('DOMContentLoaded',async ()=>{
-  const pagination = document.getElementById('pagination');
-  const searchInput = document.getElementById('searchInput');
-  const searchBtn = document.getElementById('searchBtn');
-  let currentPage = 1;
+   pagination = document.getElementById('pagination');
+   searchInput = document.getElementById('searchInput');
+   searchBtn = document.getElementById('searchBtn');
   let currentSearch = '';
 
 
@@ -164,7 +169,7 @@ if(!data.success){
     }
   }
   
- await loadCustomers();
+ await loadCustomers(currentPage);
  })
 
 })
