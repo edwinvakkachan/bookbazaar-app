@@ -16,7 +16,7 @@ router.post('/login',adminController.login);
 router.get('/dashboard',adminAuth,adminController.loadDashboard);
 router.post('/logout',adminController.logout);
 
-
+// customers
 router.get('/customers',adminAuth,customerController.getCustomerPage)
 router.get('/api/customers',adminAuth,customerController.getCustomersApi)
 router.patch('/blockUser', adminAuth, customerController.blockUser);
@@ -25,10 +25,10 @@ router.patch('/unblockUser',adminAuth, customerController.unblockUser);
 //categoryManagement
 router.get('/category',adminAuth,categoryController.categoryInfo)
 router.post('/addCategory',adminAuth,categoryController.addCategory)
-router.get('/listCategory',adminAuth,categoryController.getListCategory)
-router.get('/unlistCategory',adminAuth,categoryController.getUnlistCategory)
+router.patch('/listCategory',adminAuth,categoryController.getListCategory)
+router.patch('/unlistCategory',adminAuth,categoryController.getUnlistCategory)
 router.get('/geteditCategory',adminAuth,categoryController.geteditCategory)
-router.post('/editCategory/:id',adminAuth,categoryController.editCategory)
+router.post('/editCategory',adminAuth,categoryController.editCategory)
 
 //brandMangement
 router.get('/brands',adminAuth,brandController.getBrandPage);

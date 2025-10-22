@@ -81,14 +81,38 @@
                         <% } %>
                       </td>
                       <td class="text-center">
-                        <% if (category.isListed) { %>
-                          <a href="/admin/listCategory?id=<%= category._id %>" class="btn btn-outline-danger btn-sm">Unlist</a>
-                        <% } else { %>
-                          <a href="/admin/unlistCategory?id=<%= category._id %>" class="btn btn-outline-success btn-sm">List</a>
-                        <% } %>
+                      
+<% if (category.isListed) { %>
+  <button 
+    class="btn btn-outline-danger btn-sm list-toggle-btn" 
+    data-id="<%= category._id %>" 
+    data-action="unlist">
+    Unlist
+  </button>
+<% } else { %>
+  <button 
+    class="btn btn-outline-success btn-sm list-toggle-btn" 
+    data-id="<%= category._id %>" 
+    data-action="list">
+    List
+  </button>
+<% } %>
+
+
+
+
                       </td>
                       <td class="text-center">
+
+
                         <a href="/admin/geteditCategory?id=<%= category._id %>" class="btn btn-outline-primary btn-sm">Edit</a>
+                         <!-- <button class="btn btn-outline-primary btn-sm" 
+                         data-id="<%= category._id %>"
+                         data-action="edit">
+                            Edit
+                         </button> -->
+
+
                       </td>
                     </tr>
                   <% }) %>
@@ -123,6 +147,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<!-- add category and validation -->
 
   <script>
     async function handleFormSubmit(event) {
@@ -190,5 +216,90 @@
       });
     }
   </script>
+
+
+
+ <!-- list and unlist category -->
+
+<script>
+document.addEventListener('click', async function (e) {
+  const btn = e.target.closest('.list-toggle-btn');
+  
+
+  const id = btn.dataset.id;
+  const userId = btn.dataset.id;
+  const action = btn.dataset.action; 
+
+  
+  const confirmed = await showConfirmModal(
+    `Are you sure you want to ${action} this category?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+
+  if(action =='unlist'){
+    const res = await fetch('/admin/unlistCategory',{
+     method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    body:JSON.stringify({ userId}),
+  })
+
+const data = await res.json();
+if(!data.success){
+  showPopupAlert(data.message);
+}
+
+  }else {
+
+    const res = await fetch('/admin/listCategory',{
+     method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    body:JSON.stringify({ userId}),
+  })
+
+const data = await res.json();
+if(!data.success){
+  showPopupAlert(data.message);
+}
+
+  }
+
+
+  location.reload();
+
+
+  } catch (err) {
+    console.error(err);
+    showPopupAlert('Network error or server unavailable.');
+  }
+});
+</script>
+
+
+<!-- edit category -->
+
+<!-- <script>
+document.addEventListener('click',async (e)=>{
+   const btn = e.target.closest('[data-action]');
+   const userId = btn.dataset.id
+   const res = await fetch('/admin/editCategory',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({userId})
+   })
+   const data = await res.json();
+   if(!data.success){
+    showPopupAlert(data.message);
+   }
+})
+
+</script> -->
+
 
   <%- include('../partials/admin/footer') %>

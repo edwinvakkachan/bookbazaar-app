@@ -68,13 +68,17 @@ const addCategory =  async (req,res)=>{
 
 const getListCategory = async (req,res)=>{
     try {
-        let id = req.query.id;
-        await Category.updateOne({_id:id},{$set:{isListed:false}});
+        let {userId} = req.body;
+        
+        await Category.findByIdAndUpdate(userId,{isListed:true})
 
   broadcast('reload', { reason: 'categoryListed' }); //
 
-        res.redirect('/admin/category')
+        res.json({success:true})
     } catch (error) {
+        res.json({success:false,
+            message:'category failed to list'
+        })
         console.error('category update fails to set false error',error)
         
     }
@@ -82,13 +86,14 @@ const getListCategory = async (req,res)=>{
 
 const getUnlistCategory = async (req,res)=>{
     try {
-        let id = req.query.id;
-        await Category.updateOne({_id:id},{$set:{isListed:true}});
-
+        let {userId} = req.body
+        await Category.findByIdAndUpdate(userId,{isListed:false})
          broadcast('reload', { reason: 'categoryUnlisted' }); //
-
-        res.redirect('/admin/category')
+        res.json({success:true});
     } catch (error) {
+        res.json({success:false,
+            message:'category failed to Unlist'
+        })
          console.error('category update fails to set true error',error)
     }
 }
@@ -112,33 +117,30 @@ const geteditCategory = async (req,res)=>{
     }
 }
 
+
+
 const editCategory = async (req,res)=>{
     try {
-        const id = req.params.id;
-        const {categoryName,description} = req.body;
-        const existingCategory = await Category.findOne({name:categoryName})
+        const {name,description,categoryId} = req.body;
+        console.log(name,description,categoryId)
+        const existingCategory = await Category.findOne({name:name})
         if(existingCategory){
-            return res.status(400).json({
-               error:'category already exists try again'})
+            return res.json({success:false,message:'category already exists'})
         }
-        const updateCategory = await Category.findByIdAndUpdate(id,{
-            name:categoryName,
-            description:description,
-        },{new:true})
-
-        if(updateCategory){
-            res.redirect('/admin/category')
-        }else{
-            res.status(404).json({error:'category not found'})
-
+        const updateCategory = await Category.findByIdAndUpdate(categoryId,{
+            name,
+            description
+        });
+        res.json({success:true})
             
-        }
+        
     } catch (error) {
         console.error('edit category error',error);
-       res.status(500).json({error:'edit category error'});
+       res.json({success:false,message:'category failed to update'})
        
     }
 }
+
 
 
 const test = async (req,res)=>{
