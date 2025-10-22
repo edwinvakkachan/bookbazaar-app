@@ -356,4 +356,3 @@ module.exports = {
     updateProduct,
 }
 
-

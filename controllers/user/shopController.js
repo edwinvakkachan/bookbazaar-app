@@ -155,7 +155,6 @@ const apiGetProducts = async (req, res) => {
     
     const { query: q, sortQuery, page, limit, skip } = buildQueryFromReq(req.query);
 
-    
     if (!req.query.category) {
       const allowedCategories = await Category.find({ isListed: true }).select("_id");
       q.category = { $in: allowedCategories.map(c => c._id) };

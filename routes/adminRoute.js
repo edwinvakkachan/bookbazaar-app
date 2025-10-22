@@ -16,10 +16,11 @@ router.post('/login',adminController.login);
 router.get('/dashboard',adminAuth,adminController.loadDashboard);
 router.post('/logout',adminController.logout);
 
-//userManagement
-router.get('/customers',adminAuth,customerController.customerInfo);
-router.post('/blockUser/:id', customerController.blockUser);
-router.post('/unblockUser/:id', customerController.unblockUser);
+
+router.get('/customers',adminAuth,customerController.getCustomerPage)
+router.get('/api/customers',adminAuth,customerController.getCustomersApi)
+router.patch('/blockUser', adminAuth, customerController.blockUser);
+router.patch('/unblockUser',adminAuth, customerController.unblockUser);
 
 //categoryManagement
 router.get('/category',adminAuth,categoryController.categoryInfo)
