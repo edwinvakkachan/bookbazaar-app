@@ -15,14 +15,14 @@
       <div class="row">
         <!-- Brand Form -->
         <div class="col-md-3">
-          <form method="post" action="/admin/addBrand" enctype="multipart/form-data">
+          <form method="post" id="brandForm" action="/admin/addBrand" enctype="multipart/form-data">
             
             <div class="mb-4">
               <label for="brand_name" class="form-label">Brand Name</label>
               <input
                 type="text"
                 id="brand_name"
-                name="name"
+                name="brandName"
                 placeholder="Type here"
                 class="form-control"
               />
@@ -59,7 +59,7 @@
                 <tr>
                   <th>Brand</th>
                   <th>Logo</th>
-                  <!-- <th>Status</th> -->
+                  <th>Status</th>
                   <th>Block/Unblock/Delete</th>
                 </tr>
               </thead>
@@ -72,22 +72,19 @@
                       <img src="/uploads/reimage/<%=brand.brandImage[0]%>" alt="<%=brand.brandName%>" class="img-fluid" />
                     </div>
                   </td>
-                  <!-- <td class="text-start">
+                  <td class="text-start">
                     <%if(brand.isBlocked){%>
                     <span class="badge bg-danger rounded-pill px-3">Blocked</span>
                     <%}else {%>
                     <span class="badge bg-success rounded-pill px-3">Active</span>
                     <%}%>
-                  </td> -->
+                  </td>
                   <td class="text-start">
                     <% if (!brand.isBlocked) { %>
     <button
       class="btn btn-danger btn-sm me-2 action-btn"
       data-id="<%= brand._id %>"
       data-action="block"
-      data-message="Are you sure you want to block this brand?"
-      data-bs-toggle="modal"
-      data-bs-target="#confirmModal"
     >
       Block
     </button>
@@ -96,15 +93,23 @@
       class="btn btn-success btn-sm me-2 action-btn"
       data-id="<%= brand._id %>"
       data-action="unblock"
-      data-message="Are you sure you want to unblock this brand?"
-      data-bs-toggle="modal"
-      data-bs-target="#confirmModal"
     >
       Unblock
     </button>
   <% } %>
-                    <a href="/admin/deleteBrand?id=<%=brand._id%>" class="btn btn-outline-danger btn-sm">Delete</a>
-                  
+                    
+              
+                    <button
+      class="btn btn-outline-danger btn-sm action-btn"
+      data-id="<%= brand._id %>"
+      data-action="delete"
+    >
+      Delete
+    </button>
+
+
+
+
                   </td>
 
                 </tr>
@@ -142,42 +147,6 @@
 
 </section>
 
-<!-- alert box -->
-<div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="popupAlertMessage"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- Reusable Confirm Modal -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Confirm</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="confirmMessage">Are you sure?</div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="confirmBtnAjax" class="btn btn-danger">Yes, Proceed</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
 
 <script>
 
@@ -187,91 +156,106 @@ document.getElementById("brand_image").addEventListener("change", function (even
   if (file) {
     preview.src = URL.createObjectURL(file);
     preview.classList.remove("d-none");
+  } else {
+    preview.classList.add("d-none");
   }
 });
 
-
-</script>
-
-<%- include('../partials/admin/footer') %>
-
-<script>
-function showPopupAlert(message, title = 'Notification') {
-    document.getElementById('popupAlertTitle').innerText = title;
-    document.getElementById('popupAlertMessage').innerText = message;
-    const modalEl = document.getElementById('popupAlert');
-    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
-    modal.show();
+function validate(brandName) {
+  let isValid = true;
+  if (!brandName || brandName.trim() === '') {
+    showPopupAlert('Brand name should not be empty');
+    isValid = false;
   }
+  return isValid;
+}
 
- const confirmModal = document.getElementById('confirmModal');
-  const confirmMessage = document.getElementById('confirmMessage');
-  const confirmBtnAjax = document.getElementById('confirmBtnAjax');
+document.getElementById('brandForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-  let currentAction = null;   
-  let currentId = null;       
-  let triggeringBtn = null; 
+  const form = e.target;
+  const brandName = form.brandName.value; 
 
+  if (!validate(brandName)) return;
 
-  confirmModal.addEventListener('show.bs.modal', (event) => {
-    const button = event.relatedTarget;
-     triggeringBtn = button;
-     currentAction = button.dataset.action; 
-     currentId = button.dataset.id;
-    if (currentAction === 'unblock') {
-      confirmBtnAjax.classList.remove('btn-danger');
-      confirmBtnAjax.classList.add('btn-success');
-      confirmBtnAjax.textContent = 'Yes, Unblock';
-    } else if (currentAction === 'delete') {
-      confirmBtnAjax.classList.remove('btn-success');
-      confirmBtnAjax.classList.add('btn-danger');
-      confirmBtnAjax.textContent = 'Yes, Delete';
-    } else {
+  const formData = new FormData(form); // captures file input + text inputs
 
-      confirmBtnAjax.classList.remove('btn-success');
-      confirmBtnAjax.classList.add('btn-danger');
-      confirmBtnAjax.textContent = 'Yes, Block';
+  try {
+    const res = await fetch('/admin/addBrand', {
+      method: 'POST',
+      body: formData, 
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      showPopupAlert(data.message);
+      return;
     }
-  })
 
-  confirmBtnAjax.addEventListener('click', async ()=>{
-try {
-  const id=currentId
-  const res = await fetch(`/admin/${currentAction}Brand`,{
-  method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({id})
-})
-
-const json = await res.json();
-if(json.success){
-  if (json.isBlocked == true) {
-            triggeringBtn.textContent = 'Unblock';
-            triggeringBtn.classList.remove('btn-danger');
-            triggeringBtn.classList.add('btn-success');
-            triggeringBtn.dataset.action = 'unblock';
-            triggeringBtn.dataset.message = 'Are you sure you want to unblock this brand?';
-          } else {
-            triggeringBtn.textContent = 'Block';
-            triggeringBtn.classList.remove('btn-success');
-            triggeringBtn.classList.add('btn-danger');
-            triggeringBtn.dataset.action = 'block';
-            triggeringBtn.dataset.message = 'Are you sure you want to block this brand?';
-          }
-}else{
-  showPopupAlert(json.message)
-  return
-}
-const modalInstance = bootstrap.Modal.getInstance(confirmModal);
-      modalInstance.hide();
-      localStorage.setItem('forceReload', Date.now());// user side reload
-} catch (error) {
-  showPopupAlert(error)
-  return
-}
-
-  })
-
-
-
+    location.reload();
+    showPopupAlert(data.message);
+   
+  } catch (err) {
+    console.error(err);
+    showPopupAlert('Network error');
+  }
+});
 </script>
+
+<!-- block and ublock and delete -->
+ <script>
+  document.addEventListener('click',async (e)=>{
+    const btn = e.target.closest('.action-btn');
+    const action = btn.dataset.action;
+    const brandId = btn.dataset.id;
+    const result = await showConfirmModal(`Are you sure to ${action} brand`);
+    if(!result){
+      return;
+    }
+    if(action=='block'){
+      const res = await fetch('/admin/blockBrand',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({brandId})
+      })
+
+      const data = await res.json();
+      if(!data.success){
+        return showPopupAlert(data.message);
+      }
+     location.reload() 
+    }
+
+    // unblocking brand 
+    else if(action=='unblock'){
+      const res = await fetch('/admin/unblockBrand',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({brandId})
+      })
+      const data = await res.json();
+      if(!data.success){
+        showPopupAlert(data.message);
+        return
+      }
+      location.reload();
+    }
+    // deleting the brand
+
+    else if(action=='delete'){
+      const res = await fetch('/admin/deleteBrand',{
+        method:'DELETE',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({brandId})
+      })
+      const data = await res.json();
+      if(!data.success){
+        showPopupAlert(data.message);
+        return;
+      }
+      location.reload();
+    }
+
+  })
+ </script>
+<%- include('../partials/admin/footer') %>

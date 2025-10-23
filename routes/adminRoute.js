@@ -35,7 +35,7 @@ router.get('/brands',adminAuth,brandController.getBrandPage);
 router.post('/addBrand',adminAuth,upload.single("image"),brandController.addBrand);
 router.post('/blockBrand',adminAuth,brandController.blockBrand);
 router.post('/unblockBrand',adminAuth,brandController.unblockBrand)
-router.get('/deleteBrand',adminAuth,brandController.deleteBrand)
+router.delete('/deleteBrand',adminAuth,brandController.deleteBrand)
 
 //productMangement
 router.get('/addProducts',adminAuth,productController.getproductAddPage)
