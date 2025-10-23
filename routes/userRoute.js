@@ -96,7 +96,7 @@ router.get('/wishlist/page', userAuth,wishlistCOntroller.getWishlistPage);
 
 
 //cartManagement
-router.post('/cart/:add', userAuth, cartController.addToCart);               
+router.post('/cart/add', userAuth, cartController.addToCart);               
 router.get('/cart', userAuth, cartController.listCart);                    
 router.post('/api/cart/delete/:productId', userAuth, cartController.removeFromCart);
 router.post('/api/cart/:productId/quantity', userAuth, cartController.changeQuantity); 

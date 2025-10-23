@@ -117,7 +117,11 @@
 
               <!-- Add to Cart (JS-driven) -->
               <input type="hidden" name="quantity" value="1" id="cartQuantityInput">
-              <button type="button" class="btn btn-dark" id="addToCartBtn" data-product-id="<%= book._id %>">Add to Cart</button>
+              <button type="button" class="btn btn-dark" id="addToCartBtn"
+               data-product-id="<%= book._id %>"
+               data-quantity="<%= book.quantity %>"
+               data-status="<%= book.stock %>"
+               >Add to Cart</button>
 
               <!-- Wishlist -->
               <button type="button" id ='addTowhislistbtn' class="btn btn-dark add-to-wishlist" 
@@ -311,69 +315,45 @@
   </div>
 </div>
 
-<!-- alert box -->
-<div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="popupAlertMessage"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-
+<!-- add to Cart button  -->
 <script>
-function showPopupAlert(message, title = 'Notification') {
-    document.getElementById('popupAlertTitle').innerText = title;
-    document.getElementById('popupAlertMessage').innerText = message;
-    const modalEl = document.getElementById('popupAlert');
-    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
-    modal.show();
-  }
-
- 
-
   document.getElementById('addToCartBtn').addEventListener('click',async (e)=>{
     e.preventDefault();
    try {
-     const productId = e.currentTarget.dataset.productId;
-    const add = productId;
+     const productId = e.target.dataset.productId;
 let qty= 1;
  qty = Number(document.getElementById('quantityInput').value)
-const quantity = Number('<%= book.quantity %>') || 0;
-const status =   <%= book.stock %>;
+const quantity = Number(e.target.dataset.quantity) || 0;
+const status =   e.target.dataset.status;
 if(status==false){
   showPopupAlert('This book is out of stock. Please check back later.');
-  return;
-}
-else if(quantity<qty){
-  showPopupAlert(`only ${quantity} product left`)
   return;
 }else if(qty>5){
   showPopupAlert(`only max 5 product is allowed`);
   return;
 }
+else if(quantity<qty){
+  showPopupAlert(`only ${quantity} product left`)
+  return;
+}
 
-    const res =  await fetch(`/cart/${add}`,{
+    const res =  await fetch(`/cart/add`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({productId,qty})
     })
 
     const data = await res.json()
-    updateCartBadge(data.cartCount);
-    if(data.success){
-      showPopupAlert('added to the cart');
-    }else{
-      showPopupAlert('This book is out of stock. Please check back later.');
-    }
+    
+    
+if(!data.success){
+  showPopupAlert(data.message)
+  return
+}
 
+showPopupAlert(data.message)
+updateCartBadge(data.cartCount);
 
    } catch (error) {
     console.log(error);
@@ -392,14 +372,6 @@ badge.innerText = count;
 badge.style.display = Number(count) > 0 ? '' : 'none';
 }
 
-
-function showPopupAlert(message, title = 'Notification') {
-    document.getElementById('popupAlertTitle').innerText = title;
-    document.getElementById('popupAlertMessage').innerText = message;
-    const modalEl = document.getElementById('popupAlert');
-    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
-    modal.show();
-  }
 
 
   document.getElementById('addTowhislistbtn').addEventListener('click', async (e)=>{
@@ -443,13 +415,7 @@ if(stockAvailable==false){
 
 <script>
 
-function showPopupAlert(message, title = 'Notification') {
-    document.getElementById('popupAlertTitle').innerText = title;
-    document.getElementById('popupAlertMessage').innerText = message;
-    const modalEl = document.getElementById('popupAlert');
-    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
-    modal.show();
-  }
+
 
   const stockAvailable = <%= book.stock%>;
 document.getElementById('buyNowBtn').addEventListener('click',(e)=>{

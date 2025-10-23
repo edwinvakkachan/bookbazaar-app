@@ -110,19 +110,28 @@ const addToCart = async (req, res) => {
   try {
     const userId = req.session.user._id;
     const { productId, qty = 1 } = req.body;
-    console.log('the quantity is ',qty)
+    
+    const product = await Product.findById(productId);
+    if (!product) return res.json({ success:false, message: 'Failed to find the Product' });
 
-    const quantityRequested = Math.max(1, parseInt(qty, 10) || 1);
-
-    const product = await validateProductForCart(productId);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
-
-    const stock = safeNumber(product.quantity);
-    if (stock <= 0) return res.status(400).json({ error: 'Product out of stock' });
+    const stock = product.quantity;
+    if (stock <= 0) return res.status(400).json({ success:false,message: 'Product out of stock' });
 
     const productMax = DEFAULT_MAX_PER_ORDER;
 
-    const addQty = Math.min(quantityRequested, productMax, stock);
+//checking howmany products are in the cart
+    const checkCart = await Cart.findOne(
+  { user: userId, 'items.product': productId },
+  { 'items.$': 1 } // returns only the matched product in 'items'
+);
+
+const totalqty =checkCart?.items?.[0]?.qty ||0
+if(totalqty>=productMax){
+  return res.json({success:false,message:`cart already contains total ${productMax} products`})
+}
+
+
+    const addQty = Math.min(qty, productMax, stock);
 
     const imageUrl = product.productImage?.[0] || '';
 
@@ -150,7 +159,10 @@ const addToCart = async (req, res) => {
     cart.updatedAt = new Date();
     await cart.save();
 
-    await Wishlist.deleteOne({ userId: userId, productId: product._id }).catch(()=>{});
+    
+    await Wishlist.deleteOne({ userId, productId}).catch(()=>{});
+
+    
 //total quantity 
     const totalQuantity = (cart.items || []).reduce((sum, it) => {
       return sum + (parseInt(it.qty, 10) || 0);
@@ -158,7 +170,7 @@ const addToCart = async (req, res) => {
 
     
 
-    return res.json({ success: true, cartCount: totalQuantity });
+     res.json({ success: true,message:'added to cart successfully', cartCount: totalQuantity });
 
 
   } catch (err) {
