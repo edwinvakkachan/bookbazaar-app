@@ -26,7 +26,7 @@
         <div class="row g-3 align-items-start">
           <!-- Category Creation Form -->
 <div class="col-md-3 col-lg-4 col-xl-3">        
-      <form method="POST" action="/admin/addCategory" enctype="application/x-www-form-urlencoded" onsubmit="return handleFormSubmit(event)" class="p-3 border rounded-3 shadow-sm bg-white">
+      <form method="POST" id="categoryForm" action="/admin/addCategory" enctype="application/x-www-form-urlencoded" onsubmit="return handleFormSubmit(event)" class="p-3 border rounded-3 shadow-sm bg-white">
               <div class="mb-3">
                 <label for="product_name" class="form-label fw-semibold">Name</label>
                 <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name"  />
@@ -142,43 +142,12 @@
 
 <!-- add category and validation -->
 
-  <script>
-    async function handleFormSubmit(event) {
-      event.preventDefault();
-      const name = document.getElementsByName('name')[0].value.trim();
-      const description = document.getElementById('descriptionId').value.trim();
+<script>
+function validateForm(name,description){
+  clearErrorMessages();
+   let isValid = true;
 
-      if (!validateForm(name, description)) {
-        return false;
-      }
-
-      try {
-        const response = await fetch('/admin/addCategory', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, description })
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Something went wrong');
-        }
-
-        // console.log('Success:', data);
-        location.reload();
-        localStorage.setItem('forceReload', Date.now()); // user side reload
-      } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Oops', text: error.message || 'An error occurred' });
-      }
-    }
-
-    function validateForm() {
-      clearErrorMessages();
-      const name = document.getElementsByName('name')[0].value.trim();
-      const description = document.getElementById('descriptionId').value.trim();
-      let isValid = true;
-
-      if (name === '') {
+   if (name === '') {
         displayErrorMessage('name-error', 'Name should not be empty');
         isValid = false;
       } else if (!/^[a-zA-Z\s]+$/.test(name)) {
@@ -186,13 +155,13 @@
         isValid = false;
       }
 
-      if (description === '') {
+
+    if (description === '') {
         displayErrorMessage('description-error', 'Description should not be empty');
         isValid = false;
       }
 
       return isValid;
-    }
 
     function displayErrorMessage(elementId, message) {
       const errorElement = document.getElementById(elementId);
@@ -207,7 +176,36 @@
         element.style.display = 'none';
       });
     }
-  </script>
+
+}
+
+  document.getElementById('categoryForm').addEventListener('submit',async (e)=>{
+    e.preventDefault();
+    const name = e.target.name.value;
+    const description = e.target.description.value;
+    const result =  validateForm(name,description);
+    if(!result){
+      return 
+    }
+
+ const res = await fetch('/admin/addCategory',{
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({name,description})
+ })
+ const data = await res.json();
+ if(!data.success){
+  showPopupAlert(data.message);
+ }
+
+ // user side reloading
+// location.reload();
+// localStorage.setItem('forceReload', Date.now()); 
+
+
+
+  })
+</script>
 
 
 
