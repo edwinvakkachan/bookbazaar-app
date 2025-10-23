@@ -56,14 +56,20 @@
 let searchInput;
 let searchBtn;
 let currentPage = 1;
+let currentSearch='';
 
-async function loadCustomers(page = 1){
+async function loadCustomers(page = 1,search = ''){
   try {
-    const res = await fetch(`/admin/api/customers?page=${page}`);
+    // const res = await fetch(`/admin/api/customers?page=${page}${search ? '&search=' + encodeURIComponent(search) : ''}`);
+    const res = await fetch(`/admin/api/customers?page=${page}&search=${search}`);
   const data = await res.json();
   if(!data.success){
 showPopupAlert(data.message)
   }
+
+ currentPage = data.page;
+currentSearch = data.search || search || '';
+
 
 const tbody = document.getElementById('customerBody');
 tbody.innerHTML='';
@@ -104,15 +110,15 @@ data.users.forEach(user => {
       li.addEventListener('click', e => {
         e.preventDefault();
         currentPage = i;
-        loadCustomers(currentPage);
+        loadCustomers(currentPage,currentSearch);
       });
       pagination.appendChild(li);
     }
 
 
-  //  searchBtn.addEventListener('click', () => {
-  //   loadCustomers(1, searchInput.value);
-  // });
+   searchBtn.addEventListener('click', () => {
+    loadCustomers(1, searchInput.value);
+  });
 
 
   } catch (error) {
@@ -130,7 +136,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
   let currentSearch = '';
 
 
- await loadCustomers(currentPage)
+ await loadCustomers(currentPage,'')
 
 
  document.getElementById('customerTable').addEventListener('click',async (e)=>{
@@ -169,7 +175,7 @@ if(!data.success){
     }
   }
   
- await loadCustomers(currentPage);
+ await loadCustomers(currentPage,currentSearch);
  })
 
 })

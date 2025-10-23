@@ -15,13 +15,21 @@ const getCustomerPage = async (req,res)=>{
 
 const getCustomersApi = async (req,res)=>{
   try {
-     const page = parseInt(req.query.page) || 1;
     const limit = 6;
-     const total = await User.countDocuments({isAdmin:false});
+    //search
+    
+    const {search,page=1} = req.query
+    const filter = {};
+    if (search) {
+      filter.name = { $regex: search, $options: 'i' }
+    }
+    
+    const total = await User.countDocuments({isAdmin:false,...filter });
     const totalPages = Math.ceil(total / limit);
 
 
-    const users = await User.find({isAdmin:false}).sort({createdAt: -1,name:1,}).skip((page - 1) * limit)
+
+    const users = await User.find({isAdmin:false,...filter }).sort({createdAt: -1,name:1,}).skip((page - 1) * limit)
       .limit(limit)
       .lean();
 
