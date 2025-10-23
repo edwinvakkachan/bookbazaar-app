@@ -98,8 +98,9 @@ router.get('/wishlist/page', userAuth,wishlistCOntroller.getWishlistPage);
 //cartManagement
 router.post('/cart/add', userAuth, cartController.addToCart);               
 router.get('/cart', userAuth, cartController.listCart);                    
-router.post('/api/cart/delete/:productId', userAuth, cartController.removeFromCart);
-router.post('/api/cart/:productId/quantity', userAuth, cartController.changeQuantity); 
+router.post('/api/cart/delete', userAuth, cartController.removeFromCart);
+router.patch('/api/cart/update', userAuth, cartController.changeQuantity); 
+
 
 
 

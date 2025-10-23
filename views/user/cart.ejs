@@ -47,33 +47,30 @@
 
                   <div class="d-flex align-items-center gap-3">
                     <div class="d-flex align-items-center">
-                      <!-- decrement button -->
-                      <button 
-                        type="button"
-                        class="btn btn-outline-secondary btn-sm me-2"
-                        data-cart-action
-                        data-product-id="<%= p._id %>"
-                        data-action="dec"
-                        <%= (qty <= 1) ? 'disabled' : '' %>
-                      >-</button>
+                      
+                      <!-- increment and decrement button  -->
+              
+<div class="input-group" data-productid="<%= it.productId || (it.product && it.product._id) || '' %>">
+  <button class="btn btn-dark btn-sm decrement">-</button>
+  
+  <input 
+    type="number" 
+    name="qty" 
+    value="<%= qty %>" 
+    min="1" 
+    max="<%= (stock && productMax) ? Math.min(stock, productMax) : (stock || productMax || qty) %>" 
+    class="form-control text-center quantity-input" 
+    readonly
+  >
+  
+  <button class="btn btn-dark btn-sm increment">+</button>
+</div>
 
-                      <!-- set qty -->
-                      <form data-cart-qty data-product-id="<%= p._id %>" method="post" action="/api/cart/<%= p._id %>/quantity" class="d-inline-block">
-                        <div class="input-group input-group-sm" style="width:120px;">
-                          <input type="number" name="qty" value="<%= qty %>" min="1" max="<%= (stock && productMax) ? Math.min(stock, productMax) : (stock || productMax || qty) %>" class="form-control text-center" />
-                          <button class="btn btn-outline-secondary" type="submit">Set</button>
-                        </div>
-                      </form>
 
-                      <!-- increment button -->
-                      <button
-                        type="button"
-                        class="btn btn-outline-secondary btn-sm ms-2"
-                        data-cart-action
-                        data-product-id="<%= p._id %>"
-                        data-action="inc"
-                        <%= (outOfStock || (productMax && qty >= productMax) || (stock && qty >= stock)) ? 'disabled' : '' %>
-                      >+</button>
+
+
+
+        
                     </div>
 
                     <div class="small text-muted ms-3">Quantity</div>
@@ -89,9 +86,11 @@
                   <div class="mb-3 price-display">Price <strong>₹<%= Number(it.priceAtAdd || p.price || 0).toFixed(2) %></strong></div>
 
                   <!-- remove -->
-                  <form data-cart-remove data-product-id="<%= p && p._id ? p._id : '' %>">
-                    <button type="submit" class="btn btn-dark btn-sm">Remove</button>
-                  </form>
+                  
+                  <button type="button" class="btn btn-dark btn-sm"
+                  data-removebtn
+                  data-productid="<%= it.productId || (it.product && it.product._id) || '' %>">
+                  Remove</button>
                 </div>
               </div>
             </div>
@@ -137,194 +136,78 @@
   </div>
 </div>
 
+<!-- remove button  -->
 <script>
-(function(){
-  'use strict';
+  document.addEventListener('click',async (e)=>{
+    const btn = e.target.closest('button[data-removebtn]');
+  if (!btn) return;          
+  e.preventDefault();
+    const productId = btn.dataset.productid;
 
-  
-  function showAlert(message, type = 'danger') {
-    const container = document.getElementById('alert-container');
-    
-    container.innerHTML = `
-      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    `;
-  }
-
-  const fmt = n => '₹' + (Number(n) || 0).toFixed(2);
-  async function safeJson(res){ try{return await res.json()}catch(e){return null;} }
-
-  function updateTotals(subtotal){
-    const subEl = document.getElementById('cart-subtotal');
-    const totEl = document.getElementById('cart-total');
-    const pageTotEl = document.getElementById('cart-page-total');
-    if(subEl) subEl.textContent = fmt(subtotal);
-    if(totEl) totEl.textContent = fmt(subtotal);
-    if(pageTotEl) pageTotEl.textContent = fmt(subtotal);
-  }
-
-  
-  function rebuildFromCartData(cart){
-    if(!cart || !Array.isArray(cart.items)) return;
-    let subtotal = 0;
-
-    cart.items.forEach(it=>{
-      const pid = it.product? (it.product._id||String(it.product)) : (it.productId||'');
-      const card = document.querySelector('[data-cart-item][data-product-id="'+pid+'"]');
-      if(!card) return;
-
-      
-      const domStock = parseInt(card.getAttribute('data-stock') || '0', 10) || 0;
-      const domMax = parseInt(card.getAttribute('data-product-max') || '0', 10) || 0;
-      const serverProduct = it.product || {};
-      const serverStock = (typeof serverProduct.quantity === 'number') ? serverProduct.quantity : (serverProduct.stock || null);
-      const stock = (serverStock !== null && serverStock !== undefined) ? Number(serverStock) : domStock;
-      const productMax = domMax || 0;
-
-      const qty = Number(it.qty || 0);
-
-      
-      const qtyInput = card.querySelector('input[name="qty"]');
-      if(qtyInput){
-        qtyInput.value = qty;
-        let maxVal = 0;
-        if (stock > 0 && productMax > 0) maxVal = Math.min(stock, productMax);
-        else if (stock > 0) maxVal = stock;
-        else if (productMax > 0) maxVal = productMax;
-        else maxVal = Math.max(qty, 1);
-        qtyInput.setAttribute('max', String(maxVal));
-      }
-
-      
-      const priceEl = card.querySelector('.price-display');
-      const price = Number(it.priceAtAdd || (it.product && (it.product.price||0)) || 0);
-      if(priceEl) priceEl.textContent = 'Price ' + fmt(price);
-
-      
-      const decBtn = card.querySelector('button[data-cart-action][data-action="dec"]');
-      const incBtn = card.querySelector('button[data-cart-action][data-action="inc"]');
-      if (decBtn) decBtn.disabled = qty <= 1;
-      if (incBtn) {
-        const reachedMax = (productMax > 0 && qty >= productMax) || (stock > 0 && qty >= stock);
-        incBtn.disabled = !!reachedMax;
-      }
-
-    
-
-
-      
-      const isOut = !!it.outOfStock ||
-                    (it.product && ((typeof it.product.quantity === 'number' && it.product.quantity <= 0) || (typeof it.product.stock === 'number' && it.product.stock <= 0)));
-
-      if (!isOut) {
-        subtotal += price * (qty || 0);
-      }
-
-
-    });
-
-    updateTotals(subtotal);
-  }
-
-  
-  document.querySelectorAll('form[data-cart-qty]').forEach(form=>{
-    form.addEventListener('submit', async ev=>{
-      ev.preventDefault();
-      const productId = form.getAttribute('data-product-id');
-      const qtyInput = form.querySelector('input[name="qty"]');
-      let qty = parseInt(qtyInput.value,10);
-      if(isNaN(qty)||qty<1){ showAlert('Invalid quantity', 'danger'); return; }
-
-      const res = await fetch(form.action,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body:JSON.stringify({qty})
-      });
-      const data = await safeJson(res);
-      if(res.ok && data && data.success && data.cart) {
-        
-        if (typeof data.total !== 'undefined') updateTotals(data.total);
-        rebuildFromCartData(data.cart);
-      } else {
-        showAlert((data && data.error) || 'Failed to set quantity', 'danger');
-      }
-    });
-  });
-
-  
-  document.querySelectorAll('button[data-cart-action]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const productId = btn.getAttribute('data-product-id');
-      const action = btn.getAttribute('data-action');
-      const url = '/api/cart/'+productId+'/quantity';
-      const res = await fetch(url,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body:JSON.stringify({action})
-      });
-      const data = await safeJson(res);
-
-            if(res.ok && data && data.success && data.cart){
-        if (typeof data.total !== 'undefined') updateTotals(data.total);
-        rebuildFromCartData(data.cart);
-      } else {
-
-        
-        showAlert((data && data.error) || 'Failed to update', 'danger');
-      }
-    });
-  });
-
-  
-  document.querySelectorAll('form[data-cart-remove]').forEach(form=>{
-    form.addEventListener('submit', async ev=>{
-      ev.preventDefault();
-      const productId = form.getAttribute('data-product-id');
-      const url = '/api/cart/delete/'+productId;
-      const res = await fetch(url,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body:JSON.stringify({remove:true})
-      });
-      const data = await safeJson(res);
-           if(res.ok && data && data.success && data.cart){
-        if (typeof data.total !== 'undefined') updateTotals(data.total);
-        rebuildFromCartData(data.cart);
-        const card = document.querySelector('[data-cart-item][data-product-id="'+productId+'"]');
-        if(card) card.remove();
-      } else {
-
-        showAlert((data && data.error) || 'Failed to remove', 'danger');
-      }
-    });
-  });
-
- 
-  window.rebuildFromCartData = rebuildFromCartData;
-})();
-</script>
-
-
-<script>
-  (function(){
-    if (!('EventSource' in window)) return;
-    try {
-      const es = new EventSource('/api/updates/stream');
-      
-      es.addEventListener('reload', function(e){
-     
-        location.reload();
-      });
-      
-      es.onmessage = function(){ location.reload(); };
-    } catch (err) {
-      console.warn('SSE connection failed', err);
+    const result = await showConfirmModal('Are you sure to delete the item');
+    if(!result){
+      return;
     }
-  })();
+    const res = await fetch('/api/cart/delete',{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    body:JSON.stringify({productId}),
+    })
+
+    const data = await res.json();
+    if(!data.success){
+     showPopupAlert(data.message);
+     return
+    }
+    location.reload();
+  })
 </script>
 
+<!-- increment and decrement button -->
+
+<script>
+  document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('increment') || e.target.classList.contains('decrement')) {
+      const group = e.target.closest('.input-group');
+      const input = group.querySelector('.quantity-input');
+      const productId = group.dataset.productid;
+
+      const min = parseInt(input.min) || 1;
+      const max = parseInt(input.max) || 99;
+      let value = parseInt(input.value);
+
+      if (e.target.classList.contains('increment') && value < max) {
+        value++;
+      } else if (e.target.classList.contains('decrement') && value > min) {
+        value--;
+      }
+
+      input.value = value; // update the input visually
+
+  
+      try {
+        const res = await fetch(`/api/cart/update`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, quantity: value })
+        });
+        const data = await res.json();
+        if(!data.success){
+          showPopupAlert(data.message);
+          return
+        }
+
+        location.reload()
+
+        
+      } catch (err) {
+        console.error('Error updating cart:', err);
+      }
+    }
+  });
+</script>
 
 <%- include("../partials/user/footer.ejs") %>
 

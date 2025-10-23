@@ -259,24 +259,22 @@ function goToPage(page) {
 }
 
 
-function addToCart(productId) {
-  fetch(`/cart/${productId}`, {
+async function addToCart(productId) {
+ const res =  await fetch('/cart/add', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify({ productId })
   })
-    .then(async (res) => {
-      if (res.ok) {
-        const data = await res.json().catch(() => ({}));
-        if (data && typeof data.cartCount !== 'undefined') updateCartBadge(data.cartCount);
-        showMessage('Added to cart');
-      } else {
-        const err = await res.json().catch(() => null);
-        showMessage(err && err.message ? err.message : 'Failed to add to cart');
-      }
-    })
-    .catch(() => showMessage('Error adding to cart'));
+  const data = await res.json();
+  if (!data.success){
+    showPopupAlert(data.message)
+    return;
+  }
+  if(data.success){
+    updateCartBadge(data.cartCount);
+    showPopupAlert('Added to cart')
+  }
+    
 }
 
 

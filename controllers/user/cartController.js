@@ -74,6 +74,7 @@ const listCart = async (req, res) => {
           : DEFAULT_MAX_PER_ORDER;
 
       return {
+        productId: p._id ? p._id.toString() : it.product?.toString(),
         product: p,
         title,
         image,
@@ -86,7 +87,7 @@ const listCart = async (req, res) => {
     });
 
  
-    //
+    // console.log(items)
 
     const total =
       typeof cart.getSubtotal === 'function'
@@ -100,8 +101,6 @@ const listCart = async (req, res) => {
     return res.status(500).json({ error: 'Server error in listcart' });
   }
 };
-
-
 
 
 
@@ -182,88 +181,20 @@ if(totalqty>=productMax){
 
 
 
-const changeQuantity = async (req, res) => {
-  try {
-    const userId = req.session.user._id;
-    const { productId } = req.params;
-    const { action, qty } = req.body;
-
-    const product = await Product.findById(productId);
-    
-    if (product.isBlocked === true) return res.status(403).json({ error: 'Product blocked' });
-
-    
-    const available = safeNumber(product.quantity );
-    if (available <= 0) return res.status(400).json({ error: 'Product out of stock' });
-
-   
-const productMax = DEFAULT_MAX_PER_ORDER;
-    const cart = await Cart.findOne({ user: userId });
-    if (!cart) return res.status(404).json({ error: 'Cart not found' });
-
-    const idx = cart.items.findIndex(it => it.product.toString() === productId);
-    if (idx < 0) return res.status(404).json({ error: 'Product not in cart' });
-
-    let newQty = cart.items[idx].qty;
-    if (action === 'inc') newQty = newQty + 1;
-    else if (action === 'dec') newQty = newQty - 1;
-    else if (qty !== undefined) newQty = parseInt(qty, 10);
-
-    if (newQty < 1) {
-      cart.items.splice(idx, 1);
-    } else {
-      if (newQty > productMax) newQty = productMax;
-      if (newQty > available) {
-        return res.status(400).json({ error: `Only ${available} items available` });
-      }
-      cart.items[idx].qty = newQty;
-    }
-
-    cart.updatedAt = new Date();
-    await cart.save();
-
-
-
-
-
-        const populated = await Cart.findById(cart._id).populate({
-      path: 'items.product',
-      populate: [
-        { path: 'brand', select: 'brandName isBlocked' },
-        { path: 'category', select: 'name isListed' }
-      ]
-    });
-
-   
-    const total = calcTotalFromItems(populated.items);
-
-    return res.json({ success: true, cart: populated, total });
-
-
-
-
-  } catch (err) {
-    console.error('changeQuantity error', err);
-    const status = err.status || 500;
-    return res.status(status).json({ error: err.message || 'Server error' });
-  }
-};
-
-
 const removeFromCart = async (req, res) => {
   try {
     const userId = req.session.user._id;
-    const { productId } = req.params;
+    const { productId } = req.body;
+    console.log('prodcutid id',productId)
     const cart = await Cart.findOne({ user: userId });
-    if (!cart) return res.status(404).json({ error: 'Cart not found' });
-
+    // if (!cart) return res.status(404).json({ error: 'Cart not found' });
+    if(!cart){
+      res.json({success:false,message:'Cart not found'})
+      return;
+    }
+console.log(productId);
     cart.items = cart.items.filter(it => it.product.toString() !== productId);
     cart.updatedAt = new Date();
-
-
-  
-
-
 
         await cart.save();
 
@@ -286,10 +217,50 @@ const removeFromCart = async (req, res) => {
 
   } catch (err) {
     console.error('removeFromCart error', err);
-    return res.status(500).json({ error: 'Server error' });
+    return res.json({ success:false,message: 'Server error' });
   }
 };
 
+const changeQuantity = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+   const  { productId, quantity } =req.body;
+
+    const product = await Product.findById(productId);
+    
+    if (product.isBlocked === true) return res.json({ success:false,message: 'Product is blocked' }); // look necessery
+
+    const available = product.quantity;
+    if (available <= 0) return res.json({ success:false,message: 'Product out of stock' });
+
+   
+const productMax = DEFAULT_MAX_PER_ORDER;
+    const cart = await Cart.findOne({ user: userId });
+    if (!cart) return res.json({ success:false, message: 'Cart not found' });
+
+    const idx = cart.items.findIndex(it => it.product.toString() === productId);
+    if (idx < 0) return res.status(404).json({ error: 'Product not in cart' });
+
+
+    if(quantity>=productMax){
+      return res.json({success:false,message:`max ${productMax} are allowed`})
+    }else if(quantity>=available){
+      return res.json({success:false,message:`only ${available} products are available`})
+    }
+    cart.items[idx].qty = quantity;
+    cart.updatedAt = new Date();
+    await cart.save();
+
+res.json({success:true})
+
+
+  } catch (err) {
+    console.error('changeQuantity error', err);
+    
+    return res.json({ success:false, message:'server error'});
+  }
+};
 
 
 
