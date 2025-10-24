@@ -206,22 +206,65 @@
   </div>
 </div>
 
+<!-- script for cancell item modal -->
+
+
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const cancelItemModal = new bootstrap.Modal(document.getElementById('cancelItemModal'));
+
+  const cancelItemModalEl = document.getElementById('cancelItemModal');
+  const cancelItemModalInstance = new bootstrap.Modal(cancelItemModalEl);
+
   const cancelOrderModal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
   const returnItemModal = new bootstrap.Modal(document.getElementById('returnItemModal'));
 
-  
+ 
+  function showCancelItemModal() {
+    return new Promise((resolve) => {
+      let confirmed = false;
+      const handleSubmit = (e) => {
+        confirmed = true;
+        cleanup();
+        try { cancelItemModalInstance.hide(); } catch (err) { /* ignore */ }
+        resolve(true);
+      };
+
+      const handleHidden = () => {
+        cleanup();
+        if (!confirmed) resolve(false);
+      };
+
+      function cleanup() {   
+        cancelItemForm.removeEventListener('submit', handleSubmit);
+        cancelItemModalEl.removeEventListener('hidden.bs.modal', handleHidden);
+      }
+
+      const cancelItemForm = document.getElementById('cancelItemForm');
+
+      cancelItemForm.addEventListener('submit', handleSubmit);
+      cancelItemModalEl.addEventListener('hidden.bs.modal', handleHidden);
+
+      cancelItemModalInstance.show();
+    });
+  }
+
+ // single order cancellation
   document.querySelectorAll('.btn-cancel-item').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       document.getElementById('cancelItemOrderId').value = btn.dataset.order;
       document.getElementById('cancelItemIndex').value = btn.dataset.index;
-      
+
       document.querySelector('input[name="reasonPresetItem"][value="Changed my mind"]').checked = true;
       document.getElementById('cancelItemOtherText').style.display = 'none';
       document.getElementById('cancelItemOtherText').value = '';
-      cancelItemModal.show();
+
+      
+      const result = await showCancelItemModal();
+      if (!result) {
+        return;
+      }
+      console.log('User clicked Confirm Cancel — resolved true from showCancelItemModal()');
     });
   });
 

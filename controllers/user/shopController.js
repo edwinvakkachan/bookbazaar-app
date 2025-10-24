@@ -114,6 +114,8 @@ let status = true;
 const buildQueryFromReq = (queryParams) => {
   let { category, brand, price, sort, page = 1, limit = 9 } = queryParams;
 
+  console.log(category, brand, price, sort, page, limit)
+
   page = Number(page) || 1;
   limit = Number(limit) || 9;
   const skip = (page - 1) * limit;
@@ -138,7 +140,7 @@ const buildQueryFromReq = (queryParams) => {
 
   let sortQuery = { createdAt: -1 };
   if (sort === "popularity") {
-    sortQuery = { sold: -1 };
+    sortQuery = { quantity: -1 };
   } else if (sort === "newest") {
     sortQuery = { createdAt: -1 };
   } else if (sort === "priceAsc") {

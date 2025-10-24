@@ -124,7 +124,7 @@
         </div>
 
         <div class="d-grid">
-          <form action="/checkout" method="GET">
+          <form action="/checkout" id="checkoutbtn" method="GET">
             <button class="btn btn-dark" type="submit">Proceed to checkout</button>
           </form>
         </div>
@@ -135,6 +135,17 @@
     
   </div>
 </div>
+
+<script>
+  document.getElementById('checkoutbtn').addEventListener('submit', async (e)=>{
+    e.preventDefault()
+    const result = await showConfirmModal('Do you want to proceed');
+    if(!result){
+      return;
+    }
+    e.target.submit(); 
+  })
+</script>
 
 <!-- remove button  -->
 <script>

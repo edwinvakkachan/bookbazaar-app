@@ -35,11 +35,11 @@
       <main class="col-md-9">
         <div class="d-flex justify-content-end mb-3">
           <ul id="sort-bar" class="nav nav-pills">
-             <li class="nav-item"><button class="nav-link btn btn-link text-dark" data-sort="">Default</button></li>
             <li class="nav-item"><button class="nav-link btn btn-link text-dark " data-sort="popularity">Popularity</button></li>
             <li class="nav-item"><button class="nav-link btn btn-link text-dark " data-sort="newest">Newest</button></li>
             <li class="nav-item"><button class="nav-link btn btn-link text-dark" data-sort="priceAsc">Price ↑</button></li>
             <li class="nav-item"><button class="nav-link btn btn-link text-dark" data-sort="priceDesc">Price ↓</button></li>
+            <li class="nav-item"><button class="nav-link btn btn-link text-dark" data-sort="">Clear</button></li>
             
           </ul>
         </div>
@@ -247,6 +247,8 @@ function applyFilter(type, value) {
   params.set('page', 1);
   loadProducts(params);
 }
+
+// sorting 
 function applySort(val) {
   const params = qs();
   if (val) params.set('sort', val); else params.delete('sort');
