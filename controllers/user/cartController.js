@@ -109,6 +109,9 @@ const addToCart = async (req, res) => {
   try {
     const userId = req.session.user._id;
     const { productId, qty = 1 } = req.body;
+
+    // console.log(productId)
+    // console.log('qty is ',qty)
     
     const product = await Product.findById(productId);
     if (!product) return res.json({ success:false, message: 'Failed to find the Product' });
@@ -185,14 +188,11 @@ const removeFromCart = async (req, res) => {
   try {
     const userId = req.session.user._id;
     const { productId } = req.body;
-    console.log('prodcutid id',productId)
     const cart = await Cart.findOne({ user: userId });
-    // if (!cart) return res.status(404).json({ error: 'Cart not found' });
     if(!cart){
       res.json({success:false,message:'Cart not found'})
       return;
     }
-console.log(productId);
     cart.items = cart.items.filter(it => it.product.toString() !== productId);
     cart.updatedAt = new Date();
 

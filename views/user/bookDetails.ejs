@@ -111,9 +111,32 @@
               <!-- Quantity Selector -->
               <div class="input-group w-auto" style="max-width: 120px;">
                 <!-- <button class="btn btn-outline-secondary" type="button" id="decreaseQty" aria-label="Decrease quantity">-</button> -->
-                <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1" style="max-width:64px;">
+                <!-- <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1" style="max-width:64px;"> -->
                 <!-- <button class="btn btn-outline-secondary" type="button" id="increaseQty" aria-label="Increase quantity">+</button> -->
+              
+                          <!-- testing -->
+
+              <div class="input-group" data-productid="<%= book._id %>">
+  <button class="btn btn-dark btn-sm decrement">-</button>
+  
+  <input 
+    type="number" 
+    name="qty" 
+    value="1" 
+    min="1" 
+    max="5" 
+    class="form-control text-center quantity-input" 
+    readonly
+  >
+  
+  <button class="btn btn-dark btn-sm increment">+</button>
+</div>
+              
+              
               </div>
+
+
+  
 
               <!-- Add to Cart (JS-driven) -->
               <input type="hidden" name="quantity" value="1" id="cartQuantityInput">
@@ -132,11 +155,19 @@
 
             <!-- Buy Now -->
             <div class="mt-3">
-              <form action="/directCheckout/<%= book._id %>" method="GET">
+              <!-- <form action="/directCheckout/<%= book._id %>" method="GET">
   <input type="hidden" name="productId" id="productId" value="<%= book._id %>">
   <input type="hidden" name="qty" id="hiddenQty" value="1">
   <button type="submit" id="buyNowBtn" class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
-</form>
+</form> -->
+
+
+<button type="button" class="btn btn-dark w-100 py-2 fw-bold"
+                data-buynow
+               data-productid="<%= book._id %>"
+               data-quantity="<%= book.quantity %>"
+               data-status="<%= book.stock %>"
+               >Buy Now</button>
             </div>
 
             <!-- Delivery Info -->
@@ -323,7 +354,9 @@
    try {
      const productId = e.target.dataset.productId;
 let qty= 1;
- qty = Number(document.getElementById('quantityInput').value)
+//  qty = Number(document.getElementById('quantityInput').value)
+     const group = document.querySelector(`.input-group[data-productid="${productId}"]`);
+     qty = Number(group.querySelector('.quantity-input').value);
 const quantity = Number(e.target.dataset.quantity) || 0;
 const status =   e.target.dataset.status;
 if(status==false){
@@ -363,7 +396,7 @@ updateCartBadge(data.cartCount);
 </script>
 
 
-
+<!-- whishlist badge update -->
 <script>
 function updateWishlistBadge(count) {
 const badge = document.getElementById('wishlist-count-badge');
@@ -412,46 +445,86 @@ if(stockAvailable==false){
   })
 </script>
 
-
+<!-- direct checkout  -->
 <script>
 
 
 
-  const stockAvailable = <%= book.stock%>;
-document.getElementById('buyNowBtn').addEventListener('click',(e)=>{
-  const quantity = document.getElementById('quantityInput').value;
-  const availableQuantity = document.getElementById('stock-info').dataset.stock;
+document.addEventListener('click',async (e)=>{
+  const btn = e.target.closest('[data-buynow]')
+  const availableQuantity = btn.dataset.quantity;
+  const stockAvailable = btn.dataset.status;
+  const productId = btn.dataset.productid;
+  const group = document.querySelector(`.input-group[data-productid="${productId}"]`);
+const quantity = Number(group.querySelector('.quantity-input').value);
   
   if(stockAvailable==false){
     showPopupAlert('This book is out of stock. Please check back later.')
-    e.preventDefault();
+
     return 
   }
 if(availableQuantity<quantity){
   showPopupAlert(`Only ${availableQuantity} quantity is left`);
-    e.preventDefault();
+
     return 
 }
   if(quantity>5){
     showPopupAlert('Only Five products are allowed');
-    e.preventDefault();
     return 
   }
-const hiddenQty = document.getElementById('hiddenQty');
-hiddenQty.value = quantity;
 
-
-
-  
-
-
+ window.location.href = `/directCheckout/productId?productId=${productId}&quantity=${quantity}`;    
 })
 
 
 </script>
 
+<!-- increment and decrement button -->
+
+<script>
+  document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('increment') || e.target.classList.contains('decrement')) {
+      const group = e.target.closest('.input-group');
+      const input = group.querySelector('.quantity-input');
+      const productId = group.dataset.productid;
+
+      const min = parseInt(input.min) || 1;
+      const max = parseInt(input.max) || 99;
+      let value = parseInt(input.value);
+
+      if (e.target.classList.contains('increment') && value < max) {
+        value++;
+      } else if (e.target.classList.contains('decrement') && value > min) {
+        value--;
+      }
+
+      input.value = value; // update the input visually
+
+  
+      // try {
+      //   const res = await fetch(`/api/cart/update`, {
+      //     method: 'PATCH',
+      //     headers: { 'Content-Type': 'application/json' },
+      //     body: JSON.stringify({ productId, quantity: value })
+      //   });
+      //   const data = await res.json();
+      //   if(!data.success){
+      //     showPopupAlert(data.message);
+      //     return
+      //   }
+
+      //   location.reload()
+
+        
+      // } catch (err) {
+      //   console.error('Error updating cart:', err);
+      // }
+    }
+  });
+</script>
 
 
+<!-- page reload -->
 <script>
   window.addEventListener('storage', (event) => {
     if (event.key === 'forceReload') {

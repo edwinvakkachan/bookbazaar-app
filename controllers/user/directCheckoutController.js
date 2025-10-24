@@ -11,21 +11,19 @@ function generateOrderId() {
 
 const  showDirectCheckout = async (req,res)=>{
    try {
-     const {productId} = req.params;
-     const{qty}= req.query;
-     console.log(productId)
-     console.log('the qty is',qty)
-
-    // const { quantity, productId} = req.body;
+    const { quantity, productId} = req.query;
+    console.log(productId)
+    console.log('the qty is',quantity)
 
     const product = await Product.findById(productId);
    const userId = req.session.user._id;
    const user = await User.findById(userId)
+   const totalPrice = product.salePrice * quantity;
     res.render('directCheckout', {
       user,
       product,
-      qty,
-      totalPrice: product.salePrice,
+      qty:quantity,
+      totalPrice,
     });
 
 

@@ -86,8 +86,6 @@ router.post('/userProfile/verifyEmailOtp', userAuth, userController.verifyEmailO
 router.post('/userProfile/resendEmailOtp', userAuth, userController.resendEmailOtp);
 
 
-
-
 //whishlist
 router.get('/wishlist',userAuth,wishlistCOntroller.getWishlist)
 router.post('/wishlist/add',userAuth,wishlistCOntroller.addToWishlist)
@@ -101,12 +99,6 @@ router.get('/cart', userAuth, cartController.listCart);
 router.post('/api/cart/delete', userAuth, cartController.removeFromCart);
 router.patch('/api/cart/update', userAuth, cartController.changeQuantity); 
 
-
-
-
-
-
-
 //checkOut page
 router.get('/checkout',userAuth,checkOutController.getCheckoutPage);
 router.post('/checkout',userAuth,orderController.createShowConforamtion)
@@ -114,7 +106,7 @@ router.post('/checkout/address/add', userAuth, checkOutController.checkoutAddres
 
 //directCheckout
 
-router.get('/directCheckout/:productId',userAuth,directCheckoutController.showDirectCheckout);
+router.get('/directCheckout/productId',userAuth,directCheckoutController.showDirectCheckout);
 router.post('/directCheckout',userAuth,directCheckoutController.placeDirectOrder);
 router.get('/orders/:orderId/success', userAuth, directCheckoutController.showPaymentConfirmation);
 
