@@ -144,6 +144,7 @@
                data-product-id="<%= book._id %>"
                data-quantity="<%= book.quantity %>"
                data-status="<%= book.stock %>"
+               data-outofstock="<%= book.outOfStock %>"
                >Add to Cart</button>
 
               <!-- Wishlist -->
@@ -167,6 +168,7 @@
                data-productid="<%= book._id %>"
                data-quantity="<%= book.quantity %>"
                data-status="<%= book.stock %>"
+               data-outofstock="<%= book.outOfStock %>"
                >Buy Now</button>
             </div>
 
@@ -353,6 +355,7 @@
     e.preventDefault();
    try {
      const productId = e.target.dataset.productId;
+     const outofstock = e.target.dataset.outofstock;
 let qty= 1;
 //  qty = Number(document.getElementById('quantityInput').value)
      const group = document.querySelector(`.input-group[data-productid="${productId}"]`);
@@ -360,6 +363,10 @@ let qty= 1;
 const quantity = Number(e.target.dataset.quantity) || 0;
 const status =   e.target.dataset.status;
 if(status==false){
+  showPopupAlert('This book is out of stock. Please check back later.');
+  return;
+}
+else if(outofstock==true){
   showPopupAlert('This book is out of stock. Please check back later.');
   return;
 }else if(qty>5){
@@ -455,20 +462,22 @@ document.addEventListener('click',async (e)=>{
   const availableQuantity = btn.dataset.quantity;
   const stockAvailable = btn.dataset.status;
   const productId = btn.dataset.productid;
+  const outofstock = btn.dataset.outofstock;
   const group = document.querySelector(`.input-group[data-productid="${productId}"]`);
 const quantity = Number(group.querySelector('.quantity-input').value);
   
-  if(stockAvailable==false){
+  if(stockAvailable=='false'){
     showPopupAlert('This book is out of stock. Please check back later.')
 
     return 
   }
-if(availableQuantity<quantity){
+ 
+else if(availableQuantity<quantity){
   showPopupAlert(`Only ${availableQuantity} quantity is left`);
 
     return 
 }
-  if(quantity>5){
+ else  if(quantity>5){
     showPopupAlert('Only Five products are allowed');
     return 
   }

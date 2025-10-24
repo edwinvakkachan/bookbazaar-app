@@ -194,7 +194,7 @@
         <input type="hidden" id="returnItemOrderId" name="orderId">
         <input type="hidden" id="returnItemIndex" name="itemIndex">
         <div class="mb-3">
-          <label class="form-label">Reason for Return ()</label>
+          <label class="form-label">Reason for Return </label>
           <textarea name="reason" class="form-control" rows="3" ></textarea>
         </div>
       </div>
@@ -363,14 +363,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const orderId = ev.target.orderId.value;
     const itemIndex = ev.target.itemIndex.value;
     const reason = ev.target.reason.value;
-    if(!reason) { alert('Reason required'); return; }
+    if(!reason) { showPopupAlert('Reason required'); return; }
     const res = await fetch(`/orders/${orderId}/return`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ itemIndex, reason })
     });
     const data = await res.json();
-    if(data.success) location.reload(); else alert(data.message);
+    if(data.success) location.reload(); 
+    else showPopupAlert(data.message);
   });
 
 });

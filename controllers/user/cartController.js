@@ -115,6 +115,9 @@ const addToCart = async (req, res) => {
     
     const product = await Product.findById(productId);
     if (!product) return res.json({ success:false, message: 'Failed to find the Product' });
+    if(product.isBlocked==true){
+      return res.json({success:false,message:'product is out of stock'})
+    }
 
     const stock = product.quantity;
     if (stock <= 0) return res.status(400).json({ success:false,message: 'Product out of stock' });
