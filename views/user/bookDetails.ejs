@@ -498,27 +498,7 @@ if(availableQuantity<quantity){
         value--;
       }
 
-      input.value = value; // update the input visually
-
-  
-      // try {
-      //   const res = await fetch(`/api/cart/update`, {
-      //     method: 'PATCH',
-      //     headers: { 'Content-Type': 'application/json' },
-      //     body: JSON.stringify({ productId, quantity: value })
-      //   });
-      //   const data = await res.json();
-      //   if(!data.success){
-      //     showPopupAlert(data.message);
-      //     return
-      //   }
-
-      //   location.reload()
-
-        
-      // } catch (err) {
-      //   console.error('Error updating cart:', err);
-      // }
+      input.value = value; // updated value after increment or decrement
     }
   });
 </script>
