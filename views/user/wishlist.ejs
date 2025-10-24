@@ -144,6 +144,8 @@ updateWishlistBadge( wishlistCount);
   }
 }
 
+// remove button
+
 document.addEventListener('click', async (e) => {
   const removeBtn = e.target.closest('.remove-btn');
   if (removeBtn) {
@@ -163,11 +165,15 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-
+// add to cart button
 document.addEventListener('click', async (e) => {
   const cartBtn = e.target.closest('.add-to-cart-btn');
   if (cartBtn) {
     const productId = cartBtn.dataset.id;
+    const result = await showConfirmModal('Do you want to add the prodcut into cart')
+    if(!result){
+      return
+    }
     const res = await fetch('/cart/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
