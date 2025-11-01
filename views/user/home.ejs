@@ -1,127 +1,163 @@
 <%- include("../partials/user/header.ejs") %>
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-content">
-                <h1>SMALL CHANGES,<br>BIG RESULTS</h1>
-                <div class="price-tag">₹349 <span class="badge">BEST SELLER</span></div>
-                <p>Transform your life with proven strategies and actionable insights from our bestselling collection.</p>
-            </div>
-            <div class="hero-image">
-                <!-- Option 1: Use an actual image -->
-                <!-- <img src="images/atomic-habits-cover.jpg" alt="Atomic Habits by James Clear" class="book-cover"> -->
-                
-                <!-- Option 2: Use a placeholder for now -->
-                <div class="book-cover-placeholder">
-                    Atomic<br>Habits<br><small>by James Clear</small>
-                </div>
-            </div>
-        </section>
 
-      <!-- Popular Categories -->
-<section class="popular-categories">
-  <h2 class="section-title">Popular Categories</h2>
-
-  <div class="categories">
-    <% for (let i = 0; i < popularCategory.length; i++) { %>
-      <div class="category-card">
-        <h3><%= popularCategory[i].category?.name || popularCategory[i].name %></h3>
-      </div>
-    <% } %>
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>SMALL CHANGES,<br>BIG RESULTS</h1>
+    <div class="price-tag">₹349 <span class="badge">BEST SELLER</span></div>
+    <p>Transform your life with proven strategies and actionable insights from our bestselling collection.</p>
+  </div>
+  <div class="hero-image">
+    <div class="book-cover-placeholder">Atomic<br>Habits<br><small>by James Clear</small></div>
   </div>
 </section>
 
+<!-- Popular Categories -->
+<section class="popular-categories">
+  <h2 class="section-title">Popular Categories</h2>
+  <div class="categories"  id="popular-categories"></div>
+</section>
 
-        <!-- Best Selling Books -->
-        <section>
-            <h2 class="section-title">Best Selling Books</h2>
+<!-- Best Selling Books -->
+<section>
+  <h2 class="section-title">Best Selling Books</h2>
+  <div class="bestselling-books" id="bestselling-books"></div>
+</section>
 
-<div class="bestselling-books">
-  <% if (bestSelling && bestSelling.length) { %>
-    <% for (let i = 0; i < bestSelling.length; i++) { 
-         let p = bestSelling[i];
-         let img = (p.productImage && p.productImage.length) ? p.productImage[0] : null;
-         let coverStyle = img 
-           ? "background-image:url('" + img + "');background-size:cover;background-position:center;"
-           : "background: linear-gradient(135deg, #ff9a56, #ff6b35);";
-         let effectivePrice = (typeof p.salePrice === 'number' && p.salePrice > 0) ? p.salePrice : p.regularPrice;
-         let isDiscount = p.salePrice && p.salePrice < p.regularPrice;
-    %>
+<!-- About Us Section -->
+<section class="about-section">
+  <h2>ABOUT US</h2>
+</section>
 
+<!-- Latest Books -->
+<section>
+  <h2 class="section-title">Latest Books</h2>
+  <div class="latest-books" id="latest-books"></div>
+</section>
 
-      <a href="/book/<%= p._id %>" class="text-decoration-none text-dark">
-  <div class="latest-book">
-    <div class="latest-book-cover" style="background-image:url('<%= p.productImage[0] %>');"></div>
-    <div class="latest-book-info">
-      <h4><%= p.productName %></h4>
-      <% if (p.brand) { %><p><%= p.brand?.brandName || "N/A" %></p><% } %>
-      <!-- <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %> -->
-      <div class="latest-book-price">₹<%= p.salePrice || p.regularPrice %></div>
-    </div>
-  </div>
-</a>
+<%- include("../partials/user/footer.ejs") %>
 
+<!-- Axios CDN -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
+<script>
+async function fetchCategories() {
+  const container = document.getElementById('popular-categories');
+  try {
+    const res = await axios.get('/api/categories/popular', { withCredentials: true, timeout: 5000 });
+    const data = res.data;
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = '<p>No categories found.</p>';
+      return;
+    }
+    container.innerHTML = data.map(cat => {
+      const idAttr = cat._id ? `data-id="${cat._id}"` : '';
+      const name = cat.name || 'Unnamed';
+      return `<div class="category-card" ${idAttr}><h3>${name}</h3></div>`;
+    }).join('');
+  } catch (err) {
+    console.error('Error fetching categories', err);
+    container.innerHTML = '<p class="error">Failed to load categories.</p>';
+  }
+}
 
-
-    <% } %>
-  <% } else { %>
-    <p>No bestselling books found.</p>
-  <% } %>
-</div>
-
-        </section>
-
-        <!-- About Us Section -->
-        <section class="about-section">
-            <h2>ABOUT US</h2>
-        </section>
-
-        <!-- Latest Books -->
-        <section>
-
-<h2 class="section-title">Latest Books</h2>
-
-<div class="latest-books">
-  <% if (products && products.length) { %>
-    <% for (let i = 0; i < products.length; i++) { 
-         let p = products[i];
-         let img = (p.productImage && p.productImage.length) ? p.productImage[0] : null;
-         let coverStyle = img 
-           ? "background-image:url('" + img + "');background-size:cover;background-position:center;"
-           : "background: linear-gradient(135deg, #667eea, #764ba2);";
-         let effectivePrice = (typeof p.salePrice === 'number' && p.salePrice > 0) ? p.salePrice : p.regularPrice;
-         let isDiscount = p.salePrice && p.salePrice < p.regularPrice;
-    %>
-
-
-
-     <a href="/book/<%= p._id %>" class="text-decoration-none text-dark">
-  <div class="latest-book">
-    <div class="latest-book-cover" style="<%= coverStyle %>"></div>
-    <div class="latest-book-info">
-      <h4><%= p.productName %></h4>
-      <% if (p.brand) { %><p><%= p.brand?.brandName || "N/A" %></p><% } %>
-      <!-- <% if (p.category && p.category.name) { %><p><%= p.category.name %></p><% } %> -->
-      <div class="latest-book-price">
-        ₹<%= effectivePrice %>
-        <% if (isDiscount) { %>
-          <span style="margin-left:8px; text-decoration: line-through; opacity: .7;">₹<%= p.regularPrice %></span>
-        <% } %>
+function productHtml(p) {
+  const img = p.productImage[0] || '';
+  const price = p.salePrice || 0;
+  const coverStyle = "background-image:url('" + img + "');background-size:cover;background-position:center;";
+  const brandName = p.brand && p.brand.brandName ? p.brand.brandName : '';
+  const dataBrand = p.brand && p.brand._id ? `data-brand="${p.brand._id}"` : '';
+  const dataCategory = p.category && p.category._id ? `data-category="${p.category._id}"` : '';
+  return `
+    <a href="/book/${p._id}" class="text-decoration-none text-dark product-item" data-id="${p._id}" ${dataBrand} ${dataCategory}>
+      <div class="latest-book">
+        <div class="latest-book-cover" style="${coverStyle}"></div>
+        <div class="latest-book-info">
+          <h4>${p.productName || 'Untitled'}</h4>
+          ${brandName ? `<p>${brandName}</p>` : ''}
+          <div class="latest-book-price">₹${price}</div>
+        </div>
       </div>
-    </div>
-  </div>
-</a>
+    </a>
+  `;
+}
 
+async function fetchBestSelling() {
+  const container = document.getElementById('bestselling-books');
+  if (!container) return;
+  try {
+    const res = await axios.get('/api/products/bestselling', { withCredentials: true, timeout: 5000 });
+    const items = Array.isArray(res.data) ? res.data.filter(p => p && p.brand) : [];
+    if (items.length === 0) {
+      container.innerHTML = '<p>No best selling items.</p>';
+      return;
+    }
+    container.innerHTML = items.map(productHtml).join('');
+  } catch (err) {
+    console.error('Error fetching best selling', err);
+    container.innerHTML = '<p class="error">Failed to load best selling.</p>';
+  }
+}
 
+async function fetchLatest() {
+  const container = document.getElementById('latest-books');
+  if (!container) return;
+  try {
+    const res = await axios.get('/api/products/latest', { withCredentials: true, timeout: 5000 });
+    const data = res.data;
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = '<p>No latest items.</p>';
+      return;
+    }
+    container.innerHTML = data.map(productHtml).join('');
+  } catch (err) {
+    console.error('Error fetching latest', err);
+    container.innerHTML = '<p class="error">Failed to load latest books.</p>';
+  }
+}
 
+function loadAll() {
+  fetchCategories();
+  fetchBestSelling();
+  fetchLatest();
+}
 
+function setupSSEwithReload() {
+  if (!window.EventSource) return false;
+  try {
+    const es = new EventSource('/api/updates/stream');
+    es.addEventListener('reload', () => {
+      loadAll();
+    });
+    es.onerror = function(err) {
+      console.warn('SSE error; falling back to polling', err);
+      try { es.close(); } catch (e) {}
+      return false;
+    };
+    return true;
+  } catch (e) {
+    console.warn('SSE setup failed', e);
+    return false;
+  }
+}
 
-    <% } %>
-  <% } else { %>
-    <p>No latest books found.</p>
-  <% } %>
-</div>
+let pollHandle = null;
+function startPolling(intervalMs = 20000) {
+  if (pollHandle) clearInterval(pollHandle);
+  pollHandle = setInterval(loadAll, intervalMs);
+}
 
+document.addEventListener('DOMContentLoaded', function() {
+  loadAll();
+  const ok = setupSSEwithReload();
+  if (!ok) startPolling(20000);
+});
+</script>
 
-        </section>
-   <%- include("../partials/user/footer.ejs") %>
+<script>
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'forceReload') {
+      location.reload(); 
+    }
+  });
+</script>

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/css/shop.css">
     <link rel="stylesheet" href="/css/userheader.css">
     <link rel="stylesheet" href="/css/userFooter.css">
+    <link rel="stylesheet" href="/css/user/userProfile.css">
     <!-- <link rel="stylesheet" href="/css/auth.css"> -->
 </head>
 <body>
@@ -95,21 +96,26 @@
           </li>
 
           <li class="nav-item me-1">
-            <a href="/wishlist" class="nav-link position-relative" aria-label="Wishlist">
-              <i class="bi bi-heart"></i>
-            </a>
-          </li>
+  <a href="/wishlist/page" class="nav-link position-relative" aria-label="Wishlist">
+    <i class="bi bi-heart"></i>
+    <span id="wishlist-count-badge"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark"
+          style="<%= (typeof wishlistCount !== 'undefined' && wishlistCount > 0) ? '' : 'display:none' %>">
+      <%= wishlistCount || 0 %>
+    </span>
+  </a>
+</li>
 
-          <li class="nav-item me-2">
-            <a href="/cart" class="nav-link position-relative" aria-label="Cart">
-              <i class="bi bi-bag"></i>
-              <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                  <%= cartCount %>
-                </span>
-              <% } %>
-            </a>
-          </li>
+
+          <a href="/cart" class="nav-link position-relative" aria-label="Cart">
+  <i class="bi bi-bag"></i>
+  <span id="cart-count-badge"
+        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+        style="<%= (typeof cartCount !== 'undefined' && cartCount > 0) ? '' : 'display:none' %>">
+    <%= cartCount || 0 %>
+  </span>
+</a>
+
 
           <% if (user) { %>
             <li class="nav-item dropdown">

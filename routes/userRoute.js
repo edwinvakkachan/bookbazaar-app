@@ -1,12 +1,20 @@
 const express = require('express')
 const router = express.Router();
 const userController = require('../controllers/user/userController');
+const cartController = require('../controllers/user/cartController')
+const checkOutController = require('../controllers/user/checkOutController');
+const orderController = require('../controllers/user/orderController')
+const homeController = require('../controllers/user/homeController')
+const shopController = require('../controllers/user/shopController')
+const wishlistCOntroller = require('../controllers/user/wishlistController')
+const directCheckoutController = require('../controllers/user/directCheckoutController');
 const passport = require('passport');
 const {userAuth,adminAuth} = require('../middlewares/auth')
 
 
+
 router.get('/pageNotFound',userController.pageNotFound)
-router.get('/',userController.loadHomepage);
+
 router.get('/signup',userController.loadSignup);
 router.post('/signup',userController.signup);
 router.post('/verify-otp',userController.verifyOtp);
@@ -30,17 +38,92 @@ router.get('/resetPassword',userController.loadResetPassword)
 router.post('/resetPassword',userController.resetPassword)
 router.post('/forgotPassword/resend', userController.resendForgotOtp);
 
+//homePage
+
+router.get('/',userController.loadHomepage);
+router.get('/api/categories/popular',homeController.loadCategories)
+router.get('/api/products/bestselling',homeController.bestselling)
+router.get('/api/products/latest',homeController.latest)
+
+
+
 //product page
-router.get('/shop',userAuth, userController.loadshoppingPage);
-router.get('/filter',userController.filterProduct);
+router.get('/shop',userAuth, shopController.loadshoppingPage);
+router.get('/book/:id',userAuth,shopController.getBookDetails);
+router.get('/api/products', shopController.apiGetProducts);
+router.get('/api/categories', shopController.apiGetCategories);
+router.get('/api/brands', shopController.apiGetBrands);
+
+//userProfile
+
+router.get('/userProfile',userAuth,userController.getUserProfile)
+router.get('/userProfile/edit', userAuth, userController.getEditProfile);
+router.post('/userProfile/edit', userAuth, userController.postEditProfile);
+
+//orders
+router.get('/orders',userAuth,orderController.listOrders)
+router.get('/orders/:orderId',userAuth,orderController.viewOrder)
+router.post('/orders/:orderId/cancel',userAuth,orderController.cancelOrder)
+router.post('/orders/:orderId/return',userAuth,orderController.returnItem)
+router.get('/orders/:orderId/invoice',userAuth,orderController.downloadInvoice)
 
 
 
-router.get('/book/:id',userAuth,userController.getBookDetails);
+//address management
+router.get('/addresses',userAuth,userController.getAddress);
+router.get('/address/add', userAuth,userController.getAddAddress );
+router.post('/address/add', userAuth, userController.addAddress);
+router.get('/address/edit/:addressId', userAuth, userController.getEditAddress);
+router.post('/address/edit/:addressId', userAuth, userController.editAddress);
+router.post('/address/delete/:addressId', userAuth, userController.deleteAddress);
+router.post('/address/setPrimary/:addressId', userAuth, userController.setPrimary);
+
+
+
+// userRoute.js — add under /userProfile routes
+router.post('/userProfile/requestEmailChange', userAuth, userController.requestEmailChange);
+router.post('/userProfile/verifyEmailOtp', userAuth, userController.verifyEmailOtp);
+router.post('/userProfile/resendEmailOtp', userAuth, userController.resendEmailOtp);
+
+
+
+
+//whishlist
+router.get('/wishlist',userAuth,wishlistCOntroller.getWishlist)
+router.post('/wishlist/add',userAuth,wishlistCOntroller.addToWishlist)
+router.post('/wishlist/remove',userAuth,wishlistCOntroller.removeFromWishlist)
+router.get('/wishlist/page', userAuth,wishlistCOntroller.getWishlistPage);
+
+
+//cartManagement
+router.post('/cart/:add', userAuth, cartController.addToCart);               
+router.get('/cart', userAuth, cartController.listCart);                    
+router.post('/api/cart/delete/:productId', userAuth, cartController.removeFromCart);
+router.post('/api/cart/:productId/quantity', userAuth, cartController.changeQuantity); 
+
+
+
+
+
+
+//checkOut page
+router.get('/checkout',userAuth,checkOutController.getCheckoutPage);
+router.post('/checkout',userAuth,orderController.createShowConforamtion)
+router.post('/checkout/address/add', userAuth, checkOutController.checkoutAddress);
+
+//directCheckout
+
+router.get('/directCheckout/:productId',userAuth,directCheckoutController.showDirectCheckout);
+router.post('/directCheckout',userAuth,directCheckoutController.placeDirectOrder);
+router.get('/orders/:orderId/success', userAuth, directCheckoutController.showPaymentConfirmation);
+
+
+
+
+
 
 
 //testing
-
 router.get('/test',userController.test)
 
 

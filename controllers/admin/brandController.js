@@ -1,6 +1,7 @@
 const Brand = require('../../models/brandSchema')
 const Product = require('../../models/productSchema')
 const User = require('../../models/userSchema')
+const { broadcast } = require('../../utils/sse');//
 const fs = require('fs')
 const path = require("path");
 
@@ -56,8 +57,7 @@ const addBrand = async (req,res)=>{
         );
         fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
 
-        console.log("req.file =>", req.file);
-        console.log("req.body =>", req.body);
+
         fs.writeFileSync(uploadPath, req.file.buffer);
       }
 
@@ -76,26 +76,50 @@ const addBrand = async (req,res)=>{
   }
 }
 
+// const blockBrand = async (req,res)=>{
+//     try {
+//         const id  = req.query.id
+//              await Brand.findByIdAndUpdate(id,{$set:{isBlocked:true}})
+//              broadcast('reload', { reason: 'brandBlocked' });// 
+//             res.redirect('/admin/brands');
+//     } catch (error) {
+//         console.error('brand block error',error)
+//     }
+// }
+
+// const unblockBrand = async (req,res)=>{
+//     try {
+//         const id = req.query.id
+//         await Brand.findByIdAndUpdate(id,{$set:{isBlocked:false}});
+//         broadcast('reload', { reason: 'brandUnblocked' }); //
+//         res.redirect('/admin/brands')
+//     } catch (error) {
+//         console.error('brand unblock error',error)
+//     }
+// }
+
+
 const blockBrand = async (req,res)=>{
     try {
-        const id  = req.query.id
-             await Brand.findByIdAndUpdate(id,{$set:{isBlocked:true}})
-            res.redirect('/admin/brands');
+        const {id}  = req.body
+             await Brand.findByIdAndUpdate(id,{isBlocked:true})
+            res.json({success:true,isBlocked:true})
     } catch (error) {
         console.error('brand block error',error)
+        res.json({success:false,message:'Failed to block Brand'})
     }
 }
 
 const unblockBrand = async (req,res)=>{
     try {
-        const id = req.query.id
-        await Brand.findByIdAndUpdate(id,{$set:{isBlocked:false}});
-        res.redirect('/admin/brands')
+        const {id} = req.body
+        await Brand.findByIdAndUpdate(id,{isBlocked:false});
+        res.json({success:true,isBlocked:false})
     } catch (error) {
-        console.error('brand unblock error',error)
+        console.error('brand unblock error',error);
+        res.json({success:false,message:'Failed to unBlock the Brand'})
     }
 }
-
 const deleteBrand = async (req,res)=>{
     try {
         const id = req.query.id;

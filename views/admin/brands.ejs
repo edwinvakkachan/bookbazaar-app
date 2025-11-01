@@ -44,7 +44,7 @@
             </div>
 
             <div class="d-grid">
-              <button class="btn btn-primary mt-3" type="submit">
+              <button class="btn btn-dark mt-3" type="submit">
                 Add Brand
               </button>
             </div>
@@ -59,35 +59,54 @@
                 <tr>
                   <th>Brand</th>
                   <th>Logo</th>
-                  <th>Status</th>
+                  <!-- <th>Status</th> -->
                   <th>Block/Unblock/Delete</th>
                 </tr>
               </thead>
               <tbody>
                <%data.forEach((brand,index)=>{%>
                 <tr>
-                  <td class="text-start"><%=brand.brandName%></td>
+<td class="text-start"><%=brand.brandName%></td>
                   <td class="text-start">
                     <div class="d-flex align-items-center justify-content-center rounded-circle overflow-hidden" style="width:40px; height:40px;">
                       <img src="/uploads/reimage/<%=brand.brandImage[0]%>" alt="<%=brand.brandName%>" class="img-fluid" />
                     </div>
                   </td>
-                  <td class="text-start">
+                  <!-- <td class="text-start">
                     <%if(brand.isBlocked){%>
                     <span class="badge bg-danger rounded-pill px-3">Blocked</span>
                     <%}else {%>
                     <span class="badge bg-success rounded-pill px-3">Active</span>
                     <%}%>
-                  </td>
+                  </td> -->
                   <td class="text-start">
-                    <%if(brand.isBlocked === false){%>
-                    <a href="/admin/blockBrand?id=<%=brand._id%>" class="btn btn-danger btn-sm me-2">Block</a>
-                    <%}else{%>
-                    <a href="/admin/unblockBrand?id=<%=brand._id%>" class="btn btn-success btn-sm me-2">Unblock</a>
-                    <%}%>
+                    <% if (!brand.isBlocked) { %>
+    <button
+      class="btn btn-danger btn-sm me-2 action-btn"
+      data-id="<%= brand._id %>"
+      data-action="block"
+      data-message="Are you sure you want to block this brand?"
+      data-bs-toggle="modal"
+      data-bs-target="#confirmModal"
+    >
+      Block
+    </button>
+  <% } else { %>
+    <button
+      class="btn btn-success btn-sm me-2 action-btn"
+      data-id="<%= brand._id %>"
+      data-action="unblock"
+      data-message="Are you sure you want to unblock this brand?"
+      data-bs-toggle="modal"
+      data-bs-target="#confirmModal"
+    >
+      Unblock
+    </button>
+  <% } %>
                     <a href="/admin/deleteBrand?id=<%=brand._id%>" class="btn btn-outline-danger btn-sm">Delete</a>
                   
                   </td>
+
                 </tr>
                <%})%>
               </tbody>
@@ -122,7 +141,46 @@
 </div>
 
 </section>
+
+<!-- alert box -->
+<div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="popupAlertMessage"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Reusable Confirm Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="confirmMessage">Are you sure?</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="confirmBtnAjax" class="btn btn-danger">Yes, Proceed</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
 <script>
+
 document.getElementById("brand_image").addEventListener("change", function (event) {
   const preview = document.getElementById("preview");
   const file = event.target.files[0];
@@ -136,3 +194,84 @@ document.getElementById("brand_image").addEventListener("change", function (even
 </script>
 
 <%- include('../partials/admin/footer') %>
+
+<script>
+function showPopupAlert(message, title = 'Notification') {
+    document.getElementById('popupAlertTitle').innerText = title;
+    document.getElementById('popupAlertMessage').innerText = message;
+    const modalEl = document.getElementById('popupAlert');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    modal.show();
+  }
+
+ const confirmModal = document.getElementById('confirmModal');
+  const confirmMessage = document.getElementById('confirmMessage');
+  const confirmBtnAjax = document.getElementById('confirmBtnAjax');
+
+  let currentAction = null;   
+  let currentId = null;       
+  let triggeringBtn = null; 
+
+
+  confirmModal.addEventListener('show.bs.modal', (event) => {
+    const button = event.relatedTarget;
+     triggeringBtn = button;
+     currentAction = button.dataset.action; 
+     currentId = button.dataset.id;
+    if (currentAction === 'unblock') {
+      confirmBtnAjax.classList.remove('btn-danger');
+      confirmBtnAjax.classList.add('btn-success');
+      confirmBtnAjax.textContent = 'Yes, Unblock';
+    } else if (currentAction === 'delete') {
+      confirmBtnAjax.classList.remove('btn-success');
+      confirmBtnAjax.classList.add('btn-danger');
+      confirmBtnAjax.textContent = 'Yes, Delete';
+    } else {
+
+      confirmBtnAjax.classList.remove('btn-success');
+      confirmBtnAjax.classList.add('btn-danger');
+      confirmBtnAjax.textContent = 'Yes, Block';
+    }
+  })
+
+  confirmBtnAjax.addEventListener('click', async ()=>{
+try {
+  const id=currentId
+  const res = await fetch(`/admin/${currentAction}Brand`,{
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({id})
+})
+
+const json = await res.json();
+if(json.success){
+  if (json.isBlocked == true) {
+            triggeringBtn.textContent = 'Unblock';
+            triggeringBtn.classList.remove('btn-danger');
+            triggeringBtn.classList.add('btn-success');
+            triggeringBtn.dataset.action = 'unblock';
+            triggeringBtn.dataset.message = 'Are you sure you want to unblock this brand?';
+          } else {
+            triggeringBtn.textContent = 'Block';
+            triggeringBtn.classList.remove('btn-success');
+            triggeringBtn.classList.add('btn-danger');
+            triggeringBtn.dataset.action = 'block';
+            triggeringBtn.dataset.message = 'Are you sure you want to block this brand?';
+          }
+}else{
+  showPopupAlert(json.message)
+  return
+}
+const modalInstance = bootstrap.Modal.getInstance(confirmModal);
+      modalInstance.hide();
+      localStorage.setItem('forceReload', Date.now());// user side reload
+} catch (error) {
+  showPopupAlert(error)
+  return
+}
+
+  })
+
+
+
+</script>
