@@ -760,46 +760,36 @@ const addAddress = async (req, res) => {
   try {
     
     const userId = req.session.user._id
-    
-
-    if (!req.body) return res.status(400).json({ message: 'No form data received' });
-
-    
-    const addressData = { ...req.body };
-
-    
-    addressData.isPrimary = (addressData.isPrimary === 'true' || addressData.isPrimary === 'on' || addressData.isPrimary === true);
-
-    
-    if (!addressData.name || !addressData.line1) {
-      return res.status(400).json({
-        message: 'Validation error',
-        errors: { name: addressData.name ? undefined : 'required', line1: addressData.line1 ? undefined : 'required' }
-      });
-    }
-
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    if (!Array.isArray(user.addresses)) user.addresses = [];
+   const {name,email,phone,line1,city,state,postalCode} = req.body 
+   let {isPrimary=false}=req.body
+    if(!user.addresses){
+      user.addresses = [];
+    }
 
     
     if (user.addresses.length === 0) {
-      addressData.isPrimary = true;
-    } else if (addressData.isPrimary) {
+     isPrimary = true;
+    } else if (isPrimary=='true') {
       user.addresses.forEach(a => (a.isPrimary = false));
     }
+
+
+    const addressData ={
+    name,email,phone,line1,city,state,postalCode,isPrimary
+   }
 
     user.addresses.push(addressData);
     await user.save();
 
     
-  return res.redirect('/addresses')
+  res.json({success:true})
   } catch (error) {
     console.error('addAddress error:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    res.json({success:false,message:'failed to save the address'})
   }
 };
+
 
 const getEditAddress = async (req,res)=>{
   try {
