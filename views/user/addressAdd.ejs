@@ -20,33 +20,39 @@
             <!-- Recipient Name -->
             <div class="col-12">
               <label class="form-label">Name</label>
-              <input name="name" type="text" class="form-control form-control-lg" placeholder="Recipient Name" >
+              <input name="name" type="text" class="form-control form-control-lg" placeholder="Recipient Name">
+              <small class="error-message text-danger"></small>
             </div>
 
             <!-- Email & Phone -->
             <div class="col-12 col-md-6">
               <label class="form-label">Email</label>
               <input name="email" type="email" class="form-control form-control-lg" placeholder="example@gmail.com">
+               <small class="error-message text-danger"></small>
             </div>
             <div class="col-12 col-md-6">
               <label class="form-label">Phone</label>
               <input name="phone" type="tel" class="form-control form-control-lg" placeholder="+91 12345 67890" >
+               <small class="error-message text-danger"></small>
             </div>
 
             <!-- Address line1 -->
             <div class="col-12">
               <label class="form-label">Address</label>
               <textarea name="line1" rows="3" class="form-control form-control-lg" placeholder="House Name, House Number, Locality" ></textarea>
+               <small class="error-message text-danger"></small>
             </div>
 
             <!-- District/Town & State -->
             <div class="col-12 col-md-6">
               <label class="form-label">District / Town</label>
               <input name="city" type="text" class="form-control" placeholder="eg : Ernakulam" >
+               <small class="error-message text-danger"></small>
             </div>
             <div class="col-12 col-md-6">
               <label class="form-label">State</label>
               <input name="state" type="text" class="form-control" placeholder="eg : Kerala" >
+               <small class="error-message text-danger"></small>
             </div>
 
             <!-- Landmark (line2) & Pin -->
@@ -57,6 +63,7 @@
             <div class="col-12 col-md-6">
               <label class="form-label">Pin Code</label>
               <input name="postalCode" type="text" pattern="\d{6}" class="form-control" placeholder="eg : 689230" >
+               <small class="error-message text-danger"></small>
             </div>
 
             <!-- Address Type -->
@@ -106,28 +113,13 @@
 
 <script>
 
-  const showError = (input, message) => {
-    let errorEl = input.parentElement.querySelector(".error-message");
-    if (!errorEl) {
-      errorEl = document.createElement("small");
-      errorEl.className = "error-message text-danger";
-      input.parentElement.appendChild(errorEl);
-    }
-    errorEl.textContent = message || "";
-  };
-
-
   
 document.addEventListener('DOMContentLoaded',()=>{
-  
-  const  clearErrors =()=>{
-    form.querySelectorAll(".error-message").forEach((el) => el.remove());
-  }
-  
+    
   const form = document.getElementById('addAddressForm');
   form.addEventListener('submit',(e)=>{
     e.preventDefault();
-    clearErrors();
+    form.querySelectorAll(".error-message").forEach((a) => a.textContent='');
     let isValid = true;
     const name = form.name.value.trim();
     const email = form.email.value.trim();
@@ -138,37 +130,37 @@ document.addEventListener('DOMContentLoaded',()=>{
     const postalCode = form.postalCode.value.trim();
 
  if (name.length < 3) {
-      showError(form.name, "Name must be at least 3 characters long.");
+      form.name.parentElement.querySelector(".error-message").textContent='Name must be at least 3 characters long.'
       isValid = false;
     }
 
  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showError(form.email, "Enter a valid email address.");
+      form.email.parentElement.querySelector(".error-message").textContent='Enter a valid email address.'
       isValid = false;
     }
 
     if (!/^[6-9]\d{9}$/.test(phone)) {
-      showError(form.phone, "Enter a valid 10-digit phone number.");
+      form.phone.parentElement.querySelector(".error-message").textContent='Enter a valid 10-digit phone number.'
       isValid = false;
     }
 
     if (line1.length < 5) {
-      showError(form.line1, "Address must be at least 5 characters long.");
+      form.line1.parentElement.querySelector(".error-message").textContent='Address must be at least 5 characters long.'
       isValid = false;
     }
 
     if (city === "") {
-      showError(form.city, "City is required.");
+      form.city.parentElement.querySelector(".error-message").textContent='City is required.'
       isValid = false;
     }
 
     if (state === "") {
-      showError(form.state, "State is required.");
+      form.state.parentElement.querySelector(".error-message").textContent='State is required.'
       isValid = false;
     }
 
     if (!/^\d{6}$/.test(postalCode)) {
-      showError(form.postalCode, "Enter a valid 6-digit postal code.");
+      form.postalCode.parentElement.querySelector(".error-message").textContent='Enter a valid 6-digit postal code.'
       isValid = false;
     }
 

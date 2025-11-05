@@ -8,4 +8,29 @@
 </body>
 
 
+<form id="addressAdd">
+  <input type="text" placeholder="Your name" name="name">
+  <input type="text" placeholder="address line 1" name="addressLine1">
+  <input type="email" placeholder="email" name="email">
+  <input type="number" placeholder="phone" name="phone">
+  <button type="submit"></button>
+</form>
+
+<script>
+  document.getElementById('addressAdd').addEventListener('submit',async(e)=>{
+    e.preventDefault();
+    const form =  document.getElementById('addressAdd');
+    const name = form.name.value.trim();
+    const email = form.email.value.trim();
+    const phone = form.phone.value.trim();
+    if(name.length<3){
+      
+    }
+  })
+</script>
+
+
+
+
+
 <%- include('../test/footer')%>

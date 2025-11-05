@@ -29,3 +29,6 @@ const cartCountMiddleware = async (req, res, next) =>{
 
 
 module.exports =  cartCountMiddleware
+
+
+

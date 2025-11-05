@@ -739,16 +739,10 @@ const getAddress = async (req, res) => {
   try {
     
     const userId = req.session.user._id
-   
-
-    const user = await User.findById(userId).lean();
-    if (!user) return res.status(404).send('User not found');
-
-    user.addresses = Array.isArray(user.addresses) ? user.addresses : [];
+    const user = await User.findById(userId);
     return res.render('addresses', { user });
   } catch (error) {
     console.error('getAddresses error:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -756,6 +750,7 @@ const getAddAddress = async(req,res)=>{
   try {
     res.render('addressAdd', { user: req.session.user || null });
   } catch (error) {
+    console.error('add address page loading errror');
     
   }
 }
