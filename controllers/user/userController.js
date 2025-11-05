@@ -756,12 +756,14 @@ const getAddAddress = async(req,res)=>{
 }
 
 
+
+
 const addAddress = async (req, res) => {
   try {
     
     const userId = req.session.user._id
     const user = await User.findById(userId);
-   const {name,email,phone,line1,city,state,postalCode} = req.body 
+   const {name,phone,email='',line1,city,state,postalCode} = req.body 
    let {isPrimary=false}=req.body
     if(!user.addresses){
       user.addresses = [];
@@ -791,18 +793,14 @@ const addAddress = async (req, res) => {
 };
 
 
+
 const getEditAddress = async (req,res)=>{
   try {
-    const sessionUser = req.session.user;
-    const addressId = req.params.addressId;
-    
-
-    
-    const foundUser = await User.findById(sessionUser._id);
-    if (!foundUser) return res.status(404).send('User not found');
-
-    const addr = foundUser.addresses.id(addressId);
-    if (!addr) return res.status(404).send('Address not found');
+    const userId = req.session.user._id;
+    const {addressId} = req.params
+    const user = await User.findById(userId);
+   
+    const addr = user.addresses.id(addressId);
 
     return res.render('editAddress', { address: addr });
   } catch (error) {
@@ -820,8 +818,7 @@ const editAddress = async (req, res) => {
     
 
     const { addressId } = req.params;
-    if (!addressId) return res.status(400).json({ message: 'addressId param required' });
-    if (!req.body) return res.status(400).json({ message: 'No form data received' });
+   
 
     const updates = { ...req.body };
     updates.isPrimary = (updates.isPrimary === 'true' || updates.isPrimary === 'on' || updates.isPrimary === true);
@@ -849,33 +846,24 @@ const editAddress = async (req, res) => {
 };
 
 
+
 const deleteAddress = async (req, res) => {
   try {
-    const userId = req.session.user._id || req.session.user;
-    const { addressId } = req.params;
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    if (!Array.isArray(user.addresses)) user.addresses = [];
-
-    
+    const userId = req.session.user._id 
+    const { addressId } = req.body;
+    const user = await User.findById(userId);  
     user.addresses = user.addresses.filter(a => String(a._id) !== String(addressId));
-
-    
     if (!user.addresses.some(a => a.isPrimary) && user.addresses.length) {
       user.addresses[0].isPrimary = true;
     }
 
     await user.save();
-   res.redirect('/addresses')
+    res.json({success:true});
   } catch (error) {
     console.error('deleteAddress error:', error);
-    return res.redirect('/pageNotFound')
+    res.json ({success:false,message:'Failed to delete the address'})
   }
 };
-
-
 
 const setPrimary = async (req, res) => {
   try {

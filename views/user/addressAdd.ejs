@@ -25,11 +25,11 @@
             </div>
 
             <!-- Email & Phone -->
-            <div class="col-12 col-md-6">
+            <!-- <div class="col-12 col-md-6">
               <label class="form-label">Email</label>
               <input name="email" type="email" class="form-control form-control-lg" placeholder="example@gmail.com">
                <small class="error-message text-danger"></small>
-            </div>
+            </div> -->
             <div class="col-12 col-md-6">
               <label class="form-label">Phone</label>
               <input name="phone" type="tel" class="form-control form-control-lg" placeholder="+91 12345 67890" >
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     form.querySelectorAll(".error-message").forEach((a) => a.textContent='');
     let isValid = true;
     const name = form.name.value.trim();
-    const email = form.email.value.trim();
+    // const email = form.email.value.trim();
     const phone = form.phone.value.trim();
     const line1 = form.line1.value.trim();
     const city = form.city.value.trim();
@@ -135,10 +135,10 @@ document.addEventListener('DOMContentLoaded',()=>{
       isValid = false;
     }
 
- if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      form.email.parentElement.querySelector(".error-message").textContent='Enter a valid email address.'
-      isValid = false;
-    }
+//  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+//       form.email.parentElement.querySelector(".error-message").textContent='Enter a valid email address.'
+//       isValid = false;
+//     }
 
     if (!/^[6-9]\d{9}$/.test(phone)) {
       form.phone.parentElement.querySelector(".error-message").textContent='Enter a valid 10-digit phone number.'
@@ -174,7 +174,7 @@ return
 const res = await fetch('/address/add',{
   method:'POST',
   headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({name,email,phone,line1,city,state,postalCode,isPrimary})
+  body:JSON.stringify({name,phone,line1,city,state,postalCode,isPrimary})
 })
 
 const data = await res.json();

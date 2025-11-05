@@ -64,9 +64,10 @@
                   <div class="d-flex justify-content-end gap-2">
                     <a href="/address/edit/<%= addr._id %>" class="btn btn-dark btn-sm">Edit</a>
 
-                    <form action="/address/delete/<%= addr._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Delete this address?');">
-                      <button type="submit" class="btn btn-outline-secondary btn-sm">Delete</button>
-                    </form>
+                    <button type="button" id="deleteButton" 
+                    class="btn btn-outline-secondary btn-sm" 
+                    data-deleteBtn
+                    data-addressid="<%= addr._id %>">Delete</button>
                   </div>
                 </div>
               </div>
@@ -107,3 +108,29 @@
   
   .address-card .text-end { min-width: 150px; }
 </style>
+
+<script>
+  document.addEventListener('click', async(e)=>{
+    const btn = e.target.closest('button[data-deleteBtn]')
+    if (!btn) return;   
+    e.preventDefault();
+    const addressId = btn.dataset.addressid;
+    const result = await showConfirmModal('Are you sure?.');
+    if(!result){
+      return
+    }
+    const res = await fetch('/address/delete/',{
+      method:'DELETE',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({addressId}),
+    })
+    const data = await res.json();
+    if(!data.success){
+      showPopupAlert(data.message);
+      return;
+    }
+    if(data.success){
+      location.href='/addresses'
+    }
+  })
+</script>

@@ -75,7 +75,8 @@ router.get('/address/add', userAuth,userController.getAddAddress );
 router.post('/address/add', userAuth, userController.addAddress);
 router.get('/address/edit/:addressId', userAuth, userController.getEditAddress);
 router.post('/address/edit/:addressId', userAuth, userController.editAddress);
-router.post('/address/delete/:addressId', userAuth, userController.deleteAddress);
+// router.post('/address/delete/:addressId', userAuth, userController.deleteAddress);
+router.delete('/address/delete', userAuth, userController.deleteAddress);
 router.post('/address/setPrimary/:addressId', userAuth, userController.setPrimary);
 
 
