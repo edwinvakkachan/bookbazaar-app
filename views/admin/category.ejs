@@ -14,7 +14,8 @@
     <header class="card-header text-center mb-4">
       <form action="/admin/category/" method="get" class="d-flex justify-content-center">
         <div class="input-group input-group-sm" style="max-width: 720px; width: 100%;">
-          <input type="text" class="form-control" placeholder="Search categories" name="search" />
+          <input type="text" class="form-control" placeholder="Search categories" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" />
+
           <button class="btn btn-success" type="submit">Search</button>
         </div>
       </form>
@@ -25,21 +26,21 @@
         <div class="row g-3 align-items-start">
           <!-- Category Creation Form -->
 <div class="col-md-3 col-lg-4 col-xl-3">        
-      <form method="POST" action="/admin/addCategory" enctype="application/x-www-form-urlencoded" onsubmit="return handleFormSubmit(event)" class="p-3 border rounded-3 shadow-sm bg-white">
+      <form method="POST" id="categoryForm" action="/admin/addCategory" enctype="application/x-www-form-urlencoded" onsubmit="return handleFormSubmit(event)" class="p-3 border rounded-3 shadow-sm bg-white">
               <div class="mb-3">
                 <label for="product_name" class="form-label fw-semibold">Name</label>
-                <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name" required />
+                <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name"  />
                 <div id="name-error" class="error-message text-danger small mt-1"></div>
               </div>
 
               <div class="mb-3">
                 <label class="form-label fw-semibold">Description</label>
-                <textarea placeholder="Type here" name="description" class="form-control" id="descriptionId" required></textarea>
+                <textarea placeholder="Type here" name="description" class="form-control" id="descriptionId" ></textarea>
                 <div id="description-error" class="error-message text-danger small mt-1"></div>
               </div>
 
               <div class="d-grid">
-                <button class="btn btn-primary" type="submit">Create category</button>
+                <button class="btn btn-dark" type="submit">Create category</button>
               </div>
             </form>
           </div>
@@ -81,14 +82,34 @@
                         <% } %>
                       </td>
                       <td class="text-center">
-                        <% if (category.isListed) { %>
-                          <a href="/admin/listCategory?id=<%= category._id %>" class="btn btn-outline-danger btn-sm">Unlist</a>
-                        <% } else { %>
-                          <a href="/admin/unlistCategory?id=<%= category._id %>" class="btn btn-outline-success btn-sm">List</a>
-                        <% } %>
+                      
+<% if (category.isListed) { %>
+  <button 
+    class="btn btn-outline-danger btn-sm list-toggle-btn" 
+    data-id="<%= category._id %>" 
+    data-action="unlist">
+    Unlist
+  </button>
+<% } else { %>
+  <button 
+    class="btn btn-outline-success btn-sm list-toggle-btn" 
+    data-id="<%= category._id %>" 
+    data-action="list">
+    List
+  </button>
+<% } %>
+
+
+
+
                       </td>
                       <td class="text-center">
+
+
                         <a href="/admin/geteditCategory?id=<%= category._id %>" class="btn btn-outline-primary btn-sm">Edit</a>
+
+
+
                       </td>
                     </tr>
                   <% }) %>
@@ -101,65 +122,32 @@
     </div>
 
     <!-- Pagination -->
-    <nav class="mt-4">
-      <ul class="pagination justify-content-center flex-wrap">
-        <% if (currentPage > 1) { %>
-          <li class="page-item"><a class="page-link" href="?page=<%= currentPage - 1 %>">&laquo; Previous</a></li>
-        <% } %>
+ <nav class="mt-3">
+  <ul class="pagination justify-content-center flex-wrap">
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+        <a class="page-link" href="?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>">
+          <%= i %>
+        </a>
+      </li>
+    <% } %>
+  </ul>
+</nav>
 
-        <% for (let i = 1; i <= totalPages; i++) { %>
-          <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-          </li>
-        <% } %>
-
-        <% if (currentPage < totalPages) { %>
-          <li class="page-item"><a class="page-link" href="?page=<%= currentPage + 1 %>">Next &raquo;</a></li>
-        <% } %>
-      </ul>
-    </nav>
 
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
-  <script>
-    async function handleFormSubmit(event) {
-      event.preventDefault();
-      const name = document.getElementsByName('name')[0].value.trim();
-      const description = document.getElementById('descriptionId').value.trim();
+<!-- add category and validation -->
 
-      if (!validateForm(name, description)) {
-        return false;
-      }
+<script>
+function validateForm(name,description){
+  clearErrorMessages();
+   let isValid = true;
 
-      try {
-        const response = await fetch('/admin/addCategory', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, description })
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Something went wrong');
-        }
-
-        console.log('Success:', data);
-        location.reload();
-      } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Oops', text: error.message || 'An error occurred' });
-      }
-    }
-
-    function validateForm() {
-      clearErrorMessages();
-      const name = document.getElementsByName('name')[0].value.trim();
-      const description = document.getElementById('descriptionId').value.trim();
-      let isValid = true;
-
-      if (name === '') {
+   if (name === '') {
         displayErrorMessage('name-error', 'Name should not be empty');
         isValid = false;
       } else if (!/^[a-zA-Z\s]+$/.test(name)) {
@@ -167,13 +155,13 @@
         isValid = false;
       }
 
-      if (description === '') {
+
+    if (description === '') {
         displayErrorMessage('description-error', 'Description should not be empty');
         isValid = false;
       }
 
       return isValid;
-    }
 
     function displayErrorMessage(elementId, message) {
       const errorElement = document.getElementById(elementId);
@@ -188,6 +176,101 @@
         element.style.display = 'none';
       });
     }
-  </script>
+
+}
+
+  document.getElementById('categoryForm').addEventListener('submit',async (e)=>{
+    e.preventDefault();
+    const name = e.target.name.value;
+    const description = e.target.description.value;
+    const result =  validateForm(name,description);
+    if(!result){
+      return 
+    }
+
+ const res = await fetch('/admin/addCategory',{
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({name,description})
+ })
+ const data = await res.json();
+ if(!data.success){
+  showPopupAlert(data.message);
+ }
+
+ // user side reloading
+// location.reload();
+// localStorage.setItem('forceReload', Date.now()); 
+
+
+
+  })
+</script>
+
+
+
+ <!-- list and unlist category -->
+
+<script>
+document.addEventListener('click', async function (e) {
+  const btn = e.target.closest('.list-toggle-btn');
+  
+
+  const id = btn.dataset.id;
+  const userId = btn.dataset.id;
+  const action = btn.dataset.action; 
+
+  
+  const confirmed = await showConfirmModal(
+    `Are you sure you want to ${action} this category?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+
+  if(action =='unlist'){
+    const res = await fetch('/admin/unlistCategory',{
+     method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    body:JSON.stringify({ userId}),
+  })
+
+const data = await res.json();
+if(!data.success){
+  showPopupAlert(data.message);
+}
+
+  }else {
+
+    const res = await fetch('/admin/listCategory',{
+     method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    body:JSON.stringify({ userId}),
+  })
+
+const data = await res.json();
+if(!data.success){
+  showPopupAlert(data.message);
+}
+
+  }
+
+
+  location.reload();
+
+
+  } catch (err) {
+    console.error(err);
+    showPopupAlert('Network error or server unavailable.');
+  }
+});
+</script>
+
+
 
   <%- include('../partials/admin/footer') %>

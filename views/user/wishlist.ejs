@@ -1,0 +1,208 @@
+<%- include('../partials/user/header.ejs') %>
+
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Your Wishlist</h3>
+    <div>
+      <a href="/shop" class="btn btn-outline-secondary btn-sm me-2">Continue shopping</a>
+      <a href="/cart" class="btn btn-dark btn-sm">Go to cart</a>
+    </div>
+  </div>
+
+  <div id="wishlist-items"></div>
+
+  <hr class="my-4">
+
+  <h5>Recommendations</h5>
+  <div id="wishlist-recommendations" class="row g-3"></div>
+</div>
+
+<!-- Popup Modal (reuse from shop page) -->
+<div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="popupAlertMessage"></div>
+      <div class="modal-footer"><button class="btn btn-dark" data-bs-dismiss="modal">OK</button></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- alert box -->
+<div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="popupAlertMessage"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<%- include('../partials/user/footer.ejs') %>
+
+<script>
+
+
+function updateWishlistBadge(count) {
+  const badge = document.getElementById('wishlist-count-badge');
+  if (!badge) return;
+  badge.innerText = count;
+  badge.style.display = Number(count) > 0 ? '' : 'none';
+}
+
+function showPopupAlert(message, title = 'Notification') {
+    document.getElementById('popupAlertTitle').innerText = title;
+    document.getElementById('popupAlertMessage').innerText = message;
+    const modalEl = document.getElementById('popupAlert');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    modal.show();
+  }
+
+
+
+async function getwishlist(){
+  try {
+    const res = await fetch('/wishlist');
+const json = await res.json();
+if(!json.success){
+showPopupAlert(json.message)
+return
+}
+const { items, recommendations, wishlistCount } = json;
+
+updateWishlistBadge( wishlistCount);
+
+ const wishlistContainer = document.getElementById('wishlist-items');
+    wishlistContainer.innerHTML = items.length
+      ? items.map(it => `
+        <div class="card mb-3 shadow-sm">
+          <div class="row g-0 align-items-center">
+            <div class="col-md-2">
+              <img src="${it.productId?.productImage?.[0] || '/images/placeholder.png'}"
+                   class="img-fluid rounded-start" alt="${it.productId?.name}">
+            </div>
+            <div class="col-md-8">
+              <div class="card-body">
+                <h5 class="card-title">${it.productId?.productName}</h5>
+                <p class="card-text mb-1 text-muted">${it.productId?.brand?.brandName || 'No brand'}</p>
+                <p class="card-text fw-bold">₹${it.productId?.salePrice}</p>
+              </div>
+            </div>
+            <div class="col-md-2 d-flex flex-column align-items-end pe-3 gap-2">
+              <button class="btn btn-sm btn-success w-100 add-to-cart-btn" 
+                      data-id="${it.productId?._id}">
+                <i class="bi bi-cart-plus"></i> Add to Cart
+              </button>
+              <button class="btn btn-sm btn-danger remove-btn w-100" data-product-id="${it.productId?._id}">
+                <i class="bi bi-trash"></i> Remove
+              </button>
+            </div>
+          </div>
+        </div>`
+      ).join('')
+      : '<p class="text-muted">Your wishlist is empty.</p>';
+
+
+    // Display Recommended items
+   const recContainer = document.getElementById('wishlist-recommendations');
+    recContainer.innerHTML = (recommendations && recommendations.length)
+      ? recommendations.map(r => `
+        <div class="col-md-3">
+          <div class="card h-100 shadow-sm">
+            <img src="${r.productImage?.[0] || '/images/placeholder.png'}"
+                 class="card-img-top" alt="${r.name}">
+            <div class="card-body">
+              <h6 class="card-title">${r.productName}</h6>
+              <p class="card-text fw-bold mb-1">₹${r.salePrice}</p>
+              <a href="/book/${r._id}" class="btn btn-outline-dark btn-sm w-100 mb-2">
+                View
+              </a>
+              <button class="btn btn-dark btn-sm w-100 add-to-cart-btn" 
+                      data-id="${r._id}">
+                <i class="bi bi-cart-plus"></i> Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>`
+      ).join('')
+      : '<p class="text-muted">No recommendations available.</p>';
+
+  } catch (error) {
+    howPopupAlert('Something went wrong while loading wishlist.');
+  }
+}
+
+// remove button
+
+document.addEventListener('click', async (e) => {
+  const removeBtn = e.target.closest('.remove-btn');
+  if (removeBtn) {
+    const id = removeBtn.dataset.productId;
+    // const productId = id
+    const res = await fetch('/wishlist/remove', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({productId:id})
+     }); 
+    const json = await res.json();
+    if (json.success) {
+      showPopupAlert('Removed from wishlist');
+      getwishlist();
+    } else {
+      showPopupAlert(json.message || 'Failed to remove item');
+    }
+  }
+});
+
+// add to cart button
+document.addEventListener('click', async (e) => {
+  const cartBtn = e.target.closest('.add-to-cart-btn');
+  if (cartBtn) {
+    const productId = cartBtn.dataset.id;
+    const result = await showConfirmModal('Do you want to add the prodcut into cart')
+    if(!result){
+      return
+    }
+    const res = await fetch('/cart/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, quantity: 1 })
+    });
+    const json = await res.json();
+    if (json.success) {
+      showPopupAlert('Item added to cart!');
+      getwishlist();
+    } else {
+      showPopupAlert(json.message || 'Failed to add item to cart');
+    }
+  }
+});
+
+
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+ await getwishlist();
+
+})
+
+
+
+
+
+
+
+
+</script>

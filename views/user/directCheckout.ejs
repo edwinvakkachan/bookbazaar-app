@@ -1,0 +1,124 @@
+<%- include("../partials/user/header.ejs") %>
+
+<div class="container my-5">
+  <div class="row gx-4">
+    <!-- LEFT: Product -->
+    <div class="col-md-6">
+      <div class="card shadow-sm p-4">
+        <h4 class="mb-3">Product Summary</h4>
+        <div class="d-flex align-items-center">
+          <img src="<%= product.productImage[0] %>" class="img-thumbnail me-3" style="width:100px;height:100px;object-fit:cover;">
+          <div>
+            <h5><%= product.productName %></h5>
+            <p class="text-muted">Qty: <%= qty %></p>
+            <p class="fw-bold text-success">₹<%= totalPrice %></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Checkout -->
+    <div class="col-md-6">
+      <div class="card shadow-sm p-4">
+        <h4 class="mb-3">Shipping & Payment</h4>
+        <form id="directCheckoutForm">
+          <input type="hidden" name="productId" value="<%= product._id %>">
+          <!-- <input type="hidden" name="qty" value="1"> -->
+           <input type="hidden" name="qty" id="quantityInput" value="<%= qty %>" min="1">
+
+          <!-- Address -->
+          <div class="mb-3">
+            <label for="addressId" class="form-label">Select Address</label>
+            <select id="addressId" name="addressId" class="form-select" required>
+              <% if (user.addresses && user.addresses.length > 0) { %>
+                <% user.addresses.forEach(addr => { %>
+                  <option value="<%= addr._id %>"><%= addr.name %> - <%= addr.city %></option>
+                <% }) %>
+              <% } else { %>
+                <option disabled>No addresses saved</option>
+              <% } %>
+            </select>
+          </div>
+
+          <!-- Payment -->
+          <div class="mb-3">
+            <label class="form-label">Payment Method</label>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="cod" checked>
+              <label class="form-check-label" for="cod">Cash on Delivery</label>
+            </div>
+            <!-- <div class="form-check">
+              <input class="form-check-input" type="radio" name="paymentMethod" id="online" value="online">
+              <label class="form-check-label" for="online">Online Payment</label>
+            </div>
+          </div> -->
+
+          <!-- Total -->
+          <div class="d-flex justify-content-between border-top pt-3 mt-3">
+            <h5>Total</h5>
+            <h5 class="fw-bold text-success">₹<%= totalPrice %></h5>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 mt-3">Place Order</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- alert box -->
+<!-- <div class="modal fade" id="popupAlert" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="popupAlertTitle">Notification</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="popupAlertMessage"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+
+<script>
+  document.getElementById('directCheckoutForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    function showPopupAlert(message, title = 'Notification') {
+    document.getElementById('popupAlertTitle').innerText = title;
+    document.getElementById('popupAlertMessage').innerText = message;
+    const modalEl = document.getElementById('popupAlert');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    modal.show();
+  }
+
+
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    try {
+      const res = await fetch('/directCheckout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        window.location.href = `/orders/${result.orderId}/success`; // redirect to success page
+      } else {
+       
+        showPopupAlert(result.message)
+      }
+    } catch (err) {
+      console.error(err);
+      showPopupAlert('Something went wrong while placing the order.')
+    }
+  });
+</script>
+
+<%- include("../partials/user/footer.ejs") %>

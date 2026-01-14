@@ -3,131 +3,192 @@
 <h2 class="page-title mb-3">Customers</h2>
 
 <!-- Search & Sort -->
-<form action="/admin/customers" method="get" class="mb-3">
-  <div class="row g-2 align-items-center">
-    <div class="col-12 col-md-6 col-lg-5">
-      <input type="text" class="form-control" placeholder="Search customers..." name="search" value="<%= search || '' %>">
-    </div>
-    <div class="col-6 col-md-3 col-lg-2">
-      <select name="sortBy" class="form-select">
-        <option value="">Sort By</option>
-        <option value="name"  <%= sortBy === 'name'  ? 'selected' : '' %>>Name</option>
-        <option value="email" <%= sortBy === 'email' ? 'selected' : '' %>>Email</option>
-      </select>
-    </div>
-    <div class="col-6 col-md-auto">
-      <button class="btn btn-success" type="submit">Search</button>
-    </div>
-  </div>
-</form>
+
+
 
 <!-- Customers Table -->
-<div class="card">
-  <div class="card-header">
-    <h3 class="h6 m-0">Customer List</h3>
+
+
+<div class="container my-5">
+  <h4 class="mb-4 fw-bold">Customer List</h4>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="input-group" style="width: 250px;">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search user...">
+      <button class="btn btn-primary" id="searchBtn">Search</button>
+    </div>
   </div>
+      
   <div class="table-responsive">
-    <table class="table table-hover align-middle m-0">
+
+    <table class="table table-hover align-middle text-center" id="customerTable">
       <thead class="table-light">
         <tr>
           <th>NAME</th>
           <th>EMAIL</th>
-          <th>PHONE NO</th>
+          <th>PHONE</th>
+          <th>STATUS</th>
           <th>ACTION</th>
         </tr>
       </thead>
-      <tbody>
-        <% if (customers.length === 0) { %>
-          <tr>
-            <td colspan="4" class="text-center">No users found</td>
-          </tr>
-        <% } else { %>
-          <% customers.forEach(customer => { %>
-            <tr>
-              <td><%= customer.name %></td>
-              <td><%= customer.email %></td>
-              <td><%= customer.phone %></td>
-              <td>
-                <% if (customer.isBlocked) { %>
-    <button 
-      class="btn btn-sm btn-success toggle-user" 
-      data-id="<%= customer._id %>" 
-      data-action="unblock">
-      Unblock
-    </button>
-                <% } else { %>
-    <button 
-      class="btn btn-sm btn-danger toggle-user" 
-      data-id="<%= customer._id %>" 
-      data-action="block">
-      Block
-    </button>
-                <% } %>
-              </td>
-            </tr>
-          <% }) %>
-        <% } %>
+      <tbody id="customerBody">
+        <!-- Rows will be inserted dynamically -->
       </tbody>
     </table>
-  </div>
-</div>
 
-<!-- Pagination -->
+
+
 <nav class="mt-3">
-  <ul class="pagination">
-    <% for (let i = 1; i <= totalPages; i++) { %>
-      <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-        <a class="page-link"
-           href="?page=<%= i %><%= search ? `&search=${search}` : '' %><%= sortBy ? `&sortBy=${sortBy}` : '' %>"><%= i %></a>
-      </li>
-    <% } %>
-  </ul>
+  <ul class="pagination justify-content-center" id="pagination"></ul>
 </nav>
 
 
+  </div>
+</div>
+
+
+
+
+
+
 <script>
-document.addEventListener("click", async function(e) {
-  if (e.target.classList.contains("toggle-user")) {
-    e.preventDefault();
 
-    const userId = e.target.dataset.id;
-    const action = e.target.dataset.action;
+  let pagination; 
+let searchInput;
+let searchBtn;
+let currentPage = 1;
+let currentSearch='';
 
-    try {
-      const res = await fetch(`/admin/${action}User/${userId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        }
+async function loadCustomers(page = 1,search = ''){
+  try {
+    // const res = await fetch(`/admin/api/customers?page=${page}${search ? '&search=' + encodeURIComponent(search) : ''}`);
+    const res = await fetch(`/admin/api/customers?page=${page}&search=${search}`);
+  const data = await res.json();
+  if(!data.success){
+showPopupAlert(data.message)
+  }
+
+ currentPage = data.page;
+currentSearch = data.search || search || '';
+
+
+const tbody = document.getElementById('customerBody');
+tbody.innerHTML='';
+data.users.forEach(user => {
+  const row = document.createElement('tr');
+      row.id = `user-${user._id}`;
+      row.innerHTML = `
+        <td>${user.name}</td>
+        <td>${user.email}</td>
+        <td>${user.phone || '-'}</td>
+        <td>
+          <span class="badge ${user.isBlocked ? 'bg-danger' : 'bg-success'}">
+            ${user.isBlocked ? 'Blocked' : 'Active'}
+          </span>
+        </td>
+        <td>
+          <button
+            class="btn btn-sm ${user.isBlocked ? 'btn-outline-success' : 'btn-danger'} block-toggle-btn"
+
+            data-id="${user._id}"
+            data-blocked="${user.isBlocked}">
+            ${user.isBlocked ? 'Unblock' : 'Block'}
+          </button>
+        </td>
+      `;
+      tbody.appendChild(row);
+});
+
+
+
+
+// pagination 
+ pagination.innerHTML = '';
+    for (let i = 1; i <= data.totalPages; i++) {
+      const li = document.createElement('li');
+      li.className = `page-item ${i === data.page ? 'active' : ''}`;
+      li.innerHTML = `<a href="#" class="page-link">${i}</a>`;
+      li.addEventListener('click', e => {
+        e.preventDefault();
+        currentPage = i;
+        loadCustomers(currentPage,currentSearch);
       });
+      pagination.appendChild(li);
+    }
 
-      const data = await res.json();
 
-      if (data.success) {
-        // update button + status instantly
-        if (action === "block") {
-          e.target.innerText = "Unblock";
-          e.target.classList.remove("btn-danger");
-          e.target.classList.add("btn-success");
-          e.target.dataset.action = "unblock";
-          e.target.closest("tr").querySelector("td:nth-child(1)").style.opacity = "0.5"; // optional visual cue
-        } else {
-          e.target.innerText = "Block";
-          e.target.classList.remove("btn-success");
-          e.target.classList.add("btn-danger");
-          e.target.dataset.action = "block";
-          e.target.closest("tr").querySelector("td:nth-child(1)").style.opacity = "1";
-        }
-      } else {
-        alert("Failed: " + (data.message || "Unknown error"));
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong!");
+   searchBtn.addEventListener('click', () => {
+    loadCustomers(1, searchInput.value);
+  });
+
+
+  } catch (error) {
+    
+  }
+}
+
+
+
+
+document.addEventListener('DOMContentLoaded',async ()=>{
+   pagination = document.getElementById('pagination');
+   searchInput = document.getElementById('searchInput');
+   searchBtn = document.getElementById('searchBtn');
+  let currentSearch = '';
+
+
+ await loadCustomers(currentPage,'')
+
+
+ document.getElementById('customerTable').addEventListener('click',async (e)=>{
+  const btn = e.target.closest('.block-toggle-btn');
+  const userId = btn.dataset.id
+   const result = await showConfirmModal('Do you want to procced ?', 'Confirm Block');
+   if(!result){
+    return;
+   }
+  if(btn.dataset.blocked == 'false'){
+const res = await fetch('/admin/blockUser',{
+     method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    body:JSON.stringify({ userId}),
+  })
+
+const data = await res.json();
+if(!data.success){
+ showPopupAlert(data.message);
+}
+  }
+  
+  else{
+    const res = await fetch('/admin/unblockUser',{
+      method:'PATCH',
+      headers:{
+        'Content-Type':'application/json',
+      },
+      body:JSON.stringify({userId})
+    })
+    const data = await res.json();
+    if(!data.success){
+      showPopupAlert(data.message);
     }
   }
-});
+  
+ await loadCustomers(currentPage,currentSearch);
+ })
+
+})
+
+
+
+
 </script>
+
+
+
+
+
 
 
 

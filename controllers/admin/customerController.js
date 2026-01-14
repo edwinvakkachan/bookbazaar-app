@@ -1,85 +1,58 @@
 const User = require('../../models/userSchema');
+const { search } = require('../../routes/adminRoute');
 
 
 
-const customerInfo = async (req, res) => {
+const getCustomerPage = async (req,res)=>{
+  const adminData = req.session.admin;
+  const email = await User.findById(adminData,{email:1})
+  res.render('customers',{
+    title: 'Customers',
+    activePage:'customers',
+    admin: email,
+  })
+}
+
+const getCustomersApi = async (req,res)=>{
   try {
-    let search = '';
-    if (req.query.search) {
-      search = req.query.search;
+    const limit = 6;
+    //search
+    
+    const {search,page=1} = req.query
+    const filter = {};
+    if (search) {
+      filter.name = { $regex: search, $options: 'i' }
     }
-
-    let page = 1;
-    if (req.query.page) {
-      page = parseInt(req.query.page);
-    }
-
-    let sortBy = req.query.sortBy || ''; 
-    const limit = 5;
-
-    let sortOption = { createdAt: -1 };
-    if (sortBy === 'name') {
-      sortOption = { name: 1 }; 
-    } else if (sortBy === 'email') {
-      sortOption = { email: 1 };
-    }
-
-    const userData = await User.find({
-      isAdmin: false,
-      $or: [
-        { name: { $regex: ".*" + search + ".*", $options: "i" } },
-        { email: { $regex: ".*" + search + ".*", $options: "i" } }
-      ]
-    })
-    .sort(sortOption)
-    .limit(limit)
-    .skip((page - 1) * limit)
-    .exec();
-
-    const count = await User.countDocuments({
-      isAdmin: false,
-      $or: [
-        { name: { $regex: ".*" + search + ".*", $options: "i" } },
-        { email: { $regex: ".*" + search + ".*", $options: "i" } }
-      ]
-    });
-
-    const totalPages = Math.ceil(count / limit);
+    
+    const total = await User.countDocuments({isAdmin:false,...filter });
+    const totalPages = Math.ceil(total / limit);
 
 
-     const adminData = req.session.admin;
-    const email = await User.findById(adminData,{email:1})
 
-    res.render('customers', {
-       title: 'Customers',
-      activePage:'customers',
-      admin: email,
-      customers: userData,
-      currentPage: page,
+    const users = await User.find({isAdmin:false,...filter }).sort({createdAt: -1,name:1,}).skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+
+
+    res.json({success:true,
+      users,
       totalPages,
-      search,
-      sortBy 
-    });
-
+      page,
+    })
   } catch (error) {
-    console.error("Error in customerInfo:", error);
-    res.status(500).render('admin/customers', {
-      customers: [],
-      currentPage: 1,
-      totalPages: 1,
-      search: '',
-      sortBy: ''
-    });
+    console.error(error)
+    res.status(500).json({ success: false, message: 'Error loading users' });
   }
-};
-
-
+}
 
 
 const blockUser = async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.params.id, { isBlocked: true });
-     res.json({ success: true, userId: req.params.id, action: 'blocked' });
+    const {userId} = req.body;
+    console.log('userid',userId)
+    await User.findByIdAndUpdate(userId, { isBlocked: true });
+     res.json({ success: true});
   } catch (error) {
     console.error('Error blocking user:', error);
      res.status(500).json({ success: false, message: 'Something went wrong' });
@@ -88,17 +61,18 @@ const blockUser = async (req, res) => {
 
 const unblockUser = async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.params.id, { isBlocked: false });
-     res.json({ success: true, userId: req.params.id, action: 'unblocked' });
+    const {userId} =req.body;
+    await User.findByIdAndUpdate(userId, { isBlocked: false });
+     res.json({ success: true});
   } catch (error) {
     console.error('Error unblocking user:', error);
     res.status(500).json({ success: false, message: 'Something went wrong' });
   }
 };
 
-
 module.exports = {
-  customerInfo,
   blockUser,
   unblockUser,
+  getCustomerPage,
+  getCustomersApi,
 }

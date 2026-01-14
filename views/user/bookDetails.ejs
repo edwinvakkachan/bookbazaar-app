@@ -45,10 +45,21 @@
                     <div class="carousel-inner">
                       <% [book.coverImg, ...book.thumbnails].forEach((img, index) => { %>
                         <div class="carousel-item <%= index === 0 ? 'active' : '' %> text-center">
-                          <img src="<%= img %>" 
+                          <!-- <img src="<%= img %>" 
                                class="img-fluid w-100" 
                                style="max-height: 80vh; object-fit: contain;" 
-                               alt="Preview">
+                               alt="Preview"> -->
+
+                          <img src="<%= img %>" 
+     class="img-fluid w-100 modal-zoom-image" 
+     style="max-height: 80vh; object-fit: contain;" 
+     alt="Preview"
+     data-highres="<%= img %>">
+
+
+
+
+
                         </div>
                       <% }) %>
                     </div>
@@ -91,28 +102,74 @@
             </h5>
 
             <p class="mt-3"><%= book.description %></p>
+            <!-- total quantity -->
+            <p  id="stock-info" data-stock="<%= book.quantity %>" class="mt-3 text-success">In Stock — <%= book.quantity %> left</p> 
+
 
             <!-- Action Buttons -->
-            <div class="d-flex align-items-center gap-2 mt-4">
+            <div id="book-actions" class="d-flex align-items-center gap-2 mt-4">
               <!-- Quantity Selector -->
               <div class="input-group w-auto" style="max-width: 120px;">
-                <button class="btn btn-outline-secondary" type="button" id="decreaseQty" aria-label="Decrease quantity">-</button>
-                <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1">
-                <button class="btn btn-outline-secondary" type="button" id="increaseQty" aria-label="Increase quantity">+</button>
+                <!-- <button class="btn btn-outline-secondary" type="button" id="decreaseQty" aria-label="Decrease quantity">-</button> -->
+                <!-- <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1" style="max-width:64px;"> -->
+                <!-- <button class="btn btn-outline-secondary" type="button" id="increaseQty" aria-label="Increase quantity">+</button> -->
+              
+                          <!-- testing -->
+
+              <div class="input-group" data-productid="<%= book._id %>">
+  <button class="btn btn-dark btn-sm decrement">-</button>
+  
+  <input 
+    type="number" 
+    name="qty" 
+    value="1" 
+    min="1" 
+    max="5" 
+    class="form-control text-center quantity-input" 
+    readonly
+  >
+  
+  <button class="btn btn-dark btn-sm increment">+</button>
+</div>
+              
+              
               </div>
 
-              <!-- Add to Cart -->
-              <button class="btn btn-dark">Add to Cart</button>
+
+  
+
+              <!-- Add to Cart (JS-driven) -->
+              <input type="hidden" name="quantity" value="1" id="cartQuantityInput">
+              <button type="button" class="btn btn-dark" id="addToCartBtn"
+               data-product-id="<%= book._id %>"
+               data-quantity="<%= book.quantity %>"
+               data-status="<%= book.stock %>"
+               data-outofstock="<%= book.outOfStock %>"
+               >Add to Cart</button>
 
               <!-- Wishlist -->
-              <button class="btn btn-outline-secondary">
-                <i class="bi bi-heart"></i>
-              </button>
+              <button type="button" id ='addTowhislistbtn' class="btn btn-dark add-to-wishlist" 
+        data-product-id="<%= book._id %>" 
+        title="Add to Wishlist">🖤</button>
+
             </div>
 
             <!-- Buy Now -->
             <div class="mt-3">
-              <button class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
+              <!-- <form action="/directCheckout/<%= book._id %>" method="GET">
+  <input type="hidden" name="productId" id="productId" value="<%= book._id %>">
+  <input type="hidden" name="qty" id="hiddenQty" value="1">
+  <button type="submit" id="buyNowBtn" class="btn btn-dark w-100 py-2 fw-bold">Buy Now</button>
+</form> -->
+
+
+<button type="button" class="btn btn-dark w-100 py-2 fw-bold"
+                data-buynow
+               data-productid="<%= book._id %>"
+               data-quantity="<%= book.quantity %>"
+               data-status="<%= book.stock %>"
+               data-outofstock="<%= book.outOfStock %>"
+               >Buy Now</button>
             </div>
 
             <!-- Delivery Info -->
@@ -250,98 +307,544 @@
           </div>
         </div>
 
-
-
         <!-- Related Items -->
-<div class="mt-5">
-  <h5 class="mb-4">
-    <i class="bi bi-columns-gap me-2"></i> Related Items
-  </h5>
-  <div class="row">
-    <% if (related && related.length > 0) { %>
-      <% related.forEach(item => { %>
-        <div class="col-md-3 col-6 mb-4">
-          <div class="card h-100 border-0 shadow-sm">
-            <a href="/book/<%= item.id %>">
-              <img src="<%= item.coverImg %>" class="card-img-top" alt="<%= item.title %>" style="height:250px; object-fit:contain;">
-            </a>
-            <div class="card-body text-center">
-              <h6 class="card-title"><%= item.title %></h6>
-              <p class="mb-1">
-                ₹<%= item.price %>
-                <% if (item.oldPrice) { %>
-                  <small class="text-muted text-decoration-line-through">₹<%= item.oldPrice %></small>
-                <% } %>
-              </p>
-              <div class="text-warning">
-                <% for (let i=1; i<=5; i++) { %>
-                  <i class="bi <%= i <= item.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
-                <% } %>
-              </div>
-            </div>
+        <div class="mt-5">
+          <h5 class="mb-4">
+            <i class="bi bi-columns-gap me-2"></i> Related Items
+          </h5>
+          <div class="row">
+            <% if (related && related.length > 0) { %>
+              <% related.forEach(item => { %>
+                <div class="col-md-3 col-6 mb-4">
+                  <div class="card h-100 border-0 shadow-sm">
+                    <a href="/book/<%= item.id %>">
+                      <img src="<%= item.coverImg %>" class="card-img-top" alt="<%= item.title %>" style="height:250px; object-fit:contain;">
+                    </a>
+                    <div class="card-body text-center">
+                      <h6 class="card-title"><%= item.title %></h6>
+                      <p class="mb-1">
+                        ₹<%= item.price %>
+                        <% if (item.oldPrice) { %>
+                          <small class="text-muted text-decoration-line-through">₹<%= item.oldPrice %></small>
+                        <% } %>
+                      </p>
+                      <div class="text-warning">
+                        <% for (let i=1; i<=5; i++) { %>
+                          <i class="bi <%= i <= item.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
+                        <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <p class="text-muted">No related items available.</p>
+            <% } %>
           </div>
         </div>
-      <% }) %>
-    <% } else { %>
-      <p class="text-muted">No related items available.</p>
-    <% } %>
-  </div>
-</div>
-
-
-
 
       </div>
     </div>
   </div>
 </div>
 
+
+<!-- add to Cart button  -->
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const mainImage = document.getElementById("mainImage");
-    const thumbs = document.querySelectorAll(".thumb-image");
-    const carousel = document.getElementById("imageCarousel");
-    const carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
+  document.getElementById('addToCartBtn').addEventListener('click',async (e)=>{
+    e.preventDefault();
+   try {
+     const productId = e.target.dataset.productId;
+     const outofstock = e.target.dataset.outofstock;
+let qty= 1;
+//  qty = Number(document.getElementById('quantityInput').value)
+     const group = document.querySelector(`.input-group[data-productid="${productId}"]`);
+     qty = Number(group.querySelector('.quantity-input').value);
+const quantity = Number(e.target.dataset.quantity) || 0;
+const status =   e.target.dataset.status;
+if(status==false){
+  showPopupAlert('This book is out of stock. Please check back later.');
+  return;
+}
+else if(outofstock==true){
+  showPopupAlert('This book is out of stock. Please check back later.');
+  return;
+}else if(qty>5){
+  showPopupAlert(`only max 5 product is allowed`);
+  return;
+}
+else if(quantity<qty){
+  showPopupAlert(`only ${quantity} product left`)
+  return;
+}
 
+    const res =  await fetch(`/cart/add`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({productId,qty})
+    })
+
+    const data = await res.json()
     
-    mainImage.addEventListener("click", function() {
-      const currentSrc = this.src;
-      const items = carousel.querySelectorAll(".carousel-item");
-      items.forEach((item, index) => {
-        const img = item.querySelector("img");
-        if (img.src.includes(currentSrc)) {
-          carouselInstance.to(index);
-        }
-      });
-    });
-
     
-    thumbs.forEach((thumb, index) => {
-      thumb.addEventListener("click", function() {
-        mainImage.src = this.src;
-        thumbs.forEach(t => t.classList.remove("border", "border-2", "border-primary"));
-        this.classList.add("border", "border-2", "border-primary");
-        carouselInstance.to(index + 1); 
-      });
-    });
+if(!data.success){
+  showPopupAlert(data.message)
+  return
+}
 
-    
-    const qtyInput = document.getElementById("quantityInput");
-    const btnMinus = document.getElementById("decreaseQty");
-    const btnPlus = document.getElementById("increaseQty");
+showPopupAlert(data.message)
+updateCartBadge(data.cartCount);
 
-    btnMinus.addEventListener("click", function() {
-      let current = parseInt(qtyInput.value) || 1;
-      if (current > 1) {
-        qtyInput.value = current - 1;
+   } catch (error) {
+    console.log(error);
+    showPopupAlert('newtwork error while adding the cart')
+   }
+  })
+</script>
+
+
+<!-- whishlist badge update -->
+<script>
+function updateWishlistBadge(count) {
+const badge = document.getElementById('wishlist-count-badge');
+if (!badge) return;
+badge.innerText = count;
+badge.style.display = Number(count) > 0 ? '' : 'none';
+}
+
+
+
+  document.getElementById('addTowhislistbtn').addEventListener('click', async (e)=>{
+      e.preventDefault();
+    const productId = e.currentTarget.dataset.productId;
+
+
+const stockAvailable = <%= book.stock%>;
+if(stockAvailable==false){
+    showPopupAlert('This book is out of stock. Please check back later.')
+     updateWishlistBadge(data.wishlistCount)
+    return 
+  }
+
+    try {
+       const res = await fetch('/wishlist/add',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({productId})
+    })
+  
+
+    const data = await res.json();
+      if(data.success){
+        showPopupAlert(data.message)
+      }else{
+        showPopupAlert(data.message)
       }
-    });
 
-    btnPlus.addEventListener("click", function() {
-      let current = parseInt(qtyInput.value) || 1;
-      qtyInput.value = current + 1;
-    });
+      updateWishlistBadge(data.wishlistCount)
+
+    } catch (error) {
+       console.error('Wishlist error:', err);
+    showPopupAlert('⚠️ Network or server error. Please try again.', 'Error');
+    }
+   
+
+  })
+</script>
+
+<!-- direct checkout  -->
+<script>
+
+
+
+document.addEventListener('click',async (e)=>{
+  const btn = e.target.closest('[data-buynow]')
+  const availableQuantity = btn.dataset.quantity;
+  const stockAvailable = btn.dataset.status;
+  const productId = btn.dataset.productid;
+  const outofstock = btn.dataset.outofstock;
+  const group = document.querySelector(`.input-group[data-productid="${productId}"]`);
+const quantity = Number(group.querySelector('.quantity-input').value);
+  
+  if(stockAvailable=='false'){
+    showPopupAlert('This book is out of stock. Please check back later.')
+
+    return 
+  }
+ 
+else if(availableQuantity<quantity){
+  showPopupAlert(`Only ${availableQuantity} quantity is left`);
+
+    return 
+}
+ else  if(quantity>5){
+    showPopupAlert('Only Five products are allowed');
+    return 
+  }
+
+ window.location.href = `/directCheckout/productId?productId=${productId}&quantity=${quantity}`;    
+})
+
+
+</script>
+
+<!-- increment and decrement button -->
+
+<script>
+  document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('increment') || e.target.classList.contains('decrement')) {
+      const group = e.target.closest('.input-group');
+      const input = group.querySelector('.quantity-input');
+      const productId = group.dataset.productid;
+
+      const min = parseInt(input.min) || 1;
+      const max = parseInt(input.max) || 99;
+      let value = parseInt(input.value);
+
+      if (e.target.classList.contains('increment') && value < max) {
+        value++;
+      } else if (e.target.classList.contains('decrement') && value > min) {
+        value--;
+      }
+
+      input.value = value; // updated value after increment or decrement
+    }
   });
 </script>
 
+
+<!-- page reload -->
+<script>
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'forceReload') {
+      location.reload(); 
+    }
+  });
+</script>
+
+<!-- imge zoom -->
+<style>
+ 
+  .modal-zoom-grid {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    height: 80vh; /* adjust to desired modal height */
+  }
+  .modal-zoom-image-wrap {
+    flex: 1 1 60%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    overflow:hidden;
+  }
+  .modal-zoom-image-wrap img.modal-zoom-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    cursor: crosshair;
+  }
+
+  .modal-zoom-result {
+    flex: 1 1 40%;
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: cover;
+    min-width: 450px; /* prevents collapsing on narrow screens */
+    height: 100%;
+  }
+
+ 
+  .zoom-lens {
+    position: absolute;
+    pointer-events: none;
+    border: 2px solid rgba(0,0,0,0.15);
+    background-color: rgba(255,255,255,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border-radius: 4px;
+  }
+
+ 
+  @media (max-width: 768px) {
+    .modal-zoom-result { display: none !important; }
+    .modal-zoom-grid { height: 70vh; }
+    .modal-zoom-image-wrap img.modal-zoom-image { cursor: grab; }
+  }
+</style>
+
+<script>
+(function () {
+ 
+  const ZOOM_LEVEL = 2.6; // 2.6x zoom in pane 
+  const LENS_SIZE = { w: 160, h: 160 }; // visual lens size 
+  const LENS_ENABLED = true; 
+
+  
+  function $(s, parent = document) { return parent.querySelector(s); }
+  function $all(s, parent = document) { return Array.from(parent.querySelectorAll(s)); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const imageModal = document.getElementById('imageModal'); 
+    if (!imageModal) return;
+
+    
+    
+    const modalBody = imageModal.querySelector('.modal-body') || imageModal;
+   
+    const grid = document.createElement('div');
+    grid.className = 'modal-zoom-grid';
+
+    
+    const left = document.createElement('div');
+    left.className = 'modal-zoom-image-wrap position-relative';
+
+   
+    const right = document.createElement('div');
+    right.className = 'modal-zoom-result';
+
+   
+    const lens = document.createElement('div');
+    lens.className = 'zoom-lens';
+    lens.style.width = LENS_SIZE.w + 'px';
+    lens.style.height = LENS_SIZE.h + 'px';
+    lens.style.display = 'none';
+    left.appendChild(lens);
+
+  
+    grid.appendChild(left);
+    grid.appendChild(right);
+
+    
+    const existingCarousel = modalBody.querySelector('.carousel');
+    const originalImage = modalBody.querySelector('img.modal-zoom-image');
+
+    if (existingCarousel) {
+      left.appendChild(existingCarousel);
+    } else if (originalImage) {
+      
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '100%';
+      wrapper.style.height = '100%';
+      wrapper.style.display = 'flex';
+      wrapper.style.alignItems = 'center';
+      wrapper.style.justifyContent = 'center';
+      wrapper.appendChild(originalImage);
+      left.appendChild(wrapper);
+    } else {
+      
+      console.warn('No modal image or carousel found for zoom pane.');
+      return;
+    }
+
+    
+    while (modalBody.firstChild) modalBody.removeChild(modalBody.firstChild);
+    modalBody.appendChild(grid);
+
+    
+    function getModalImages() {
+      return $all('img.modal-zoom-image', left);
+    }
+
+   
+    function setZoomImage(img) {
+      if (!img) return;
+      
+      const src = img.dataset.highres || img.src;
+     
+      const naturalW = img.naturalWidth || (img.width * (img.naturalWidth ? 1 : 1));
+      const naturalH = img.naturalHeight || (img.height * (img.naturalHeight ? 1 : 1));
+      
+      right.style.backgroundImage = `url('${src}')`;
+      
+      if (naturalW && naturalH) {
+        right.style.backgroundSize = (naturalW * ZOOM_LEVEL) + 'px ' + (naturalH * ZOOM_LEVEL) + 'px';
+      } else {
+       
+        right.style.backgroundSize = (img.width * ZOOM_LEVEL) + 'px ' + (img.height * ZOOM_LEVEL) + 'px';
+      }
+    }
+
+    
+    function onMoveOverImage(e, img) {
+      
+      const rect = img.getBoundingClientRect();
+      const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
+
+      let x = clientX - rect.left; 
+      let y = clientY - rect.top;
+
+      
+      x = Math.max(0, Math.min(rect.width, x));
+      y = Math.max(0, Math.min(rect.height, y));
+
+     
+      const px = x / rect.width;
+      const py = y / rect.height;
+
+     
+      const rightRect = right.getBoundingClientRect();
+      const bgWidth = parseFloat(getComputedStyle(right).backgroundSize.split(' ')[0]) || (rect.width * ZOOM_LEVEL);
+      const bgHeight = parseFloat(getComputedStyle(right).backgroundSize.split(' ')[1]) || (rect.height * ZOOM_LEVEL);
+
+      
+      const bgX = px * bgWidth;
+      const bgY = py * bgHeight;
+
+     
+      const posX = (rightRect.width / 2) - bgX;
+      const posY = (rightRect.height / 2) - bgY;
+
+     
+      right.style.backgroundPosition = `${posX}px ${posY}px`;
+
+     
+      if (LENS_ENABLED) {
+        lens.style.display = 'block';
+        
+        const lensLeft = (clientX - rect.left) - (LENS_SIZE.w / 2);
+        const lensTop = (clientY - rect.top) - (LENS_SIZE.h / 2);
+        lens.style.left = Math.max(0, Math.min(rect.width - LENS_SIZE.w, lensLeft)) + 'px';
+        lens.style.top = Math.max(0, Math.min(rect.height - LENS_SIZE.h, lensTop)) + 'px';
+      }
+    }
+
+   
+    function enableZoomFor(img) {
+      if (!img) return;
+     
+      setZoomImage(img);
+
+     
+      const moveHandler = (e) => onMoveOverImage(e, img);
+      const enterHandler = (e) => {
+       
+        right.style.opacity = 1;
+        if (img.complete) setZoomImage(img);
+      };
+      const leaveHandler = (e) => {
+        right.style.opacity = 1; 
+        if (LENS_ENABLED) lens.style.display = 'none';
+      };
+
+      
+      img.addEventListener('mousemove', moveHandler);
+      img.addEventListener('touchmove', moveHandler, { passive: true });
+      img.addEventListener('mouseenter', enterHandler);
+      img.addEventListener('mouseleave', leaveHandler);
+      img.addEventListener('touchstart', enterHandler, { passive: true });
+      img.addEventListener('touchend', leaveHandler, { passive: true });
+
+      
+      img.addEventListener('load', () => setZoomImage(img));
+
+      
+      img.__zoomCleanup = () => {
+        img.removeEventListener('mousemove', moveHandler);
+        img.removeEventListener('touchmove', moveHandler);
+        img.removeEventListener('mouseenter', enterHandler);
+        img.removeEventListener('mouseleave', leaveHandler);
+        img.removeEventListener('touchstart', enterHandler);
+        img.removeEventListener('touchend', leaveHandler);
+      };
+    }
+
+
+    function initAll() {
+    
+      const imgs = getModalImages();
+      imgs.forEach(img => {
+        if (img.__zoomCleanup) img.__zoomCleanup();
+      });
+
+    
+      getModalImages().forEach(img => enableZoomFor(img));
+    }
+
+   
+    const carousels = left.querySelectorAll('.carousel');
+    carousels.forEach(c => {
+      c.addEventListener('slid.bs.carousel', () => {
+       
+        if (LENS_ENABLED) lens.style.display = 'none';
+        initAll();
+      });
+    });
+
+   
+    imageModal.addEventListener('shown.bs.modal', () => {
+      initAll();
+      
+      const activeImg = left.querySelector('.carousel-item.active img.modal-zoom-image') || left.querySelector('img.modal-zoom-image');
+      if (activeImg) {
+        setZoomImage(activeImg);
+      }
+    });
+
+  
+    imageModal.addEventListener('hidden.bs.modal', () => {
+      const imgs = getModalImages();
+      imgs.forEach(img => {
+        if (img.__zoomCleanup) img.__zoomCleanup();
+      });
+      if (LENS_ENABLED) lens.style.display = 'none';
+      right.style.backgroundImage = '';
+    });
+
+    
+    initAll();
+  });
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const imageModal = document.getElementById('imageModal');
+  const carouselEl = document.getElementById('imageCarousel');
+  if (!imageModal || !carouselEl) return;
+
+  const bsModal = bootstrap.Modal.getOrCreateInstance(imageModal);
+  const bsCarousel = bootstrap.Carousel.getOrCreateInstance(carouselEl);
+
+  
+  const thumbs = document.querySelectorAll('.thumb-image');
+  thumbs.forEach((thumb, idx) => {
+    thumb.style.cursor = 'pointer';
+    thumb.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      const targetIndex = idx + 1;
+      
+      bsModal.show();
+      const handler = () => {
+        bsCarousel.to(targetIndex);
+        imageModal.removeEventListener('shown.bs.modal', handler);
+      };
+      imageModal.addEventListener('shown.bs.modal', handler);
+    });
+  });
+
+  
+  const mainImage = document.getElementById('mainImage');
+  mainImage?.addEventListener('click', (e) => {
+    bsModal.show();
+    const handler = () => {
+      bsCarousel.to(0);
+      imageModal.removeEventListener('shown.bs.modal', handler);
+    };
+    imageModal.addEventListener('shown.bs.modal', handler);
+  });
+});
+</script>
+
+
+
+
 <%- include("../partials/user/footer.ejs") %>
+
+

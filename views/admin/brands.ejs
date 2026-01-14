@@ -15,14 +15,14 @@
       <div class="row">
         <!-- Brand Form -->
         <div class="col-md-3">
-          <form method="post" action="/admin/addBrand" enctype="multipart/form-data">
+          <form method="post" id="brandForm" action="/admin/addBrand" enctype="multipart/form-data">
             
             <div class="mb-4">
               <label for="brand_name" class="form-label">Brand Name</label>
               <input
                 type="text"
                 id="brand_name"
-                name="name"
+                name="brandName"
                 placeholder="Type here"
                 class="form-control"
               />
@@ -44,7 +44,7 @@
             </div>
 
             <div class="d-grid">
-              <button class="btn btn-primary mt-3" type="submit">
+              <button class="btn btn-dark mt-3" type="submit">
                 Add Brand
               </button>
             </div>
@@ -66,7 +66,7 @@
               <tbody>
                <%data.forEach((brand,index)=>{%>
                 <tr>
-                  <td class="text-start"><%=brand.brandName%></td>
+<td class="text-start"><%=brand.brandName%></td>
                   <td class="text-start">
                     <div class="d-flex align-items-center justify-content-center rounded-circle overflow-hidden" style="width:40px; height:40px;">
                       <img src="/uploads/reimage/<%=brand.brandImage[0]%>" alt="<%=brand.brandName%>" class="img-fluid" />
@@ -80,14 +80,38 @@
                     <%}%>
                   </td>
                   <td class="text-start">
-                    <%if(brand.isBlocked === false){%>
-                    <a href="/admin/blockBrand?id=<%=brand._id%>" class="btn btn-danger btn-sm me-2">Block</a>
-                    <%}else{%>
-                    <a href="/admin/unblockBrand?id=<%=brand._id%>" class="btn btn-success btn-sm me-2">Unblock</a>
-                    <%}%>
-                    <a href="/admin/deleteBrand?id=<%=brand._id%>" class="btn btn-outline-danger btn-sm">Delete</a>
-                  
+                    <% if (!brand.isBlocked) { %>
+    <button
+      class="btn btn-danger btn-sm me-2 action-btn"
+      data-id="<%= brand._id %>"
+      data-action="block"
+    >
+      Block
+    </button>
+  <% } else { %>
+    <button
+      class="btn btn-success btn-sm me-2 action-btn"
+      data-id="<%= brand._id %>"
+      data-action="unblock"
+    >
+      Unblock
+    </button>
+  <% } %>
+                    
+              
+                    <button
+      class="btn btn-outline-danger btn-sm action-btn"
+      data-id="<%= brand._id %>"
+      data-action="delete"
+    >
+      Delete
+    </button>
+
+
+
+
                   </td>
+
                 </tr>
                <%})%>
               </tbody>
@@ -122,17 +146,116 @@
 </div>
 
 </section>
+
+
 <script>
+
 document.getElementById("brand_image").addEventListener("change", function (event) {
   const preview = document.getElementById("preview");
   const file = event.target.files[0];
   if (file) {
     preview.src = URL.createObjectURL(file);
     preview.classList.remove("d-none");
+  } else {
+    preview.classList.add("d-none");
   }
 });
 
+function validate(brandName) {
+  let isValid = true;
+  if (!brandName || brandName.trim() === '') {
+    showPopupAlert('Brand name should not be empty');
+    isValid = false;
+  }
+  return isValid;
+}
 
+document.getElementById('brandForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const form = e.target;
+  const brandName = form.brandName.value; 
+
+  if (!validate(brandName)) return;
+
+  const formData = new FormData(form); // captures file input + text inputs
+
+  try {
+    const res = await fetch('/admin/addBrand', {
+      method: 'POST',
+      body: formData, 
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      showPopupAlert(data.message);
+      return;
+    }
+
+    location.reload();
+    showPopupAlert(data.message);
+   
+  } catch (err) {
+    console.error(err);
+    showPopupAlert('Network error');
+  }
+});
 </script>
 
+<!-- block and ublock and delete -->
+ <script>
+  document.addEventListener('click',async (e)=>{
+    const btn = e.target.closest('.action-btn');
+    const action = btn.dataset.action;
+    const brandId = btn.dataset.id;
+    const result = await showConfirmModal(`Are you sure to ${action} brand`);
+    if(!result){
+      return;
+    }
+    if(action=='block'){
+      const res = await fetch('/admin/blockBrand',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({brandId})
+      })
+
+      const data = await res.json();
+      if(!data.success){
+        return showPopupAlert(data.message);
+      }
+     location.reload() 
+    }
+
+    // unblocking brand 
+    else if(action=='unblock'){
+      const res = await fetch('/admin/unblockBrand',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({brandId})
+      })
+      const data = await res.json();
+      if(!data.success){
+        showPopupAlert(data.message);
+        return
+      }
+      location.reload();
+    }
+    // deleting the brand
+
+    else if(action=='delete'){
+      const res = await fetch('/admin/deleteBrand',{
+        method:'DELETE',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({brandId})
+      })
+      const data = await res.json();
+      if(!data.success){
+        showPopupAlert(data.message);
+        return;
+      }
+      location.reload();
+    }
+
+  })
+ </script>
 <%- include('../partials/admin/footer') %>

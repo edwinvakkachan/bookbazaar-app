@@ -1,0 +1,196 @@
+<%- include("../partials/user/header.ejs") %>
+
+<div class="container my-5">
+  <div class="row gx-4">
+    <!-- LEFT: sidebar -->
+    <div class="col-12 col-md-3">
+      <%- include("../partials/user/userSidebar.ejs") %>
+    </div>
+
+    <!-- RIGHT: main content -->
+    <div class="col-12 col-md-9">
+      <div class="card shadow-sm p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="mb-0">Add New Address</h4>
+          <h6 class="mb-0 text-muted">Personal Information</h6>
+        </div>
+
+        <form id="addAddressForm" action="/address/add" method="POST" novalidate>
+          <div class="row g-3">
+            <!-- Recipient Name -->
+            <div class="col-12">
+              <label class="form-label">Name</label>
+              <input name="name" type="text" class="form-control form-control-lg" placeholder="Recipient Name">
+              <small class="error-message text-danger"></small>
+            </div>
+
+            <!-- Email & Phone -->
+            <!-- <div class="col-12 col-md-6">
+              <label class="form-label">Email</label>
+              <input name="email" type="email" class="form-control form-control-lg" placeholder="example@gmail.com">
+               <small class="error-message text-danger"></small>
+            </div> -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">Phone</label>
+              <input name="phone" type="tel" class="form-control form-control-lg" placeholder="+91 12345 67890" >
+               <small class="error-message text-danger"></small>
+            </div>
+
+            <!-- Address line1 -->
+            <div class="col-12">
+              <label class="form-label">Address</label>
+              <textarea name="line1" rows="3" class="form-control form-control-lg" placeholder="House Name, House Number, Locality" ></textarea>
+               <small class="error-message text-danger"></small>
+            </div>
+
+            <!-- District/Town & State -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">District / Town</label>
+              <input name="city" type="text" class="form-control" placeholder="eg : Ernakulam" >
+               <small class="error-message text-danger"></small>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">State</label>
+              <input name="state" type="text" class="form-control" placeholder="eg : Kerala" >
+               <small class="error-message text-danger"></small>
+            </div>
+
+            <!-- Landmark (line2) & Pin -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">Landmark (optional)</label>
+              <input name="line2" type="text" class="form-control" placeholder="eg : Hospital">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Pin Code</label>
+              <input name="postalCode" type="text" pattern="\d{6}" class="form-control" placeholder="eg : 689230" >
+               <small class="error-message text-danger"></small>
+            </div>
+
+            <!-- Address Type -->
+            <div class="col-12">
+              <label class="form-label d-block">Address Type</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="label" id="addrHome" value="Home" checked>
+                <label class="form-check-label" for="addrHome">Home</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="label" id="addrWork" value="Work">
+                <label class="form-check-label" for="addrWork">Work</label>
+              </div>
+            </div>
+
+            <!-- Primary checkbox -->
+            <div class="col-12">
+              <!-- <input type="hidden" name="isPrimary" value="false"> -->
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="isPrimary" id="isPrimary" value="true">
+                <label class="form-check-label" for="isPrimary">Set as primary address</label>
+              </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="col-12 d-flex justify-content-end mt-2">
+              <button type="submit" class="btn btn-dark btn-lg">Add Address</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("../partials/user/footer.ejs") %>
+
+<style>
+  .card { border-radius: 10px; }
+  .form-control-lg { background: #f7f7f7; border: none; }
+  .form-label { font-weight: 600; color: #333; }
+  @media (max-width: 767.98px) {
+    .card { padding: 1rem; }
+  }
+</style>
+
+
+<script>
+
+  
+document.addEventListener('DOMContentLoaded',()=>{
+    
+  const form = document.getElementById('addAddressForm');
+  form.addEventListener('submit',async(e)=>{
+    e.preventDefault();
+    form.querySelectorAll(".error-message").forEach((a) => a.textContent='');
+    let isValid = true;
+    const name = form.name.value.trim();
+    // const email = form.email.value.trim();
+    const phone = form.phone.value.trim();
+    const line1 = form.line1.value.trim();
+    const city = form.city.value.trim();
+    const state = form.state.value.trim();
+    const postalCode = form.postalCode.value.trim();
+    const isPrimary = document.getElementById('isPrimary').checked;
+
+ if (name.length < 3) {
+      form.name.parentElement.querySelector(".error-message").textContent='Name must be at least 3 characters long.'
+      isValid = false;
+    }
+
+//  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+//       form.email.parentElement.querySelector(".error-message").textContent='Enter a valid email address.'
+//       isValid = false;
+//     }
+
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      form.phone.parentElement.querySelector(".error-message").textContent='Enter a valid 10-digit phone number.'
+      isValid = false;
+    }
+
+    if (line1.length < 5) {
+      form.line1.parentElement.querySelector(".error-message").textContent='Address must be at least 5 characters long.'
+      isValid = false;
+    }
+
+    if (city === "") {
+      form.city.parentElement.querySelector(".error-message").textContent='City is required.'
+      isValid = false;
+    }
+
+    if (state === "") {
+      form.state.parentElement.querySelector(".error-message").textContent='State is required.'
+      isValid = false;
+    }
+
+    if (!/^\d{6}$/.test(postalCode)) {
+      form.postalCode.parentElement.querySelector(".error-message").textContent='Enter a valid 6-digit postal code.'
+      isValid = false;
+    }
+
+if(!isValid){
+return
+}
+
+//  form.submit();
+
+const res = await fetch('/address/add',{
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({name,phone,line1,city,state,postalCode,isPrimary})
+})
+
+const data = await res.json();
+if(!data.success){
+  showPopupAlert(data.message)
+  return
+}
+
+if(data.success){
+window.location.href = '/addresses';
+}
+
+
+
+  })
+})
+
+
+</script>
